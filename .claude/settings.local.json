@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(npm run *)",
+      "Bash(npx tsc *)",
+      "PowerShell($env:Path = [System.Environment]::GetEnvironmentVariable\\(\"Path\",\"Machine\"\\) + \";\" + [System.Environment]::GetEnvironmentVariable\\(\"Path\",\"User\"\\); cd \"C:\\\\Users\\\\user\\\\Documents\\\\Harvey Files\\\\Production Training Tracker\\\\app\"; npx tsc -b --noEmit 2>&1)"
+    ]
+  }
+}
