@@ -25,7 +25,7 @@ const STATUS_CONFIG: Record<TrainingStatus, { label: string; color: string; badg
 }
 
 export default function Trainings() {
-  const { state, loadAll, can } = useApp()
+  const { state, loadAll, can, dispatch } = useApp()
   const { trainings, enrollments } = state
 
   const [layout, setLayout] = useState<Layout>('kanban')
@@ -75,9 +75,14 @@ export default function Trainings() {
     if (!dragId) return
     const t = trainings.find(t => t.id === dragId)
     if (!t || t.status === newStatus) return
+    // Optimistic update — no reload flash
+    dispatch({ type: 'SET_DATA', payload: { trainings: trainings.map(tr => tr.id === dragId ? { ...tr, status: newStatus } : tr) } })
     const { error } = await supabase.from('trainings').update({ status: newStatus }).eq('id', dragId)
-    if (error) toast.error(error.message)
-    else await loadAll()
+    if (error) {
+      toast.error(error.message)
+      // Revert
+      dispatch({ type: 'SET_DATA', payload: { trainings: trainings.map(tr => tr.id === dragId ? { ...tr, status: t.status } : tr) } })
+    }
   }
 
   const SortIcon = ({ col }: { col: SortCol }) => {

@@ -8,7 +8,7 @@ import {
 import { supabase } from '@/lib/supabase'
 import { useApp } from '@/context/AppContext'
 import { toast } from 'sonner'
-import { cn, fmtD, initials } from '@/lib/utils'
+import { cn, fmtD, initials, normAtt } from '@/lib/utils'
 import type { Training, TrainingSession, TrainingEnrollment, Designer } from '@/types/database'
 
 interface Props {
@@ -19,7 +19,7 @@ interface Props {
 
 export default function TrainingDetail({ training, onClose, onEdit }: Props) {
   const { state, loadAll, can, dispatch } = useApp()
-  const { designers, enrollments, sessions, attendance } = state
+  const { designers, enrollments, sessions, attendance, designerSkills } = state
 
   const [activeTab, setActiveTab] = useState<'roster' | 'sessions'>('roster')
   const [deleting, setDeleting] = useState(false)
@@ -44,14 +44,71 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
     onClose()
   }
 
-  async function handleFinish() {
-    if (!confirm('Mark this training as completed? This cannot be undone easily.')) return
+  async function handleAssess() {
+    const enrolledIds = myEnrollments.map(e => e.designer_id).filter(Boolean) as string[]
+    const sessionIds = new Set(mySessions.map(s => s.id))
+
+    const passedIds = enrolledIds.filter(did =>
+      attendance.some(a =>
+        sessionIds.has(a.session_id ?? '') &&
+        a.designer_id === did &&
+        (normAtt(a.is_present) === 'true' || normAtt(a.is_present) === 'late')
+      )
+    )
+
+    if (passedIds.length === 0) {
+      toast.error('No attendance records found — mark attendance first')
+      return
+    }
+
+    if (!confirm(`Award skill to ${passedIds.length} designer(s) who attended this training?`)) return
     setCompleting(true)
-    const { error } = await supabase.from('trainings').update({ status: 'completed' }).eq('id', training.id)
-    if (error) { toast.error(error.message); setCompleting(false); return }
-    await loadAll()
-    setCompleting(false)
-    onClose()
+
+    try {
+      const awardPlatform = isHandsOn ? training.platform : `DSG: ${training.name}`
+      const awardLevel   = isHandsOn ? (training.skill_level ?? 'Intermediate') : 'Completed'
+
+      if (isHandsOn && !training.platform) {
+        toast.error('Training has no platform configured — edit the training first')
+        setCompleting(false)
+        return
+      }
+
+      const LEVEL_ORDER: Record<string, number> = { Intermediate: 0, Advanced: 1, Expert: 2, Completed: 3 }
+
+      // Don't downgrade — skip designers who already have a higher or equal level
+      const rowsToUpsert = passedIds
+        .filter(did => {
+          const existing = designerSkills.find(s => s.designer_id === did && s.platform === awardPlatform)
+          if (!existing) return true
+          return (LEVEL_ORDER[awardLevel] ?? 0) > (LEVEL_ORDER[existing.level] ?? 0)
+        })
+        .map(did => ({
+          designer_id: did,
+          platform: awardPlatform,
+          level: awardLevel,
+          source: training.name,
+          updated_at: new Date().toISOString(),
+        }))
+
+      if (rowsToUpsert.length > 0) {
+        const { error } = await supabase.from('designer_skills').upsert(rowsToUpsert, { onConflict: 'designer_id,platform' })
+        if (error) { toast.error(error.message); setCompleting(false); return }
+      }
+
+      await loadAll()
+      const skipped = passedIds.length - rowsToUpsert.length
+      toast.success(
+        rowsToUpsert.length > 0
+          ? `Skill awarded to ${rowsToUpsert.length} designer(s)${skipped > 0 ? ` (${skipped} already at this level or higher)` : ''}`
+          : `All ${skipped} designers already have this skill level or higher`
+      )
+      setCompleting(false)
+      onClose()
+    } catch (err: any) {
+      toast.error(err.message)
+      setCompleting(false)
+    }
   }
 
   async function goToAttendance() {
@@ -234,9 +291,9 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
               <button onClick={goToAttendance} className="btn-outline h-10 px-6 gap-2">
                  <ClipboardCheck className="w-4 h-4" /> Go to Attendance
               </button>
-              {training.status !== 'completed' && can('canAddEditTrainings') && (
-                <button className="btn-primary h-10 px-6 gap-2" onClick={handleFinish} disabled={completing}>
-                   <CheckCircle2 className="w-4 h-4" /> {completing ? 'Finishing…' : 'Finish & Assess'}
+              {training.status === 'completed' && can('canAddEditTrainings') && (
+                <button className="btn-primary h-10 px-6 gap-2" onClick={handleAssess} disabled={completing}>
+                   <CheckCircle2 className="w-4 h-4" /> {completing ? 'Awarding…' : 'Finish & Assess'}
                 </button>
               )}
            </div>

@@ -8,8 +8,9 @@ import type { Training, TrainingType, SkillLevel, TrainingStatus } from '@/types
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 const LEVELS: SkillLevel[] = ['Intermediate', 'Advanced', 'Expert']
-const STATUSES: TrainingStatus[] = ['upcoming', 'active', 'completed']
-const PLATFORMS = ['Clickfunnels', 'GoHighLevel', 'Shopify', 'Wix', 'Wordpress']
+const LEVEL_ORDER: Record<string, number> = { Intermediate: 0, Advanced: 1, Expert: 2 }
+const STATUSES: TrainingStatus[] = ['upcoming', 'active', 'on-hold', 'completed']
+const BASE_PLATFORMS = ['Clickfunnels', 'GoHighLevel', 'Shopify', 'Wix', 'Wordpress']
 
 interface Props {
   training: Training | null
@@ -19,7 +20,7 @@ interface Props {
 
 export default function TrainingModal({ training, onClose, onSaved }: Props) {
   const { state } = useApp()
-  const { designers, teams, enrollments } = state
+  const { designers, teams, enrollments, designerSkills } = state
 
   // --- Form State ---
   const [type, setType] = useState<TrainingType>(training?.type ?? 'Hands-On')
@@ -47,6 +48,12 @@ export default function TrainingModal({ training, onClose, onSaved }: Props) {
     return map
   })
 
+  // Platform mode: existing (dropdown) vs new (text input)
+  const [platformMode, setPlatformMode] = useState<'existing' | 'new'>(() => {
+    if (!training?.platform) return 'existing'
+    return BASE_PLATFORMS.includes(training.platform) ? 'existing' : 'new'
+  })
+
   // UI state
   const [step, setStep] = useState(1) // 1: Info, 2: Enroll
   const [search, setSearch] = useState('')
@@ -55,6 +62,24 @@ export default function TrainingModal({ training, onClose, onSaved }: Props) {
   const [error, setError] = useState('')
 
   const isHandsOn = type === 'Hands-On'
+
+  // All known platforms (base + any custom ones already in skills)
+  const existingPlatforms = useMemo(() => {
+    const fromSkills = designerSkills
+      .map(s => s.platform)
+      .filter(p => !p.startsWith('DSG:'))
+    return [...new Set([...BASE_PLATFORMS, ...fromSkills])].sort()
+  }, [designerSkills])
+
+  // Map: designerId -> their current level for the selected platform
+  const platformSkillMap = useMemo(() => {
+    if (!isHandsOn || !platform) return new Map<string, string>()
+    const map = new Map<string, string>()
+    designerSkills.forEach(s => {
+      if (s.platform === platform && s.designer_id) map.set(s.designer_id, s.level)
+    })
+    return map
+  }, [designerSkills, isHandsOn, platform])
 
   // --- Actions ---
   function toggleDay(day: string) {
@@ -211,15 +236,46 @@ export default function TrainingModal({ training, onClose, onSaved }: Props) {
                   <input className="input" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. CF Advanced mastery" />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  {isHandsOn ? (
-                    <>
+                {isHandsOn ? (
+                  <div className="space-y-3 p-4 rounded-xl bg-surface-2 border border-border">
+                    {/* Platform mode toggle */}
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => { setPlatformMode('existing'); setPlatform('') }}
+                        className={cn(
+                          'flex-1 h-8 rounded-lg border text-[11px] font-bold uppercase tracking-widest transition-all',
+                          platformMode === 'existing'
+                            ? 'border-orange-500/50 bg-orange-500/10 text-orange-500'
+                            : 'border-border text-muted-c hover:text-secondary'
+                        )}
+                      >
+                        Existing Platform
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setPlatformMode('new'); setPlatform('') }}
+                        className={cn(
+                          'flex-1 h-8 rounded-lg border text-[11px] font-bold uppercase tracking-widest transition-all',
+                          platformMode === 'new'
+                            ? 'border-orange-500/50 bg-orange-500/10 text-orange-500'
+                            : 'border-border text-muted-c hover:text-secondary'
+                        )}
+                      >
+                        + New Platform
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1.5">
                         <label className="text-xs font-semibold uppercase tracking-wider text-muted-c">Platform</label>
-                        <select className="input" value={platform} onChange={e => setPlatform(e.target.value)}>
-                          <option value="">Select Platform...</option>
-                          {PLATFORMS.map(p => <option key={p} value={p}>{p}</option>)}
-                        </select>
+                        {platformMode === 'existing' ? (
+                          <select className="input" value={platform} onChange={e => setPlatform(e.target.value)}>
+                            <option value="">Select platform…</option>
+                            {existingPlatforms.map(p => <option key={p} value={p}>{p}</option>)}
+                          </select>
+                        ) : (
+                          <input className="input" value={platform} onChange={e => setPlatform(e.target.value)} placeholder="e.g. Kajabi, Systeme.io…" />
+                        )}
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-xs font-semibold uppercase tracking-wider text-muted-c">Award Level</label>
@@ -227,14 +283,14 @@ export default function TrainingModal({ training, onClose, onSaved }: Props) {
                           {LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
                         </select>
                       </div>
-                    </>
-                  ) : (
-                    <div className="col-span-2 space-y-1.5">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-c">Topic / Agenda</label>
-                      <input className="input" value={topic} onChange={e => setTopic(e.target.value)} placeholder="What will be discussed?" />
                     </div>
-                  )}
-                </div>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-c">Topic / Agenda</label>
+                    <input className="input" value={topic} onChange={e => setTopic(e.target.value)} placeholder="What will be discussed?" />
+                  </div>
+                )}
 
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-1.5">
@@ -307,15 +363,28 @@ export default function TrainingModal({ training, onClose, onSaved }: Props) {
                 <div className="space-y-2 border-t border-border pt-4">
                   {visibleDesigners.map(d => {
                     const isEnrolled = !!enrolled[d.id]
+                    const currentLevel = platformSkillMap.get(d.id)
+                    const alreadyQualified = !isEnrolled && !!currentLevel &&
+                      (LEVEL_ORDER[currentLevel] ?? -1) >= (LEVEL_ORDER[skillLevel] ?? 0) &&
+                      isHandsOn && !!platform
+
                     return (
-                      <div key={d.id} className={cn('p-3 rounded-xl border transition-all', isEnrolled ? 'border-orange-500/30 bg-orange-500/5' : 'border-border bg-surface')}>
+                      <div
+                        key={d.id}
+                        className={cn(
+                          'p-3 rounded-xl border transition-all',
+                          alreadyQualified ? 'border-border bg-surface-2/40 opacity-60' :
+                          isEnrolled ? 'border-orange-500/30 bg-orange-500/5' : 'border-border bg-surface'
+                        )}
+                      >
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-3">
                             <input
                               type="checkbox"
                               checked={isEnrolled}
-                              onChange={() => toggleEnroll(d.id)}
-                              className="w-4 h-4 rounded text-orange-500 bg-surface-2 border-border focus:ring-orange-500"
+                              disabled={alreadyQualified}
+                              onChange={() => { if (!alreadyQualified) toggleEnroll(d.id) }}
+                              className="w-4 h-4 rounded text-orange-500 bg-surface-2 border-border focus:ring-orange-500 disabled:cursor-not-allowed"
                             />
                             <div className="w-8 h-8 rounded-full bg-surface-2 flex items-center justify-center shrink-0 text-[10px] font-bold">
                               {initials(d.name)}
@@ -325,6 +394,11 @@ export default function TrainingModal({ training, onClose, onSaved }: Props) {
                               <div className="text-[10px] text-muted-c mt-1">{d.team || 'Uncategorized'}</div>
                             </div>
                           </div>
+                          {alreadyQualified && (
+                            <div className="text-[10px] font-bold text-muted-c bg-surface-3 px-1.5 py-0.5 rounded uppercase tracking-widest">
+                              Already {currentLevel}
+                            </div>
+                          )}
                           {isEnrolled && (
                             <div className="text-[10px] font-bold text-orange-500 bg-orange-500/10 px-1.5 py-0.5 rounded">
                               ENROLLED
