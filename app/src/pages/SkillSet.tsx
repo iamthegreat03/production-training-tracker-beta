@@ -36,6 +36,11 @@ export default function SkillSet() {
 
   const allPlatforms = [...BASE_PLATFORMS, ...dynamicPlatforms]
 
+  // Columns actually shown — filtered by the platform pill
+  const visiblePlatforms = useMemo(() =>
+    platFilter === 'ALL' ? allPlatforms : allPlatforms.filter(p => p === platFilter),
+  [allPlatforms, platFilter])
+
   // 2. Identify DSG columns
   const dsgColumns = useMemo(() => {
     const set = new Set<string>()
@@ -141,7 +146,7 @@ export default function SkillSet() {
               </div>
            </div>
            <div className="text-[10px] font-bold text-muted-c uppercase tracking-widest">
-              Matrix: {filteredDesigners.length} Designers × {allPlatforms.length} Platforms
+              Matrix: {filteredDesigners.length} Designers × {visiblePlatforms.length} Platforms
            </div>
         </div>
 
@@ -153,7 +158,7 @@ export default function SkillSet() {
                     <th className="sticky left-0 z-20 bg-surface border-r border-border p-4 w-64 min-w-[200px]">
                        <div className="text-[10px] font-bold text-muted-c uppercase tracking-widest">Designer</div>
                     </th>
-                    {allPlatforms.map(p => (
+                    {visiblePlatforms.map(p => (
                       <th key={p} className="p-4 border-b border-border min-w-[120px]">
                          <div className="text-[10px] font-bold text-muted-c uppercase tracking-widest flex items-center justify-between group">
                             {p}
@@ -185,7 +190,7 @@ export default function SkillSet() {
                             </div>
                          </div>
                       </td>
-                      {allPlatforms.map(p => {
+                      {visiblePlatforms.map(p => {
                         const skill = designerSkills.find(s => s.designer_id === d.id && s.platform === p)
                         const level = skill?.level ?? null
                         return (

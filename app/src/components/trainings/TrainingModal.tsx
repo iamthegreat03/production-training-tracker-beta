@@ -111,6 +111,7 @@ export default function TrainingModal({ training, onClose, onSaved }: Props) {
 
   async function handleSave() {
     if (!name.trim()) { setError('Training name is required'); setStep(1); return }
+    if (isHandsOn && !platform.trim()) { setError('Platform is required for Hands-On trainings'); setStep(1); return }
     if (schedule.length === 0) { setError('Please add at least one session day/date'); setStep(1); return }
     if (isHandsOn && (!startDate || !targetDate)) { setError('Start date and target date are required for Hands-On trainings'); setStep(1); return }
     

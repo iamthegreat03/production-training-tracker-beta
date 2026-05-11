@@ -92,8 +92,24 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
         }))
 
       if (rowsToUpsert.length > 0) {
-        const { error } = await supabase.from('designer_skills').upsert(rowsToUpsert, { onConflict: 'designer_id,platform' })
-        if (error) { toast.error(error.message); setCompleting(false); return }
+        // Split: designers with no existing row → insert; those upgrading an existing row → update by id
+        const toInsert = rowsToUpsert.filter(r =>
+          !designerSkills.some(s => s.designer_id === r.designer_id && s.platform === awardPlatform)
+        )
+        const toUpdate = rowsToUpsert
+          .map(r => ({ ...r, sid: designerSkills.find(s => s.designer_id === r.designer_id && s.platform === awardPlatform)?.id }))
+          .filter(r => r.sid)
+
+        if (toInsert.length > 0) {
+          const { error } = await supabase.from('designer_skills').insert(toInsert)
+          if (error) { toast.error(error.message); setCompleting(false); return }
+        }
+        for (const r of toUpdate) {
+          const { error } = await supabase.from('designer_skills')
+            .update({ level: r.level, source: r.source, updated_at: r.updated_at })
+            .eq('id', r.sid!)
+          if (error) { toast.error(error.message); setCompleting(false); return }
+        }
       }
 
       await loadAll()
