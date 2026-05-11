@@ -208,6 +208,7 @@ export default function Designers() {
         {bulkMode && selected.size > 0 && (
           <motion.div
             initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+            transition={{ type: 'spring', damping: 26, stiffness: 360 }}
             className="flex flex-wrap items-center gap-2 p-3 rounded-xl border border-orange-500/20 bg-orange-500/5"
           >
             <span className="text-sm font-semibold text-orange-500">{selected.size} selected</span>
@@ -279,9 +280,9 @@ export default function Designers() {
                 return (
                   <motion.tr
                     key={d.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: i * 0.02 }}
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ type: 'spring', damping: 28, stiffness: 380, delay: Math.min(i * 0.03, 0.22) }}
                     className={cn('cursor-pointer group', isSel && 'bg-orange-500/5')}
                     onClick={() => bulkMode ? toggleSel(d.id) : setProfileTarget(d)}
                   >

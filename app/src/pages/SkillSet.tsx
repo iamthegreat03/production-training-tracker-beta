@@ -81,6 +81,15 @@ export default function SkillSet() {
   }, [designerSkills])
 
   // --- Actions ---
+  async function deletePlatform(platform: string) {
+    if (!confirm(`Delete all skill records for "${platform}"? This cannot be undone.`)) return
+    setSaving(true)
+    const { error } = await supabase.from('designer_skills').delete().eq('platform', platform)
+    setSaving(false)
+    if (error) { alert(error.message); return }
+    await loadAll()
+  }
+
   function exportCSV() {
     let csv = 'Designer,Team,Rank,' + allPlatforms.join(',') + '\n'
     designers.forEach(d => {
@@ -149,7 +158,11 @@ export default function SkillSet() {
                          <div className="text-[10px] font-bold text-muted-c uppercase tracking-widest flex items-center justify-between group">
                             {p}
                             {!BASE_PLATFORMS.includes(p) && can('canAddEditTrainings') && (
-                              <button className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-500 transition-opacity">
+                              <button
+                                onClick={() => deletePlatform(p)}
+                                disabled={saving}
+                                className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-500 transition-opacity"
+                              >
                                  <Trash2 className="w-3 h-3" />
                               </button>
                             )}

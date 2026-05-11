@@ -136,9 +136,9 @@ export default function UserManagement() {
                   return (
                     <motion.tr
                       key={u.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: i * 0.02 }}
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ type: 'spring', damping: 28, stiffness: 380, delay: Math.min(i * 0.03, 0.2) }}
                       className="group"
                     >
                       <td>

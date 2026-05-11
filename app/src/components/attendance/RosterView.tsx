@@ -74,9 +74,9 @@ export default function RosterView({
               return (
                 <motion.tr
                   key={d.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: i * 0.015 }}
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ type: 'spring', damping: 28, stiffness: 380, delay: Math.min(i * 0.03, 0.2) }}
                   className={cn(
                     'group',
                     val === 'true'  && 'bg-emerald-500/[0.02] border-l-2 border-l-emerald-500/40',

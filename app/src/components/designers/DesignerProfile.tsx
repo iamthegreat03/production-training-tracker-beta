@@ -58,7 +58,10 @@ export default function DesignerProfile({ designer, onClose, onEdit, trainings, 
     <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-4"
          onClick={onClose}>
       <motion.div
-        initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 24 }}
+        initial={{ opacity: 0, scale: 0.97, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.97, y: 12 }}
+        transition={{ type: 'spring', damping: 22, stiffness: 280, mass: 0.8 }}
         onClick={e => e.stopPropagation()}
         className="glass rounded-2xl w-full max-w-lg max-h-[85vh] flex flex-col"
       >

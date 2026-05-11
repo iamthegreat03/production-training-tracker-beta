@@ -94,9 +94,9 @@ export default function DesignerBadges() {
                   {skills.map((s, i) => (
                     <motion.div
                       key={s.id}
-                      initial={{ opacity: 0, scale: 0.9 }}
+                      initial={{ opacity: 0, scale: 0.88 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: i * 0.05 }}
+                      transition={{ type: 'spring', damping: 22, stiffness: 320, delay: Math.min(i * 0.05, 0.25) }}
                       className={cn('rounded-2xl border p-4 flex flex-col items-center gap-2 text-center', cfg.bg)}
                     >
                       <div className={cn('w-12 h-12 rounded-xl flex items-center justify-center', cfg.bg)}>

@@ -46,9 +46,9 @@ export default function AttendanceCard({
   return (
     <>
       <motion.div
-        initial={{ opacity: 0, y: 8 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: index * 0.03 }}
+        transition={{ type: 'spring', damping: 26, stiffness: 360, delay: Math.min(index * 0.04, 0.28) }}
         className={cn(
           'card p-4 flex flex-col gap-3 group relative overflow-hidden transition-all duration-300',
           currentVal === 'true' && 'border-emerald-500/30 bg-emerald-500/[0.02]',

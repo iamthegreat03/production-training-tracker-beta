@@ -51,7 +51,7 @@ export default function DesignerHistory() {
                 key={t.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.06 }}
+                transition={{ type: 'spring', damping: 26, stiffness: 360, delay: Math.min(i * 0.06, 0.3) }}
                 className="card rounded-2xl p-5 space-y-4"
               >
                 <div className="flex items-start justify-between gap-3">

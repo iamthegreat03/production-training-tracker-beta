@@ -122,9 +122,10 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
     <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-4"
          onClick={onClose}>
       <motion.div
-        initial={{ opacity: 0, scale: 0.98, y: 10 }}
+        initial={{ opacity: 0, scale: 0.96, y: 12 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.98, y: 10 }}
+        exit={{ opacity: 0, scale: 0.97, y: 8 }}
+        transition={{ type: 'spring', damping: 22, stiffness: 280, mass: 0.8 }}
         onClick={e => e.stopPropagation()}
         className="glass rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden"
       >
@@ -190,7 +191,7 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
         <div className="flex-1 overflow-y-auto p-6 bg-surface">
           <AnimatePresence mode="wait">
             {activeTab === 'roster' ? (
-              <motion.div key="roster" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
+              <motion.div key="roster" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.18, ease: [0.16,1,0.3,1] }} className="space-y-4">
                  <div className="grid grid-cols-2 gap-4">
                     <div className="p-3 rounded-xl bg-surface-2 border border-border">
                        <div className="text-[10px] font-bold text-muted-c uppercase tracking-widest mb-1 flex items-center gap-1">
@@ -237,7 +238,7 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
                  </div>
               </motion.div>
             ) : (
-              <motion.div key="sessions" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
+              <motion.div key="sessions" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.18, ease: [0.16,1,0.3,1] }} className="space-y-3">
                  <div className="flex items-center justify-between px-1 mb-2">
                     <div className="text-[10px] font-bold text-muted-c uppercase tracking-widest">History Log</div>
                     {can('canAddSessions') && (

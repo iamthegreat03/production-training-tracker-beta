@@ -218,9 +218,10 @@ export default function TrainingModal({ training, onClose, onSaved }: Props) {
     <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-4"
          onClick={onClose}>
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
+        initial={{ opacity: 0, scale: 0.96, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.97, y: 8 }}
+        transition={{ type: 'spring', damping: 22, stiffness: 280, mass: 0.8 }}
         onClick={e => e.stopPropagation()}
         className="glass rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col"
       >
@@ -248,7 +249,7 @@ export default function TrainingModal({ training, onClose, onSaved }: Props) {
         <div className="flex-1 overflow-y-auto p-5">
           <AnimatePresence mode="wait">
             {step === 1 ? (
-              <motion.div key="step1" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} className="space-y-5">
+              <motion.div key="step1" initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 12 }} transition={{ duration: 0.2, ease: [0.16,1,0.3,1] }} className="space-y-5">
                 {/* Type Selector */}
                 <div className="flex gap-2">
                   <button
@@ -383,7 +384,7 @@ export default function TrainingModal({ training, onClose, onSaved }: Props) {
                 </div>
               </motion.div>
             ) : (
-              <motion.div key="step2" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="space-y-4">
+              <motion.div key="step2" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.2, ease: [0.16,1,0.3,1] }} className="space-y-4">
                 {/* Enrollment Filter */}
                 <div className="flex gap-2">
                   <div className="relative flex-1">

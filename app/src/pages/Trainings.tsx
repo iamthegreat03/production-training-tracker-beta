@@ -137,8 +137,8 @@ export default function Trainings() {
         {layout === 'kanban' ? (
           <motion.div
             key="kanban"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
+            initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.2, ease: [0.16,1,0.3,1] }}
             className="flex-1 flex gap-4 overflow-x-auto pb-4 min-h-0"
           >
             {columns.map(status => {
@@ -201,8 +201,8 @@ export default function Trainings() {
         ) : (
           <motion.div
             key="table"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
+            initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.2, ease: [0.16,1,0.3,1] }}
             className="flex-1 overflow-auto min-h-0 max-w-7xl mx-auto w-full"
           >
             <div className="card rounded-2xl overflow-hidden">
@@ -259,9 +259,9 @@ export default function Trainings() {
                     return (
                       <motion.tr
                         key={t.id}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: i * 0.02 }}
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ type: 'spring', damping: 28, stiffness: 380, delay: Math.min(i * 0.03, 0.22) }}
                         className="cursor-pointer group"
                         onClick={() => setDetailTarget(t)}
                       >
@@ -373,9 +373,9 @@ function TrainingCard({ training, enrolledCount, onClick, onEdit, canEdit, index
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: isDragging ? 0.5 : 1, y: 0, scale: isDragging ? 0.97 : 1 }}
-      transition={{ delay: isDragging ? 0 : index * 0.05 }}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: isDragging ? 0.5 : 1, y: 0, scale: isDragging ? 0.96 : 1 }}
+      transition={isDragging ? { duration: 0.12 } : { type: 'spring', damping: 26, stiffness: 360, delay: Math.min(index * 0.04, 0.28) }}
       draggable={canEdit}
       onDragStart={() => { wasDragged.current = true; onDragStart() }}
       onDragEnd={() => { onDragEnd(); setTimeout(() => { wasDragged.current = false }, 100) }}

@@ -201,14 +201,18 @@
     @apply rounded-xl border;
     background-color: rgb(var(--surface));
     border-color: rgb(var(--border));
-    transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+    transition: border-color 0.18s cubic-bezier(0.16,1,0.3,1),
+                box-shadow 0.18s cubic-bezier(0.16,1,0.3,1),
+                transform 0.18s cubic-bezier(0.16,1,0.3,1);
   }
   .card:hover { border-color: rgba(249,115,22,0.25); }
   .dark .card { background-color: rgb(var(--surface)); }
+  .card-interactive { will-change: transform; }
   .card-interactive:hover {
-    box-shadow: 0 0 20px rgba(249,115,22,0.12);
-    transform: translateY(-1px);
+    box-shadow: 0 0 24px rgba(249,115,22,0.14);
+    transform: translateY(-2px);
   }
+  .card-interactive:active { transform: translateY(0px); }
 
   /* Stat card big number */
   .stat-value {
@@ -221,7 +225,13 @@
   /* Button base */
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-lg font-medium text-sm
-           transition-all duration-200 cursor-pointer select-none;
+           cursor-pointer select-none;
+    transition: background 0.15s cubic-bezier(0.16,1,0.3,1),
+                box-shadow 0.15s cubic-bezier(0.16,1,0.3,1),
+                border-color 0.15s cubic-bezier(0.16,1,0.3,1),
+                color 0.15s cubic-bezier(0.16,1,0.3,1),
+                transform 0.12s cubic-bezier(0.16,1,0.3,1),
+                opacity 0.15s ease;
   }
   .btn:disabled { @apply opacity-50 cursor-not-allowed; }
 
@@ -229,10 +239,15 @@
     @apply btn px-4 py-2 text-white;
     background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
     box-shadow: 0 0 16px rgba(249,115,22,0.3);
+    will-change: transform;
   }
   .btn-primary:hover:not(:disabled) {
-    box-shadow: 0 0 28px rgba(249,115,22,0.5);
+    box-shadow: 0 0 28px rgba(249,115,22,0.55);
     transform: translateY(-1px);
+  }
+  .btn-primary:active:not(:disabled) {
+    transform: translateY(0) scale(0.97);
+    box-shadow: 0 0 12px rgba(249,115,22,0.3);
   }
 
   .btn-ghost {
@@ -243,6 +258,7 @@
     background: rgba(var(--surface-2), 0.8);
     color: rgb(var(--text));
   }
+  .btn-ghost:active:not(:disabled) { transform: scale(0.97); }
 
   .btn-outline {
     @apply btn px-4 py-2;
@@ -253,6 +269,7 @@
     border-color: rgba(249,115,22,0.4);
     color: rgb(249,115,22);
   }
+  .btn-outline:active:not(:disabled) { transform: scale(0.97); }
 
   /* Badge */
   .badge {
@@ -268,15 +285,17 @@
 
   /* Input */
   .input {
-    @apply w-full rounded-lg px-3 py-2 text-sm outline-none transition-all duration-200;
+    @apply w-full rounded-lg px-3 py-2 text-sm outline-none;
     background: rgb(var(--surface-2));
     border: 1px solid rgb(var(--border));
     color: rgb(var(--text));
+    transition: border-color 0.15s cubic-bezier(0.16,1,0.3,1),
+                box-shadow 0.15s cubic-bezier(0.16,1,0.3,1);
   }
   .input::placeholder { color: rgb(var(--text-muted)); }
   .input:focus {
-    border-color: rgba(249,115,22,0.5);
-    box-shadow: 0 0 0 3px rgba(249,115,22,0.1);
+    border-color: rgba(249,115,22,0.55);
+    box-shadow: 0 0 0 3px rgba(249,115,22,0.12);
   }
 
   /* Progress bar */
@@ -296,7 +315,10 @@
   /* Nav item */
   .nav-item {
     @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
-           cursor-pointer transition-all duration-150 w-full;
+           cursor-pointer w-full;
+    transition: background 0.14s cubic-bezier(0.16,1,0.3,1),
+                color 0.14s cubic-bezier(0.16,1,0.3,1),
+                box-shadow 0.14s cubic-bezier(0.16,1,0.3,1);
     color: rgb(var(--text-secondary));
   }
   .nav-item:hover {
@@ -349,11 +371,16 @@
   /* Chip/Tag */
   .chip {
     @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
-           cursor-pointer transition-all duration-150 select-none;
+           cursor-pointer select-none;
     border: 1px solid rgb(var(--border));
     color: rgb(var(--text-secondary));
+    transition: background 0.14s cubic-bezier(0.16,1,0.3,1),
+                border-color 0.14s cubic-bezier(0.16,1,0.3,1),
+                color 0.14s cubic-bezier(0.16,1,0.3,1),
+                transform 0.12s cubic-bezier(0.16,1,0.3,1);
   }
   .chip:hover { border-color: rgba(249,115,22,0.4); color: #f97316; }
+  .chip:active { transform: scale(0.95); }
   .chip.active {
     background: rgba(249,115,22,0.12);
     border-color: rgba(249,115,22,0.4);

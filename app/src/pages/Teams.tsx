@@ -204,7 +204,8 @@ function TeamCard({ team, reshuffleMode, allTeams, onMove, onDelete, canManage, 
 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }}
+      initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ type: 'spring', damping: 26, stiffness: 360, delay: Math.min(index * 0.05, 0.25) }}
       className="card flex flex-col h-full overflow-hidden"
     >
       <div className="p-4 border-b border-border bg-surface-2/50">

@@ -549,8 +549,8 @@ export default function AttendancePage() {
           {/* ── Views ── */}
           <AnimatePresence mode="wait">
             {layout === 'cards' && (
-              <motion.div key="cards" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }} className="flex-1 overflow-y-auto pr-1">
+              <motion.div key="cards" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.2, ease: [0.16,1,0.3,1] }} className="flex-1 overflow-y-auto pr-1">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {visibleDesigners.length === 0 ? (
                     <div className="col-span-full py-16 text-center text-muted-c border border-dashed border-border rounded-2xl bg-surface-2/50">
@@ -596,8 +596,8 @@ export default function AttendancePage() {
             )}
 
             {layout === 'matrix' && (
-              <motion.div key="matrix" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }} className="flex-1 min-h-0 flex flex-col">
+              <motion.div key="matrix" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.2, ease: [0.16,1,0.3,1] }} className="flex-1 min-h-0 flex flex-col">
                 <MatrixView
                   designers={enrolledDesigners}
                   sessions={tSessions}
@@ -611,8 +611,8 @@ export default function AttendancePage() {
             )}
 
             {layout === 'roster' && (
-              <motion.div key="roster" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }} className="flex-1 min-h-0 flex flex-col">
+              <motion.div key="roster" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.2, ease: [0.16,1,0.3,1] }} className="flex-1 min-h-0 flex flex-col">
                 <RosterView
                   designers={visibleDesigners}
                   sessions={tSessions}
@@ -629,8 +629,8 @@ export default function AttendancePage() {
             )}
 
             {layout === 'stats' && (
-              <motion.div key="stats" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }} className="flex-1 min-h-0 flex flex-col">
+              <motion.div key="stats" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.2, ease: [0.16,1,0.3,1] }} className="flex-1 min-h-0 flex flex-col">
                 <StatsView
                   designers={enrolledDesigners}
                   sessions={tSessions}
@@ -660,7 +660,10 @@ export default function AttendancePage() {
           <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-4"
             onClick={() => setNotesTarget(null)}>
             <motion.div
-              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, scale: 0.96, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.97, y: 8 }}
+              transition={{ type: 'spring', damping: 22, stiffness: 280, mass: 0.8 }}
               onClick={e => e.stopPropagation()}
               className="glass rounded-2xl w-full max-w-sm p-5 space-y-4"
             >
@@ -693,7 +696,10 @@ export default function AttendancePage() {
           <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-4"
             onClick={() => setRescheduleTarget(null)}>
             <motion.div
-              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, scale: 0.96, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.97, y: 8 }}
+              transition={{ type: 'spring', damping: 22, stiffness: 280, mass: 0.8 }}
               onClick={e => e.stopPropagation()}
               className="glass rounded-2xl w-full max-w-sm p-5 space-y-4"
             >

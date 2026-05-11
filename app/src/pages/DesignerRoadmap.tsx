@@ -52,7 +52,7 @@ export default function DesignerRoadmap() {
                 key={t.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.07 }}
+                transition={{ type: 'spring', damping: 26, stiffness: 360, delay: Math.min(i * 0.06, 0.3) }}
                 className="card rounded-2xl overflow-hidden"
               >
                 {/* Color bar */}
