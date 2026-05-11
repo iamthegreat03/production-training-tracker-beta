@@ -138,7 +138,7 @@ export default function SkillSet() {
                  <input className="input h-9 pl-9 text-xs" placeholder="Filter by name or team..." value={search} onChange={e => setSearch(e.target.value)} />
               </div>
               <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
-                 {['ALL', ...BASE_PLATFORMS].map(p => (
+                 {['ALL', ...allPlatforms].map(p => (
                    <button key={p} onClick={() => setPlatFilter(p)} className={cn('chip whitespace-nowrap', platFilter === p && 'active')}>
                       {p}
                    </button>
