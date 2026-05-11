@@ -112,6 +112,7 @@ export default function TrainingModal({ training, onClose, onSaved }: Props) {
   async function handleSave() {
     if (!name.trim()) { setError('Training name is required'); setStep(1); return }
     if (schedule.length === 0) { setError('Please add at least one session day/date'); setStep(1); return }
+    if (isHandsOn && (!startDate || !targetDate)) { setError('Start date and target date are required for Hands-On trainings'); setStep(1); return }
     
     setSaving(true); setError('')
     try {
@@ -156,9 +157,45 @@ export default function TrainingModal({ training, onClose, onSaved }: Props) {
         await supabase.from('training_enrollments').insert(enrollRows)
       }
 
-      // 3. Auto-generate sessions if new or status changed to active
-      // In a real app, this logic might be more complex (preventing duplicates)
-      // For now, let's just trigger a reload
+      // 3. Auto-generate sessions (skip dates that already exist)
+      const { data: existingSessions } = await supabase
+        .from('training_sessions')
+        .select('session_date')
+        .eq('training_id', trainingId)
+      const existingDates = new Set((existingSessions ?? []).map((s: any) => s.session_date))
+
+      const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
+      const newSessions: { training_id: string; session_date: string; day_of_week: string }[] = []
+
+      if (isHandsOn) {
+        // Walk day-by-day from start to target, emit a session on each scheduled day
+        const cur = new Date(startDate + 'T00:00:00')
+        const end = new Date(targetDate + 'T00:00:00')
+        while (cur <= end) {
+          const dayName = DAY_NAMES[cur.getDay()]
+          if (schedule.includes(dayName)) {
+            const dateStr = cur.toISOString().split('T')[0]
+            if (!existingDates.has(dateStr)) {
+              newSessions.push({ training_id: trainingId, session_date: dateStr, day_of_week: dayName })
+            }
+          }
+          cur.setDate(cur.getDate() + 1)
+        }
+      } else {
+        // Discussion: one session per exact date in schedule
+        for (const dateStr of schedule) {
+          if (!existingDates.has(dateStr)) {
+            const d = new Date(dateStr + 'T00:00:00')
+            newSessions.push({ training_id: trainingId, session_date: dateStr, day_of_week: DAY_NAMES[d.getDay()] })
+          }
+        }
+      }
+
+      if (newSessions.length > 0) {
+        const { error: sessErr } = await supabase.from('training_sessions').insert(newSessions)
+        if (sessErr) throw new Error(sessErr.message)
+      }
+
       onSaved()
       onClose()
     } catch (err: any) {
