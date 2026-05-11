@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { Zap, MessageSquare, Calendar, Clock, ChevronRight, Target } from 'lucide-react'
+import { Zap, MessageSquare, Calendar, Clock, ChevronRight, Target, StickyNote } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
 import { cn, fmtD, fmtDs, pct } from '@/lib/utils'
 
@@ -119,6 +119,23 @@ export default function DesignerRoadmap() {
                       </div>
                     </div>
                   )}
+
+                  {/* Latest trainer note */}
+                  {(() => {
+                    const latestNote = [...tSessions]
+                      .sort((a, b) => b.session_date.localeCompare(a.session_date))
+                      .map(s => myAtt.find(a => a.session_id === s.id))
+                      .find(a => a?.notes)
+                    if (!latestNote?.notes) return null
+                    return (
+                      <div className="p-3 rounded-xl bg-surface-2 border border-border-subtle space-y-1">
+                        <div className="text-[9px] font-bold text-muted-c uppercase tracking-widest flex items-center gap-1">
+                          <StickyNote className="w-3 h-3" /> Latest Trainer Note
+                        </div>
+                        <p className="text-xs text-primary leading-relaxed">{latestNote.notes}</p>
+                      </div>
+                    )
+                  })()}
 
                   {/* Date range */}
                   <div className="flex items-center gap-1.5 text-xs text-muted-c">

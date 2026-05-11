@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { CheckCircle2, XCircle, Clock, Zap, MessageSquare } from 'lucide-react'
+import { CheckCircle2, XCircle, Clock, Zap, MessageSquare, StickyNote } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
 import { cn, fmtD, fmtDs, pct, normAtt } from '@/lib/utils'
 
@@ -96,6 +96,31 @@ export default function DesignerHistory() {
                     )
                   })}
                 </div>
+
+                {/* Trainer notes */}
+                {(() => {
+                  const notedSessions = tSessions.filter(s => {
+                    const att = myAtt.find(a => a.session_id === s.id)
+                    return att?.notes
+                  })
+                  if (notedSessions.length === 0) return null
+                  return (
+                    <div className="space-y-2 pt-1">
+                      <div className="text-[10px] font-bold text-muted-c uppercase tracking-widest flex items-center gap-1">
+                        <StickyNote className="w-3 h-3" /> Trainer Notes
+                      </div>
+                      {notedSessions.map(s => {
+                        const att = myAtt.find(a => a.session_id === s.id)
+                        return (
+                          <div key={s.id} className="p-2.5 rounded-lg bg-surface-2 border border-border-subtle">
+                            <div className="text-[9px] text-muted-c uppercase tracking-widest mb-1">{fmtDs(s.session_date)} · {s.day_of_week}</div>
+                            <p className="text-xs text-primary leading-relaxed">{att!.notes}</p>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )
+                })()}
 
                 {/* Stats */}
                 <div className="flex items-center gap-4 pt-1 border-t border-border">

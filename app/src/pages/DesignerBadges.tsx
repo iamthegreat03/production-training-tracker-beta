@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { Star, Zap, Trophy, Award, Shield } from 'lucide-react'
+import { Star, Trophy, Award, Shield } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
 import { cn } from '@/lib/utils'
 import type { SkillLevel } from '@/types/database'
@@ -100,7 +100,7 @@ export default function DesignerBadges() {
                       className={cn('rounded-2xl border p-4 flex flex-col items-center gap-2 text-center', cfg.bg)}
                     >
                       <div className={cn('w-12 h-12 rounded-xl flex items-center justify-center', cfg.bg)}>
-                        <Zap className={cn('w-6 h-6', cfg.color)} />
+                        <Icon className={cn('w-6 h-6', cfg.color)} />
                       </div>
                       <div>
                         <p className="text-sm font-bold text-primary">{s.platform}</p>
