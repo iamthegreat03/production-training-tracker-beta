@@ -411,7 +411,6 @@ export default function AttendancePage() {
                 {tSessions.map(s => (
                   <button
                     key={s.id}
-                    onMouseDown={e => e.stopPropagation()}
                     onClick={() => { if (dragState.current.dragged) return; setSelSId(s.id) }}
                     className={cn(
                       'flex flex-col items-center justify-center min-w-[60px] h-14 rounded-xl border transition-all',
