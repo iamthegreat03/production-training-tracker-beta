@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Plus, BookOpen, Calendar, Clock, CheckCircle2,
@@ -150,7 +150,7 @@ export default function Trainings() {
                   onDragLeave={e => {
                     if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverCol(null)
                   }}
-                  onDrop={async () => { await moveTraining(status); setDragOverCol(null); setDragId(null) }}
+                  onDrop={async (e) => { e.preventDefault(); await moveTraining(status); setDragOverCol(null); setDragId(null) }}
                 >
                   <div className="flex items-center justify-between px-2">
                     <div className="flex items-center gap-2">
@@ -364,6 +364,7 @@ function TrainingCard({ training, enrolledCount, onClick, onEdit, canEdit, index
   isDragging: boolean
 }) {
   const isHandsOn = training.type === 'Hands-On'
+  const wasDragged = useRef(false)
 
   return (
     <motion.div
@@ -371,9 +372,9 @@ function TrainingCard({ training, enrolledCount, onClick, onEdit, canEdit, index
       animate={{ opacity: isDragging ? 0.5 : 1, y: 0, scale: isDragging ? 0.97 : 1 }}
       transition={{ delay: isDragging ? 0 : index * 0.05 }}
       draggable={canEdit}
-      onDragStart={onDragStart}
-      onDragEnd={onDragEnd}
-      onClick={onClick}
+      onDragStart={() => { wasDragged.current = true; onDragStart() }}
+      onDragEnd={() => { onDragEnd(); setTimeout(() => { wasDragged.current = false }, 100) }}
+      onClick={() => { if (wasDragged.current) return; onClick() }}
       className={cn(
         'card card-interactive p-4 group relative cursor-pointer',
         isDragging && 'opacity-50'

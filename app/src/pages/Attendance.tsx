@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Search, Filter, CheckCircle2, XCircle, Clock, Plus,
   Users, Pencil, X, LayoutGrid, Table2, List, BarChart2,
+  AlertTriangle, CalendarClock,
 } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
 import { supabase } from '@/lib/supabase'
@@ -16,6 +17,25 @@ import StatsView from '@/components/attendance/StatsView'
 import AddSessionModal from '@/components/attendance/AddSessionModal'
 
 type AttLayout = 'cards' | 'matrix' | 'roster' | 'stats'
+
+// Week helpers
+function getWeekStart(date: Date): Date {
+  const d = new Date(date)
+  const day = d.getDay()
+  d.setDate(d.getDate() - (day === 0 ? 6 : day - 1)) // Monday
+  d.setHours(0, 0, 0, 0)
+  return d
+}
+function isSessionWeekOver(sessionDate: string): boolean {
+  return getWeekStart(new Date(sessionDate + 'T00:00:00')) < getWeekStart(new Date())
+}
+function getSessionWeekBounds(sessionDate: string): { min: string; max: string } {
+  const start = getWeekStart(new Date(sessionDate + 'T00:00:00'))
+  const end = new Date(start)
+  end.setDate(start.getDate() + 6)
+  const fmt = (d: Date) => d.toISOString().split('T')[0]
+  return { min: fmt(start), max: fmt(end) }
+}
 
 const LAYOUTS: { id: AttLayout; icon: any; title: string }[] = [
   { id: 'cards',  icon: LayoutGrid, title: 'Cards'  },
@@ -41,6 +61,11 @@ export default function AttendancePage() {
   const [notesTarget, setNotesTarget] = useState<Designer | null>(null)
   const [noteText, setNoteText] = useState('')
   const [savingNote, setSavingNote] = useState(false)
+
+  // Reschedule modal state
+  const [rescheduleTarget, setRescheduleTarget] = useState<Designer | null>(null)
+  const [makeupDate, setMakeupDate] = useState('')
+  const [savingMakeup, setSavingMakeup] = useState(false)
 
   const [optimistic, setOptimistic] = useState<Record<string, AttendanceValue>>({})
 
@@ -152,6 +177,77 @@ export default function AttendancePage() {
     })
     return { present, late, absent, unmarked, total: enrolledIds.length, rate: pct(present + late, present + late + absent) }
   }, [attendance, optimistic, selSId, selTId, enrollments])
+
+  // Week-based reschedule flags for the selected session
+  const sessionIsOverdue = selS ? isSessionWeekOver(selS.session_date) : false
+  const sessionCanReschedule = selS ? !isSessionWeekOver(selS.session_date) && new Date(selS.session_date + 'T00:00:00') < new Date() : false
+
+  const overdueCount = useMemo(() => {
+    if (!selSId || !selS || !sessionIsOverdue) return 0
+    const enrolledIds = new Set(enrollments.filter(e => e.training_id === selTId).map(e => e.designer_id))
+    return designers.filter(d => enrolledIds.has(d.id) && getVal(selSId, d.id) === null).length
+  }, [selSId, selS, sessionIsOverdue, designers, enrollments, selTId, attendance, optimistic])
+
+  function openRescheduleModal(d: Designer) {
+    if (!selS) return
+    const bounds = getSessionWeekBounds(selS.session_date)
+    const today = new Date().toISOString().split('T')[0]
+    setMakeupDate(today >= bounds.min && today <= bounds.max ? today : bounds.min)
+    setRescheduleTarget(d)
+  }
+
+  async function saveReschedule() {
+    if (!rescheduleTarget || !makeupDate || !selT || !selSId) return
+    setSavingMakeup(true)
+    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
+    const { error } = await supabase.from('makeup_sessions').insert({
+      designer_id: rescheduleTarget.id,
+      training_id: selT.id,
+      original_session_id: selSId,
+      makeup_date: makeupDate,
+      day_of_week: days[new Date(makeupDate + 'T00:00:00').getDay()],
+      is_attended: null,
+    })
+    setSavingMakeup(false)
+    if (error) { toast.error('Failed to schedule makeup'); return }
+    toast.success(`Makeup scheduled for ${fmtDs(makeupDate)}`)
+    setRescheduleTarget(null)
+    await loadAll()
+  }
+
+  async function markOverdueAbsent() {
+    if (!selSId || !sessionIsOverdue) return
+    const enrolledIds = new Set(enrollments.filter(e => e.training_id === selTId).map(e => e.designer_id))
+    const overdueDes = designers.filter(d => enrolledIds.has(d.id) && getVal(selSId, d.id) === null)
+    if (overdueDes.length === 0) return
+    if (!confirm(`Mark ${overdueDes.length} unmarked designer(s) as absent for this session?`)) return
+    setOptimistic(prev => {
+      const next = { ...prev }
+      overdueDes.forEach(d => { next[`${selSId}_${d.id}`] = 'false' })
+      return next
+    })
+    const results = await Promise.all(overdueDes.map(d => {
+      const existing = attendance.find(a => a.session_id === selSId && a.designer_id === d.id)
+      const payload = { session_id: selSId, designer_id: d.id, is_present: 'false', marked_at: new Date().toISOString() }
+      return existing
+        ? supabase.from('attendance').update(payload).eq('id', existing.id).select().single()
+        : supabase.from('attendance').insert(payload).select().single()
+    }))
+    const failed = results.filter(r => r.error).length
+    const saved = results.filter(r => !r.error).map(r => r.data as Attendance)
+    if (failed) toast.error(`${failed} records failed`)
+    else toast.success(`${overdueDes.length} designer(s) marked absent`)
+    if (saved.length) {
+      const ids = new Set(overdueDes.map(d => d.id))
+      const base = attendance.filter(a => !(a.session_id === selSId && ids.has(a.designer_id ?? '')))
+      dispatch({ type: 'SET_DATA', payload: { attendance: [...base, ...saved] } })
+    }
+    setOptimistic(prev => {
+      const n = { ...prev }
+      overdueDes.forEach(d => delete n[`${selSId}_${d.id}`])
+      return n
+    })
+  }
 
   // mark accepts optional sessionId for matrix view
   async function mark(designerId: string, value: AttendanceValue, sessionId?: string) {
@@ -392,6 +488,24 @@ export default function AttendancePage() {
             </motion.div>
           )}
 
+          {/* Overdue banner */}
+          {showSessionSelector && selSId && sessionIsOverdue && overdueCount > 0 && (
+            <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 shrink-0">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+                <span className="text-xs font-semibold text-amber-400">
+                  {overdueCount} designer{overdueCount !== 1 ? 's' : ''} still unmarked — session week has ended
+                </span>
+              </div>
+              <button
+                onClick={markOverdueAbsent}
+                className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-red-400 hover:text-red-300 whitespace-nowrap transition-colors"
+              >
+                Mark all absent
+              </button>
+            </div>
+          )}
+
           {/* Cards view filter bar */}
           {layout === 'cards' && (
             <div className="flex flex-wrap items-center justify-between gap-3 shrink-0">
@@ -470,6 +584,9 @@ export default function AttendancePage() {
                           scheduledSessionIds={getScheduledSessionIds(d.id)}
                           onMark={v => mark(d.id, v)}
                           onSaveNotes={note => updateNotes(d.id, note)}
+                          onReschedule={() => openRescheduleModal(d)}
+                          canReschedule={sessionCanReschedule}
+                          isOverdue={sessionIsOverdue}
                           index={i}
                         />
                       )
@@ -505,6 +622,9 @@ export default function AttendancePage() {
                   selSId={selSId}
                   onMark={(designerId, value) => mark(designerId, value)}
                   onOpenNotes={openNotesModal}
+                  onReschedule={openRescheduleModal}
+                  canReschedule={sessionCanReschedule}
+                  isOverdue={sessionIsOverdue}
                 />
               </motion.div>
             )}
@@ -561,6 +681,59 @@ export default function AttendancePage() {
                 <button className="btn-ghost flex-1" onClick={() => setNotesTarget(null)}>Cancel</button>
                 <button className="btn-primary flex-1" onClick={handleSaveNotes} disabled={savingNote}>
                   {savingNote ? 'Saving…' : 'Save Notes'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Reschedule Modal */}
+      <AnimatePresence>
+        {rescheduleTarget && selS && (
+          <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-4"
+            onClick={() => setRescheduleTarget(null)}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
+              onClick={e => e.stopPropagation()}
+              className="glass rounded-2xl w-full max-w-sm p-5 space-y-4"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <CalendarClock className="w-4 h-4 text-purple-400" />
+                    <h3 className="font-display font-semibold text-primary">Reschedule Makeup</h3>
+                  </div>
+                  <p className="text-xs text-muted-c mt-0.5">{rescheduleTarget.name}</p>
+                </div>
+                <button onClick={() => setRescheduleTarget(null)} className="p-1.5 rounded-lg text-muted-c hover:text-primary">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-c">
+                  Makeup Date <span className="normal-case text-purple-400">(within this week only)</span>
+                </label>
+                <input
+                  type="date"
+                  className="input w-full"
+                  value={makeupDate}
+                  min={getSessionWeekBounds(selS.session_date).min}
+                  max={getSessionWeekBounds(selS.session_date).max}
+                  onChange={e => setMakeupDate(e.target.value)}
+                />
+                <p className="text-[10px] text-muted-c">
+                  Week: {fmtDs(getSessionWeekBounds(selS.session_date).min)} – {fmtDs(getSessionWeekBounds(selS.session_date).max)}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <button className="btn-ghost flex-1" onClick={() => setRescheduleTarget(null)}>Cancel</button>
+                <button
+                  className="btn-primary flex-1"
+                  onClick={saveReschedule}
+                  disabled={savingMakeup || !makeupDate}
+                >
+                  {savingMakeup ? 'Scheduling…' : 'Schedule Makeup'}
                 </button>
               </div>
             </motion.div>

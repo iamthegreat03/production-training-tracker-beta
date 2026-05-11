@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Check, X, Clock, MessageSquare, Undo2 } from 'lucide-react'
+import { Check, X, Clock, MessageSquare, Undo2, CalendarClock, AlertTriangle } from 'lucide-react'
 import { cn, initials, pct, normAtt } from '@/lib/utils'
 import type { Designer, Attendance, TrainingSession, AttendanceValue } from '@/types/database'
 
@@ -12,12 +12,15 @@ interface Props {
   scheduledSessionIds: Set<string>
   onMark: (val: AttendanceValue) => void
   onSaveNotes: (note: string) => Promise<void>
+  onReschedule?: () => void
+  canReschedule?: boolean
+  isOverdue?: boolean
   index: number
 }
 
 export default function AttendanceCard({
   designer, attendance, allAttendance, sessions, scheduledSessionIds,
-  onMark, onSaveNotes, index,
+  onMark, onSaveNotes, onReschedule, canReschedule = false, isOverdue = false, index,
 }: Props) {
   const currentVal = normAtt(attendance?.is_present)
   const [showNotes, setShowNotes] = useState(false)
@@ -119,6 +122,36 @@ export default function AttendanceCard({
             <span className="text-[8px] font-bold uppercase tracking-widest">Absent</span>
           </button>
         </div>
+
+        {/* Reschedule / Overdue indicator */}
+        {currentVal === null && (canReschedule || isOverdue) && (
+          <div className={cn(
+            'flex items-center gap-2 px-3 py-2 rounded-xl border text-[10px] font-bold uppercase tracking-widest',
+            isOverdue
+              ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+              : 'bg-purple-500/5 border-purple-500/20 text-purple-400'
+          )}>
+            {isOverdue ? (
+              <>
+                <AlertTriangle className="w-3 h-3 shrink-0" />
+                <span>Overdue — mark absent when ready</span>
+              </>
+            ) : (
+              <>
+                <CalendarClock className="w-3 h-3 shrink-0" />
+                <span className="flex-1">Reschedule within this week</span>
+                {onReschedule && (
+                  <button
+                    onClick={e => { e.stopPropagation(); onReschedule() }}
+                    className="ml-auto px-2 py-0.5 rounded-md bg-purple-500/20 hover:bg-purple-500/30 transition-colors"
+                  >
+                    Set Date
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+        )}
 
         {/* Heatmap — all sessions; gray = not scheduled, dim white = scheduled/unmarked */}
         <div className="flex flex-wrap gap-1.5 mt-1 px-1">

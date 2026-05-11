@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Check, Clock, X, Undo2, MessageSquare } from 'lucide-react'
+import { Check, Clock, X, Undo2, MessageSquare, CalendarClock, AlertTriangle } from 'lucide-react'
 import { cn, initials, normAtt, pct } from '@/lib/utils'
 import type { Designer, Attendance, TrainingSession, AttendanceValue } from '@/types/database'
 
@@ -11,10 +11,14 @@ interface Props {
   selSId: string | null
   onMark: (designerId: string, value: AttendanceValue) => void
   onOpenNotes: (designer: Designer) => void
+  onReschedule?: (designer: Designer) => void
+  canReschedule?: boolean
+  isOverdue?: boolean
 }
 
 export default function RosterView({
   designers, sessions, attendance, optimistic, selSId, onMark, onOpenNotes,
+  onReschedule, canReschedule = false, isOverdue = false,
 }: Props) {
   function getVal(designerId: string): AttendanceValue {
     if (!selSId) return null
@@ -102,12 +106,19 @@ export default function RosterView({
 
                   {/* Rate */}
                   <td>
-                    <span className={cn(
-                      'text-xs font-bold',
-                      rate >= 80 ? 'text-emerald-400' : rate >= 60 ? 'text-amber-400' : 'text-red-400'
-                    )}>
-                      {rate}%
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className={cn(
+                        'text-xs font-bold',
+                        rate >= 80 ? 'text-emerald-400' : rate >= 60 ? 'text-amber-400' : 'text-red-400'
+                      )}>
+                        {rate}%
+                      </span>
+                      {val === null && isOverdue && (
+                        <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-[8px] font-bold uppercase tracking-widest text-amber-400">
+                          <AlertTriangle className="w-2.5 h-2.5" /> Overdue
+                        </span>
+                      )}
+                    </div>
                   </td>
 
                   {/* Mark buttons */}
@@ -152,6 +163,15 @@ export default function RosterView({
                   {/* Actions */}
                   <td>
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {canReschedule && val === null && onReschedule && (
+                        <button
+                          onClick={() => onReschedule(d)}
+                          className="p-1.5 rounded-lg text-purple-400 hover:text-purple-300 transition-colors"
+                          title="Reschedule within this week"
+                        >
+                          <CalendarClock className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                       <button
                         onClick={() => onOpenNotes(d)}
                         className={cn(
