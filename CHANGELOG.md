@@ -93,6 +93,14 @@ All notable changes to this project are documented here.
 
 ---
 
+## [v3.7] — 2026-05-13
+
+### Features
+- **Attendance Summary card** — Dashboard "Trained Designers" card replaced with a compact stat snapshot for any selected date range. Shows five color-coded metrics: Rate %, Present, Late, Absent, and Notes count. Instantly recalculates when either date input changes.
+- **Date range picker** — Replaced the Weekly / Monthly / All Time toggle with a from → to date input pair (defaults to last 30 days). Works across any arbitrary range instead of fixed period buckets.
+
+---
+
 ## [v3.6] — 2026-05-13
 
 ### Features
