@@ -93,6 +93,13 @@ All notable changes to this project are documented here.
 
 ---
 
+## [v3.8] — 2026-05-13
+
+### Bug Fixes
+- **Page resets to Dashboard on tab refocus** — Supabase fires a `SIGNED_IN` event on every token refresh (e.g. alt-tab, window switch), which was calling `applySession` and always dispatching `page: defaultPage`, resetting navigation. Fixed by tracking the authed user ID in a `useRef`; `page` is now only reset on a genuinely new login (different or previously null user ID), not on re-auth of the same session.
+
+---
+
 ## [v3.7] — 2026-05-13
 
 ### Features
