@@ -5,7 +5,7 @@ import {
   AlertTriangle, Clock, Zap, ChevronRight, Star, Activity,
 } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
-import { pct, fmtDs, shortName } from '@/lib/utils'
+import { pct, fmtDs } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 
 const fadeUp = {
@@ -64,65 +64,43 @@ export default function Dashboard() {
     return { name: team.name, members: members.length, rate: pct(teamPresent.length, teamMarked.length) }
   }).sort((a, b) => b.rate - a.rate)
 
-  type TrainedPeriod = 'weekly' | 'monthly' | 'alltime'
-  const [trainedPeriod, setTrainedPeriod] = useState<TrainedPeriod>('weekly')
+  const [rangeFrom, setRangeFrom] = useState(() => {
+    const d = new Date(); d.setDate(d.getDate() - 30)
+    return d.toISOString().split('T')[0]
+  })
+  const [rangeTo, setRangeTo] = useState(today)
 
-  function fmtMonth(ym: string): string {
-    const [year, month] = ym.split('-')
-    const names = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-    return `${names[parseInt(month) - 1]} '${year.slice(2)}`
-  }
-
-  // Weekly attendance count (total present/late marks per week, not unique)
-  const weeklyTrained = useMemo(() => {
-    const weeks: Record<string, number> = {}
+  const rangedTrained = useMemo(() => {
+    if (!rangeFrom || !rangeTo || rangeFrom > rangeTo) return { data: [], byDay: true }
+    const diffDays = Math.round(
+      (new Date(rangeTo + 'T00:00:00').getTime() - new Date(rangeFrom + 'T00:00:00').getTime())
+      / (1000 * 60 * 60 * 24)
+    )
+    const byDay = diffDays <= 14
+    const buckets: Record<string, number> = {}
     attendance.forEach(a => {
       if (a.is_present !== 'true' && a.is_present !== 'late') return
       const sess = sessions.find(s => s.id === a.session_id)
       if (!sess || !a.designer_id) return
-      const d = new Date(sess.session_date + 'T00:00:00')
-      const day = d.getDay()
-      const monday = new Date(d)
-      monday.setDate(d.getDate() - (day === 0 ? 6 : day - 1))
-      const weekKey = monday.toISOString().split('T')[0]
-      weeks[weekKey] = (weeks[weekKey] ?? 0) + 1
+      const date = sess.session_date
+      if (date < rangeFrom || date > rangeTo) return
+      let key: string
+      if (byDay) {
+        key = date
+      } else {
+        const d = new Date(date + 'T00:00:00')
+        const dow = d.getDay()
+        const mon = new Date(d)
+        mon.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1))
+        key = mon.toISOString().split('T')[0]
+      }
+      buckets[key] = (buckets[key] ?? 0) + 1
     })
-    return Object.entries(weeks)
-      .sort((a, b) => b[0].localeCompare(a[0]))
-      .slice(0, 8).reverse()
-      .map(([week, count]) => ({ label: week, count }))
-  }, [attendance, sessions])
-
-  // Monthly attendance count (total present/late marks per month)
-  const monthlyTrained = useMemo(() => {
-    const months: Record<string, number> = {}
-    attendance.forEach(a => {
-      if (a.is_present !== 'true' && a.is_present !== 'late') return
-      const sess = sessions.find(s => s.id === a.session_id)
-      if (!sess || !a.designer_id) return
-      const monthKey = sess.session_date.slice(0, 7)
-      months[monthKey] = (months[monthKey] ?? 0) + 1
-    })
-    return Object.entries(months)
-      .sort((a, b) => b[0].localeCompare(a[0]))
-      .slice(0, 6).reverse()
-      .map(([month, count]) => ({ label: month, count }))
-  }, [attendance, sessions])
-
-  // All-time attendance count per month
-  const allTimeTrained = useMemo(() => {
-    const months: Record<string, number> = {}
-    attendance.forEach(a => {
-      if (a.is_present !== 'true' && a.is_present !== 'late') return
-      const sess = sessions.find(s => s.id === a.session_id)
-      if (!sess || !a.designer_id) return
-      const monthKey = sess.session_date.slice(0, 7)
-      months[monthKey] = (months[monthKey] ?? 0) + 1
-    })
-    return Object.entries(months)
+    const data = Object.entries(buckets)
       .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([month, count]) => ({ label: month, count }))
-  }, [attendance, sessions])
+      .map(([label, count]) => ({ label, count }))
+    return { data, byDay }
+  }, [attendance, sessions, rangeFrom, rangeTo])
 
   // Skill coverage for base platforms
   const PLATFORMS = ['Clickfunnels', 'GoHighLevel', 'Shopify', 'Wix', 'Wordpress']
@@ -270,43 +248,41 @@ export default function Dashboard() {
 
       {/* Trained Designers */}
       {(() => {
-        const data = trainedPeriod === 'weekly' ? weeklyTrained
-          : trainedPeriod === 'monthly' ? monthlyTrained
-          : allTimeTrained
+        const { data, byDay } = rangedTrained
         const maxCount = Math.max(...data.map(d => d.count), 1)
-        const getLabel = (label: string) =>
-          trainedPeriod === 'weekly' ? fmtDs(label) : fmtMonth(label)
         return (
           <motion.div variants={fadeUp} custom={8} initial="hidden" animate="show"
             className="card rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-4 flex-wrap">
+            <div className="flex items-center gap-2 mb-4 flex-wrap gap-y-2">
               <Activity className="w-4 h-4 text-orange-400 shrink-0" />
               <h2 className="font-semibold text-sm text-primary">Trained Designers</h2>
-              <div className="flex ml-auto gap-0.5 p-1 rounded-lg bg-surface-2 border border-border">
-                {(['weekly', 'monthly', 'alltime'] as const).map(p => (
-                  <button
-                    key={p}
-                    onClick={() => setTrainedPeriod(p)}
-                    className={cn(
-                      'px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all',
-                      trainedPeriod === p
-                        ? 'bg-surface text-orange-500 shadow-sm'
-                        : 'text-muted-c hover:text-primary'
-                    )}
-                  >
-                    {p === 'alltime' ? 'All Time' : p === 'monthly' ? 'Monthly' : 'Weekly'}
-                  </button>
-                ))}
+              <div className="flex items-center gap-1.5 ml-auto">
+                <input
+                  type="date"
+                  value={rangeFrom}
+                  max={rangeTo}
+                  onChange={e => setRangeFrom(e.target.value)}
+                  className="input h-7 px-2 text-[11px] w-32 tabular-nums"
+                />
+                <span className="text-[10px] text-muted-c font-bold">→</span>
+                <input
+                  type="date"
+                  value={rangeTo}
+                  min={rangeFrom}
+                  max={today}
+                  onChange={e => setRangeTo(e.target.value)}
+                  className="input h-7 px-2 text-[11px] w-32 tabular-nums"
+                />
               </div>
             </div>
             {data.length === 0 ? (
-              <p className="text-sm text-muted-c text-center py-4">No training data yet</p>
+              <p className="text-sm text-muted-c text-center py-4">No training data in this range</p>
             ) : (
               <div className="space-y-2.5">
                 {data.map(({ label, count }) => (
                   <div key={label} className="flex items-center gap-3">
                     <span className="text-[10px] font-bold text-muted-c w-16 shrink-0 tabular-nums">
-                      {getLabel(label)}
+                      {byDay ? fmtDs(label) : `Wk ${fmtDs(label)}`}
                     </span>
                     <div className="flex-1 h-2 rounded-full overflow-hidden bg-surface-2">
                       <div
