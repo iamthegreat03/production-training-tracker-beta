@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import {
   Users, BookOpen, CalendarCheck, TrendingUp,
-  AlertTriangle, Clock, Zap, ChevronRight, Star,
+  AlertTriangle, Clock, Zap, ChevronRight, Star, Activity,
 } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
 import { pct, fmtDs, shortName } from '@/lib/utils'
@@ -63,6 +63,28 @@ export default function Dashboard() {
     const teamMarked = teamAtt.filter(a => a.is_present !== null)
     return { name: team.name, members: members.length, rate: pct(teamPresent.length, teamMarked.length) }
   }).sort((a, b) => b.rate - a.rate)
+
+  // Weekly trained designers (last 8 weeks, Mon–Sun grouping)
+  const weeklyTrained = useMemo(() => {
+    const weeks: Record<string, Set<string>> = {}
+    attendance.forEach(a => {
+      if (a.is_present !== 'true' && a.is_present !== 'late') return
+      const sess = sessions.find(s => s.id === a.session_id)
+      if (!sess || !a.designer_id) return
+      const d = new Date(sess.session_date + 'T00:00:00')
+      const day = d.getDay()
+      const monday = new Date(d)
+      monday.setDate(d.getDate() - (day === 0 ? 6 : day - 1))
+      const weekKey = monday.toISOString().split('T')[0]
+      if (!weeks[weekKey]) weeks[weekKey] = new Set()
+      weeks[weekKey].add(a.designer_id)
+    })
+    return Object.entries(weeks)
+      .sort((a, b) => b[0].localeCompare(a[0]))
+      .slice(0, 8)
+      .reverse()
+      .map(([week, ids]) => ({ week, count: ids.size }))
+  }, [attendance, sessions])
 
   // Skill coverage for base platforms
   const PLATFORMS = ['Clickfunnels', 'GoHighLevel', 'Shopify', 'Wix', 'Wordpress']
@@ -207,6 +229,34 @@ export default function Dashboard() {
           )}
         </motion.div>
       </div>
+
+      {/* Weekly Trained Designers */}
+      <motion.div variants={fadeUp} custom={8} initial="hidden" animate="show"
+        className="card rounded-xl p-4">
+        <div className="flex items-center gap-2 mb-4">
+          <Activity className="w-4 h-4 text-orange-400" />
+          <h2 className="font-semibold text-sm text-primary">Weekly Trained Designers</h2>
+          <span className="text-xs text-muted-c ml-auto">Unique designers per week</span>
+        </div>
+        {weeklyTrained.length === 0 ? (
+          <p className="text-sm text-muted-c text-center py-4">No training data yet</p>
+        ) : (
+          <div className="space-y-2.5">
+            {weeklyTrained.map(({ week, count }) => (
+              <div key={week} className="flex items-center gap-3">
+                <span className="text-[10px] font-bold text-muted-c w-16 shrink-0 tabular-nums">{fmtDs(week)}</span>
+                <div className="flex-1 h-2 rounded-full overflow-hidden bg-surface-2">
+                  <div
+                    className="h-full rounded-full bg-orange-gradient transition-all duration-500"
+                    style={{ width: `${pct(count, designers.length)}%` }}
+                  />
+                </div>
+                <span className="text-xs font-bold text-primary w-5 text-right tabular-nums">{count}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </motion.div>
 
       {/* Team breakdown + Skill coverage */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

@@ -81,6 +81,18 @@ All notable changes to this project are documented here.
 
 ---
 
+## [v3.3] — 2026-05-12
+
+### Features
+- **Assess designers one by one** — "Finish & Assess" now opens a dedicated assess panel inside the Training Detail modal instead of bulk-awarding everyone automatically. Each enrolled designer is listed with a checkbox (pre-checked if they attended), their attendance count/rate, and any existing skill level for that platform. "Select Attendees" shortcut pre-selects all who attended; individual toggles let you include or exclude anyone. "Award to N Designers" confirms and runs the skill grant only for the selected subset.
+- **Weekly Trained Designers card** — new card on the Dashboard showing unique designer counts per calendar week (Mon–Sun) as a mini bar chart, up to the last 8 weeks.
+
+### Bug Fixes
+- **Skill Set layout** — Team Skill Coverage, Discussion History, and Global Skill Distribution cards moved to the top of the page (above the matrix table) so summary stats are visible without scrolling.
+- **Distribution cards not updating** — distribution useMemo now tracks `allPlatforms` (base + dynamic) instead of only `BASE_PLATFORMS`, so newly assessed dynamic platforms immediately appear; `allPlatforms` is also properly memoized so dependency tracking is accurate.
+
+---
+
 ## [v3.2] — 2026-05-12
 
 ### Bug Fixes

@@ -34,7 +34,7 @@ export default function SkillSet() {
     return Array.from(set).sort()
   }, [designerSkills])
 
-  const allPlatforms = [...BASE_PLATFORMS, ...dynamicPlatforms]
+  const allPlatforms = useMemo(() => [...BASE_PLATFORMS, ...dynamicPlatforms], [dynamicPlatforms])
 
   // Columns actually shown — filtered by the platform pill
   const visiblePlatforms = useMemo(() =>
@@ -74,16 +74,16 @@ export default function SkillSet() {
     })
   }, [teams, designers, designerSkills])
 
-  // 5. Global Distribution stats
+  // 5. Global Distribution stats — all platforms (base + dynamic)
   const distribution = useMemo(() => {
-     return BASE_PLATFORMS.map(p => {
+     return allPlatforms.map(p => {
         const platformSkills = designerSkills.filter(s => s.platform === p)
         const int = platformSkills.filter(s => s.level === 'Intermediate').length
         const adv = platformSkills.filter(s => s.level === 'Advanced').length
         const exp = platformSkills.filter(s => s.level === 'Expert').length
         return { platform: p, int, adv, exp, total: platformSkills.length }
      })
-  }, [designerSkills])
+  }, [designerSkills, allPlatforms])
 
   // --- Actions ---
   async function deletePlatform(platform: string) {
@@ -125,96 +125,6 @@ export default function SkillSet() {
            <button onClick={exportCSV} className="btn-outline h-10 px-4 gap-2">
               <Download className="w-4 h-4" /> Export CSV
            </button>
-        </div>
-      </div>
-
-      {/* Main Grid Card */}
-      <div className="card rounded-2xl flex flex-col overflow-hidden">
-        {/* Matrix Controls */}
-        <div className="p-4 border-b border-border bg-surface-2/50 flex flex-wrap items-center justify-between gap-4">
-           <div className="flex items-center gap-4 flex-1 min-w-[300px]">
-              <div className="relative flex-1 max-w-sm">
-                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-c" />
-                 <input className="input h-9 pl-9 text-xs" placeholder="Filter by name or team..." value={search} onChange={e => setSearch(e.target.value)} />
-              </div>
-              <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
-                 {['ALL', ...allPlatforms].map(p => (
-                   <button key={p} onClick={() => setPlatFilter(p)} className={cn('chip whitespace-nowrap', platFilter === p && 'active')}>
-                      {p}
-                   </button>
-                 ))}
-              </div>
-           </div>
-           <div className="text-[10px] font-bold text-muted-c uppercase tracking-widest">
-              Matrix: {filteredDesigners.length} Designers × {visiblePlatforms.length} Platforms
-           </div>
-        </div>
-
-        {/* The Matrix Table */}
-        <div className="overflow-x-auto">
-           <table className="w-full text-left border-collapse">
-              <thead>
-                 <tr className="bg-surface-2/30">
-                    <th className="sticky left-0 z-20 bg-surface border-r border-border p-4 w-64 min-w-[200px]">
-                       <div className="text-[10px] font-bold text-muted-c uppercase tracking-widest">Designer</div>
-                    </th>
-                    {visiblePlatforms.map(p => (
-                      <th key={p} className="p-4 border-b border-border min-w-[120px]">
-                         <div className="text-[10px] font-bold text-muted-c uppercase tracking-widest flex items-center justify-between group">
-                            {p}
-                            {!BASE_PLATFORMS.includes(p) && can('canAddEditTrainings') && (
-                              <button
-                                onClick={() => deletePlatform(p)}
-                                disabled={saving}
-                                className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-500 transition-opacity"
-                              >
-                                 <Trash2 className="w-3 h-3" />
-                              </button>
-                            )}
-                         </div>
-                      </th>
-                    ))}
-                 </tr>
-              </thead>
-              <tbody>
-                 {filteredDesigners.map(d => (
-                   <tr key={d.id} className="hover:bg-surface-2/30 transition-colors">
-                      <td className="sticky left-0 z-10 bg-surface border-r border-border p-3">
-                         <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-surface-2 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">
-                               {initials(d.name)}
-                            </div>
-                            <div className="min-w-0">
-                               <div className="text-xs font-bold text-primary truncate">{d.name}</div>
-                               <div className="text-[9px] text-muted-c font-bold uppercase tracking-widest">{d.team || 'None'}</div>
-                            </div>
-                         </div>
-                      </td>
-                      {visiblePlatforms.map(p => {
-                        const skill = designerSkills.find(s => s.designer_id === d.id && s.platform === p)
-                        const level = skill?.level ?? null
-                        return (
-                          <td key={p} className="p-2 border-b border-border-subtle">
-                             <button
-                               onClick={() => setEditTarget({ designer: d, platform: p })}
-                               disabled={!can('canAddEditTrainings')}
-                               className={cn(
-                                 'w-full py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all',
-                                 level === 'Expert' ? 'bg-orange-gradient text-white shadow-orange-sm' :
-                                 level === 'Advanced' ? 'bg-orange-500/10 text-orange-500 border border-orange-500/20' :
-                                 level === 'Intermediate' ? 'bg-orange-500/5 text-orange-500/60 border border-orange-500/10' :
-                                 'text-muted-c hover:bg-surface-2'
-                               )}
-                             >
-                               {level ? LEVEL_SHORT[level] || '✓' : '—'}
-                             </button>
-                          </td>
-                        )
-                      })}
-                   </tr>
-                 ))}
-              </tbody>
-           </table>
         </div>
       </div>
 
@@ -315,6 +225,96 @@ export default function SkillSet() {
               </div>
            </div>
          ))}
+      </div>
+
+      {/* Main Grid Card */}
+      <div className="card rounded-2xl flex flex-col overflow-hidden">
+        {/* Matrix Controls */}
+        <div className="p-4 border-b border-border bg-surface-2/50 flex flex-wrap items-center justify-between gap-4">
+           <div className="flex items-center gap-4 flex-1 min-w-[300px]">
+              <div className="relative flex-1 max-w-sm">
+                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-c" />
+                 <input className="input h-9 pl-9 text-xs" placeholder="Filter by name or team..." value={search} onChange={e => setSearch(e.target.value)} />
+              </div>
+              <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
+                 {['ALL', ...allPlatforms].map(p => (
+                   <button key={p} onClick={() => setPlatFilter(p)} className={cn('chip whitespace-nowrap', platFilter === p && 'active')}>
+                      {p}
+                   </button>
+                 ))}
+              </div>
+           </div>
+           <div className="text-[10px] font-bold text-muted-c uppercase tracking-widest">
+              Matrix: {filteredDesigners.length} Designers × {visiblePlatforms.length} Platforms
+           </div>
+        </div>
+
+        {/* The Matrix Table */}
+        <div className="overflow-x-auto">
+           <table className="w-full text-left border-collapse">
+              <thead>
+                 <tr className="bg-surface-2/30">
+                    <th className="sticky left-0 z-20 bg-surface border-r border-border p-4 w-64 min-w-[200px]">
+                       <div className="text-[10px] font-bold text-muted-c uppercase tracking-widest">Designer</div>
+                    </th>
+                    {visiblePlatforms.map(p => (
+                      <th key={p} className="p-4 border-b border-border min-w-[120px]">
+                         <div className="text-[10px] font-bold text-muted-c uppercase tracking-widest flex items-center justify-between group">
+                            {p}
+                            {!BASE_PLATFORMS.includes(p) && can('canAddEditTrainings') && (
+                              <button
+                                onClick={() => deletePlatform(p)}
+                                disabled={saving}
+                                className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-500 transition-opacity"
+                              >
+                                 <Trash2 className="w-3 h-3" />
+                              </button>
+                            )}
+                         </div>
+                      </th>
+                    ))}
+                 </tr>
+              </thead>
+              <tbody>
+                 {filteredDesigners.map(d => (
+                   <tr key={d.id} className="hover:bg-surface-2/30 transition-colors">
+                      <td className="sticky left-0 z-10 bg-surface border-r border-border p-3">
+                         <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-surface-2 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">
+                               {initials(d.name)}
+                            </div>
+                            <div className="min-w-0">
+                               <div className="text-xs font-bold text-primary truncate">{d.name}</div>
+                               <div className="text-[9px] text-muted-c font-bold uppercase tracking-widest">{d.team || 'None'}</div>
+                            </div>
+                         </div>
+                      </td>
+                      {visiblePlatforms.map(p => {
+                        const skill = designerSkills.find(s => s.designer_id === d.id && s.platform === p)
+                        const level = skill?.level ?? null
+                        return (
+                          <td key={p} className="p-2 border-b border-border-subtle">
+                             <button
+                               onClick={() => setEditTarget({ designer: d, platform: p })}
+                               disabled={!can('canAddEditTrainings')}
+                               className={cn(
+                                 'w-full py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all',
+                                 level === 'Expert' ? 'bg-orange-gradient text-white shadow-orange-sm' :
+                                 level === 'Advanced' ? 'bg-orange-500/10 text-orange-500 border border-orange-500/20' :
+                                 level === 'Intermediate' ? 'bg-orange-500/5 text-orange-500/60 border border-orange-500/10' :
+                                 'text-muted-c hover:bg-surface-2'
+                               )}
+                             >
+                               {level ? LEVEL_SHORT[level] || '✓' : '—'}
+                             </button>
+                          </td>
+                        )
+                      })}
+                   </tr>
+                 ))}
+              </tbody>
+           </table>
+        </div>
       </div>
 
       {/* Edit Modal */}
