@@ -73,9 +73,9 @@ export default function Dashboard() {
     return `${names[parseInt(month) - 1]} '${year.slice(2)}`
   }
 
-  // Weekly trained designers (last 8 weeks, Mon–Sun grouping)
+  // Weekly attendance count (total present/late marks per week, not unique)
   const weeklyTrained = useMemo(() => {
-    const weeks: Record<string, Set<string>> = {}
+    const weeks: Record<string, number> = {}
     attendance.forEach(a => {
       if (a.is_present !== 'true' && a.is_present !== 'late') return
       const sess = sessions.find(s => s.id === a.session_id)
@@ -85,46 +85,43 @@ export default function Dashboard() {
       const monday = new Date(d)
       monday.setDate(d.getDate() - (day === 0 ? 6 : day - 1))
       const weekKey = monday.toISOString().split('T')[0]
-      if (!weeks[weekKey]) weeks[weekKey] = new Set()
-      weeks[weekKey].add(a.designer_id)
+      weeks[weekKey] = (weeks[weekKey] ?? 0) + 1
     })
     return Object.entries(weeks)
       .sort((a, b) => b[0].localeCompare(a[0]))
       .slice(0, 8).reverse()
-      .map(([week, ids]) => ({ label: week, count: ids.size }))
+      .map(([week, count]) => ({ label: week, count }))
   }, [attendance, sessions])
 
-  // Monthly trained designers (last 6 months)
+  // Monthly attendance count (total present/late marks per month)
   const monthlyTrained = useMemo(() => {
-    const months: Record<string, Set<string>> = {}
+    const months: Record<string, number> = {}
     attendance.forEach(a => {
       if (a.is_present !== 'true' && a.is_present !== 'late') return
       const sess = sessions.find(s => s.id === a.session_id)
       if (!sess || !a.designer_id) return
       const monthKey = sess.session_date.slice(0, 7)
-      if (!months[monthKey]) months[monthKey] = new Set()
-      months[monthKey].add(a.designer_id)
+      months[monthKey] = (months[monthKey] ?? 0) + 1
     })
     return Object.entries(months)
       .sort((a, b) => b[0].localeCompare(a[0]))
       .slice(0, 6).reverse()
-      .map(([month, ids]) => ({ label: month, count: ids.size }))
+      .map(([month, count]) => ({ label: month, count }))
   }, [attendance, sessions])
 
-  // All-time trained designers (every month)
+  // All-time attendance count per month
   const allTimeTrained = useMemo(() => {
-    const months: Record<string, Set<string>> = {}
+    const months: Record<string, number> = {}
     attendance.forEach(a => {
       if (a.is_present !== 'true' && a.is_present !== 'late') return
       const sess = sessions.find(s => s.id === a.session_id)
       if (!sess || !a.designer_id) return
       const monthKey = sess.session_date.slice(0, 7)
-      if (!months[monthKey]) months[monthKey] = new Set()
-      months[monthKey].add(a.designer_id)
+      months[monthKey] = (months[monthKey] ?? 0) + 1
     })
     return Object.entries(months)
       .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([month, ids]) => ({ label: month, count: ids.size }))
+      .map(([month, count]) => ({ label: month, count }))
   }, [attendance, sessions])
 
   // Skill coverage for base platforms
@@ -276,6 +273,7 @@ export default function Dashboard() {
         const data = trainedPeriod === 'weekly' ? weeklyTrained
           : trainedPeriod === 'monthly' ? monthlyTrained
           : allTimeTrained
+        const maxCount = Math.max(...data.map(d => d.count), 1)
         const getLabel = (label: string) =>
           trainedPeriod === 'weekly' ? fmtDs(label) : fmtMonth(label)
         return (
@@ -313,7 +311,7 @@ export default function Dashboard() {
                     <div className="flex-1 h-2 rounded-full overflow-hidden bg-surface-2">
                       <div
                         className="h-full rounded-full bg-orange-gradient transition-all duration-500"
-                        style={{ width: `${pct(count, designers.length)}%` }}
+                        style={{ width: `${pct(count, maxCount)}%` }}
                       />
                     </div>
                     <span className="text-xs font-bold text-primary w-5 text-right tabular-nums">{count}</span>
