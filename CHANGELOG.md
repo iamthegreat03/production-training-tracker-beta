@@ -81,6 +81,16 @@ All notable changes to this project are documented here.
 
 ---
 
+## [v3.2] — 2026-05-12
+
+### Bug Fixes
+- **White borders in dark mode** — Tailwind's default border color (`#e5e7eb`) was leaking through in dark mode on buttons, cards, and other bordered elements. Fixed with a three-layer approach:
+  1. `borderColor.DEFAULT` in Tailwind config overrides the preflight default to `rgb(var(--border))`
+  2. `border` and `border-subtle` registered as named color tokens so `border-border` resolves to the CSS variable
+  3. `.dark *` base CSS rule as a guaranteed fallback — stays below `@layer utilities` so explicit colored borders (e.g., `border-emerald-400`) are unaffected
+
+---
+
 ## [v2.0] — 2025 (Vanilla JS — Deprecated)
 
 Original single-file HTML implementation. Replaced by v3.0 React/Vite rewrite.

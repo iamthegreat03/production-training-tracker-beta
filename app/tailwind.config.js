@@ -10,6 +10,8 @@ export default {
           500: '#f97316',
           600: '#ea6c0a',
         },
+        border: 'rgb(var(--border) / <alpha-value>)',
+        'border-subtle': 'rgb(var(--border-subtle) / <alpha-value>)',
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
@@ -45,6 +47,9 @@ export default {
       },
       backgroundSize: {
         'grid': '32px 32px',
+      },
+      borderColor: {
+        DEFAULT: 'rgb(var(--border) / <alpha-value>)',
       },
       boxShadow: {
         'orange-sm': '0 0 10px rgba(249,115,22,0.2)',
