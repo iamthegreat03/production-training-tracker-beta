@@ -70,36 +70,21 @@ export default function Dashboard() {
   })
   const [rangeTo, setRangeTo] = useState(today)
 
-  const rangedTrained = useMemo(() => {
-    if (!rangeFrom || !rangeTo || rangeFrom > rangeTo) return { data: [], byDay: true }
-    const diffDays = Math.round(
-      (new Date(rangeTo + 'T00:00:00').getTime() - new Date(rangeFrom + 'T00:00:00').getTime())
-      / (1000 * 60 * 60 * 24)
-    )
-    const byDay = diffDays <= 14
-    const buckets: Record<string, number> = {}
+  const rangedStats = useMemo(() => {
+    if (!rangeFrom || !rangeTo || rangeFrom > rangeTo) return null
+    let presentCount = 0, lateCount = 0, absentCount = 0, notesCount = 0
     attendance.forEach(a => {
-      if (a.is_present !== 'true' && a.is_present !== 'late') return
       const sess = sessions.find(s => s.id === a.session_id)
       if (!sess || !a.designer_id) return
-      const date = sess.session_date
-      if (date < rangeFrom || date > rangeTo) return
-      let key: string
-      if (byDay) {
-        key = date
-      } else {
-        const d = new Date(date + 'T00:00:00')
-        const dow = d.getDay()
-        const mon = new Date(d)
-        mon.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1))
-        key = mon.toISOString().split('T')[0]
-      }
-      buckets[key] = (buckets[key] ?? 0) + 1
+      if (sess.session_date < rangeFrom || sess.session_date > rangeTo) return
+      if (a.is_present === 'true') presentCount++
+      else if (a.is_present === 'late') lateCount++
+      else if (a.is_present === 'false') absentCount++
+      if (a.notes) notesCount++
     })
-    const data = Object.entries(buckets)
-      .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([label, count]) => ({ label, count }))
-    return { data, byDay }
+    const total = presentCount + lateCount + absentCount
+    const rate = total > 0 ? Math.round(((presentCount + lateCount) / total) * 100) : 0
+    return { presentCount, lateCount, absentCount, notesCount, total, rate }
   }, [attendance, sessions, rangeFrom, rangeTo])
 
   // Skill coverage for base platforms
@@ -247,57 +232,49 @@ export default function Dashboard() {
       </div>
 
       {/* Trained Designers */}
-      {(() => {
-        const { data, byDay } = rangedTrained
-        const maxCount = Math.max(...data.map(d => d.count), 1)
-        return (
-          <motion.div variants={fadeUp} custom={8} initial="hidden" animate="show"
-            className="card rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-4 flex-wrap gap-y-2">
-              <Activity className="w-4 h-4 text-orange-400 shrink-0" />
-              <h2 className="font-semibold text-sm text-primary">Trained Designers</h2>
-              <div className="flex items-center gap-1.5 ml-auto">
-                <input
-                  type="date"
-                  value={rangeFrom}
-                  max={rangeTo}
-                  onChange={e => setRangeFrom(e.target.value)}
-                  className="input h-7 px-2 text-[11px] w-32 tabular-nums"
-                />
-                <span className="text-[10px] text-muted-c font-bold">→</span>
-                <input
-                  type="date"
-                  value={rangeTo}
-                  min={rangeFrom}
-                  max={today}
-                  onChange={e => setRangeTo(e.target.value)}
-                  className="input h-7 px-2 text-[11px] w-32 tabular-nums"
-                />
+      <motion.div variants={fadeUp} custom={8} initial="hidden" animate="show"
+        className="card rounded-xl p-4">
+        <div className="flex items-center gap-2 mb-4 flex-wrap gap-y-2">
+          <Activity className="w-4 h-4 text-orange-400 shrink-0" />
+          <h2 className="font-semibold text-sm text-primary">Attendance Summary</h2>
+          <div className="flex items-center gap-1.5 ml-auto">
+            <input
+              type="date"
+              value={rangeFrom}
+              max={rangeTo}
+              onChange={e => setRangeFrom(e.target.value)}
+              className="input h-7 px-2 text-[11px] w-32 tabular-nums"
+            />
+            <span className="text-[10px] text-muted-c font-bold">→</span>
+            <input
+              type="date"
+              value={rangeTo}
+              min={rangeFrom}
+              max={today}
+              onChange={e => setRangeTo(e.target.value)}
+              className="input h-7 px-2 text-[11px] w-32 tabular-nums"
+            />
+          </div>
+        </div>
+        {!rangedStats || rangedStats.total === 0 ? (
+          <p className="text-sm text-muted-c text-center py-4">No attendance data in this range</p>
+        ) : (
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+            {[
+              { label: 'Rate', value: `${rangedStats.rate}%`, color: 'text-orange-500', bg: 'bg-orange-500/8' },
+              { label: 'Present', value: rangedStats.presentCount, color: 'text-emerald-400', bg: 'bg-emerald-500/8' },
+              { label: 'Late', value: rangedStats.lateCount, color: 'text-amber-400', bg: 'bg-amber-500/8' },
+              { label: 'Absent', value: rangedStats.absentCount, color: 'text-red-400', bg: 'bg-red-500/8' },
+              { label: 'Notes', value: rangedStats.notesCount, color: 'text-blue-400', bg: 'bg-blue-500/8' },
+            ].map(({ label, value, color, bg }) => (
+              <div key={label} className={cn('rounded-xl p-3 text-center', bg)}>
+                <div className={cn('text-lg font-bold tabular-nums leading-none', color)}>{value}</div>
+                <div className="text-[9px] font-bold text-muted-c uppercase tracking-widest mt-1">{label}</div>
               </div>
-            </div>
-            {data.length === 0 ? (
-              <p className="text-sm text-muted-c text-center py-4">No training data in this range</p>
-            ) : (
-              <div className="space-y-2.5">
-                {data.map(({ label, count }) => (
-                  <div key={label} className="flex items-center gap-3">
-                    <span className="text-[10px] font-bold text-muted-c w-16 shrink-0 tabular-nums">
-                      {byDay ? fmtDs(label) : `Wk ${fmtDs(label)}`}
-                    </span>
-                    <div className="flex-1 h-2 rounded-full overflow-hidden bg-surface-2">
-                      <div
-                        className="h-full rounded-full bg-orange-gradient transition-all duration-500"
-                        style={{ width: `${pct(count, maxCount)}%` }}
-                      />
-                    </div>
-                    <span className="text-xs font-bold text-primary w-5 text-right tabular-nums">{count}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </motion.div>
-        )
-      })()}
+            ))}
+          </div>
+        )}
+      </motion.div>
 
       {/* Team breakdown + Skill coverage */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
