@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   Users, BookOpen, CalendarCheck, TrendingUp,
@@ -64,6 +64,15 @@ export default function Dashboard() {
     return { name: team.name, members: members.length, rate: pct(teamPresent.length, teamMarked.length) }
   }).sort((a, b) => b.rate - a.rate)
 
+  type TrainedPeriod = 'weekly' | 'monthly' | 'alltime'
+  const [trainedPeriod, setTrainedPeriod] = useState<TrainedPeriod>('weekly')
+
+  function fmtMonth(ym: string): string {
+    const [year, month] = ym.split('-')
+    const names = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+    return `${names[parseInt(month) - 1]} '${year.slice(2)}`
+  }
+
   // Weekly trained designers (last 8 weeks, Mon–Sun grouping)
   const weeklyTrained = useMemo(() => {
     const weeks: Record<string, Set<string>> = {}
@@ -81,9 +90,41 @@ export default function Dashboard() {
     })
     return Object.entries(weeks)
       .sort((a, b) => b[0].localeCompare(a[0]))
-      .slice(0, 8)
-      .reverse()
-      .map(([week, ids]) => ({ week, count: ids.size }))
+      .slice(0, 8).reverse()
+      .map(([week, ids]) => ({ label: week, count: ids.size }))
+  }, [attendance, sessions])
+
+  // Monthly trained designers (last 6 months)
+  const monthlyTrained = useMemo(() => {
+    const months: Record<string, Set<string>> = {}
+    attendance.forEach(a => {
+      if (a.is_present !== 'true' && a.is_present !== 'late') return
+      const sess = sessions.find(s => s.id === a.session_id)
+      if (!sess || !a.designer_id) return
+      const monthKey = sess.session_date.slice(0, 7)
+      if (!months[monthKey]) months[monthKey] = new Set()
+      months[monthKey].add(a.designer_id)
+    })
+    return Object.entries(months)
+      .sort((a, b) => b[0].localeCompare(a[0]))
+      .slice(0, 6).reverse()
+      .map(([month, ids]) => ({ label: month, count: ids.size }))
+  }, [attendance, sessions])
+
+  // All-time trained designers (every month)
+  const allTimeTrained = useMemo(() => {
+    const months: Record<string, Set<string>> = {}
+    attendance.forEach(a => {
+      if (a.is_present !== 'true' && a.is_present !== 'late') return
+      const sess = sessions.find(s => s.id === a.session_id)
+      if (!sess || !a.designer_id) return
+      const monthKey = sess.session_date.slice(0, 7)
+      if (!months[monthKey]) months[monthKey] = new Set()
+      months[monthKey].add(a.designer_id)
+    })
+    return Object.entries(months)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([month, ids]) => ({ label: month, count: ids.size }))
   }, [attendance, sessions])
 
   // Skill coverage for base platforms
@@ -230,33 +271,59 @@ export default function Dashboard() {
         </motion.div>
       </div>
 
-      {/* Weekly Trained Designers */}
-      <motion.div variants={fadeUp} custom={8} initial="hidden" animate="show"
-        className="card rounded-xl p-4">
-        <div className="flex items-center gap-2 mb-4">
-          <Activity className="w-4 h-4 text-orange-400" />
-          <h2 className="font-semibold text-sm text-primary">Weekly Trained Designers</h2>
-          <span className="text-xs text-muted-c ml-auto">Unique designers per week</span>
-        </div>
-        {weeklyTrained.length === 0 ? (
-          <p className="text-sm text-muted-c text-center py-4">No training data yet</p>
-        ) : (
-          <div className="space-y-2.5">
-            {weeklyTrained.map(({ week, count }) => (
-              <div key={week} className="flex items-center gap-3">
-                <span className="text-[10px] font-bold text-muted-c w-16 shrink-0 tabular-nums">{fmtDs(week)}</span>
-                <div className="flex-1 h-2 rounded-full overflow-hidden bg-surface-2">
-                  <div
-                    className="h-full rounded-full bg-orange-gradient transition-all duration-500"
-                    style={{ width: `${pct(count, designers.length)}%` }}
-                  />
-                </div>
-                <span className="text-xs font-bold text-primary w-5 text-right tabular-nums">{count}</span>
+      {/* Trained Designers */}
+      {(() => {
+        const data = trainedPeriod === 'weekly' ? weeklyTrained
+          : trainedPeriod === 'monthly' ? monthlyTrained
+          : allTimeTrained
+        const getLabel = (label: string) =>
+          trainedPeriod === 'weekly' ? fmtDs(label) : fmtMonth(label)
+        return (
+          <motion.div variants={fadeUp} custom={8} initial="hidden" animate="show"
+            className="card rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-4 flex-wrap">
+              <Activity className="w-4 h-4 text-orange-400 shrink-0" />
+              <h2 className="font-semibold text-sm text-primary">Trained Designers</h2>
+              <div className="flex ml-auto gap-0.5 p-1 rounded-lg bg-surface-2 border border-border">
+                {(['weekly', 'monthly', 'alltime'] as const).map(p => (
+                  <button
+                    key={p}
+                    onClick={() => setTrainedPeriod(p)}
+                    className={cn(
+                      'px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all',
+                      trainedPeriod === p
+                        ? 'bg-surface text-orange-500 shadow-sm'
+                        : 'text-muted-c hover:text-primary'
+                    )}
+                  >
+                    {p === 'alltime' ? 'All Time' : p === 'monthly' ? 'Monthly' : 'Weekly'}
+                  </button>
+                ))}
               </div>
-            ))}
-          </div>
-        )}
-      </motion.div>
+            </div>
+            {data.length === 0 ? (
+              <p className="text-sm text-muted-c text-center py-4">No training data yet</p>
+            ) : (
+              <div className="space-y-2.5">
+                {data.map(({ label, count }) => (
+                  <div key={label} className="flex items-center gap-3">
+                    <span className="text-[10px] font-bold text-muted-c w-16 shrink-0 tabular-nums">
+                      {getLabel(label)}
+                    </span>
+                    <div className="flex-1 h-2 rounded-full overflow-hidden bg-surface-2">
+                      <div
+                        className="h-full rounded-full bg-orange-gradient transition-all duration-500"
+                        style={{ width: `${pct(count, designers.length)}%` }}
+                      />
+                    </div>
+                    <span className="text-xs font-bold text-primary w-5 text-right tabular-nums">{count}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </motion.div>
+        )
+      })()}
 
       {/* Team breakdown + Skill coverage */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
