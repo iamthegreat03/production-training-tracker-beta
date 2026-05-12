@@ -1,12 +1,30 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Zap, MessageSquare, Calendar, Clock, ChevronRight, Target, StickyNote } from 'lucide-react'
+import { Zap, MessageSquare, Calendar, Clock, ChevronRight, Target, StickyNote, Link, ExternalLink, Check } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
+import { supabase } from '@/lib/supabase'
+import { toast } from 'sonner'
 import { cn, fmtD, fmtDs, pct } from '@/lib/utils'
 
 export default function DesignerRoadmap() {
-  const { state } = useApp()
+  const { state, loadAll } = useApp()
   const { designer, trainings, enrollments, sessions, attendance } = state
+
+  const [outputUrls, setOutputUrls] = useState<Record<string, string>>({})
+  const [savingOutput, setSavingOutput] = useState<string | null>(null)
+
+  async function submitOutput(enrollmentId: string) {
+    const url = (outputUrls[enrollmentId] ?? '').trim()
+    setSavingOutput(enrollmentId)
+    const { error } = await supabase
+      .from('training_enrollments')
+      .update({ output_url: url || null })
+      .eq('id', enrollmentId)
+    setSavingOutput(null)
+    if (error) { toast.error('Failed to save link'); return }
+    toast.success('Output link saved!')
+    await loadAll()
+  }
 
   const myEnrollments = useMemo(() =>
     enrollments.filter(e => e.designer_id === designer?.id),
@@ -133,6 +151,61 @@ export default function DesignerRoadmap() {
                           <StickyNote className="w-3 h-3" /> Latest Trainer Note
                         </div>
                         <p className="text-xs text-primary leading-relaxed">{latestNote.notes}</p>
+                      </div>
+                    )
+                  })()}
+
+                  {/* Submit Output — Hands-On with checklist only */}
+                  {isHandsOn && (t.checklist?.length ?? 0) > 0 && enrollment && (() => {
+                    const saved = enrollment.output_url ?? ''
+                    const current = outputUrls[enrollment.id] ?? saved
+                    const isSubmitted = !!saved
+                    return (
+                      <div className="space-y-2 p-3 rounded-xl bg-blue-500/5 border border-blue-500/20">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-blue-400 flex items-center gap-1.5">
+                            <Link className="w-3 h-3" /> Submit Output
+                          </span>
+                          {isSubmitted && (
+                            <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-400">
+                              <Check className="w-3 h-3" /> Submitted
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <input
+                            className="input h-8 flex-1 text-xs"
+                            placeholder="Paste your output link here…"
+                            value={current}
+                            onChange={e => setOutputUrls(prev => ({ ...prev, [enrollment.id]: e.target.value }))}
+                          />
+                          {isSubmitted && saved && (
+                            <a
+                              href={saved}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="btn-outline h-8 px-2 text-[10px] font-bold gap-1 flex items-center shrink-0"
+                            >
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          )}
+                          <button
+                            className="btn-primary h-8 px-3 text-[10px] shrink-0"
+                            onClick={() => submitOutput(enrollment.id)}
+                            disabled={savingOutput === enrollment.id || !current.trim()}
+                          >
+                            {savingOutput === enrollment.id ? 'Saving…' : isSubmitted ? 'Update' : 'Submit'}
+                          </button>
+                        </div>
+                        {t.checklist && (
+                          <div className="flex flex-wrap gap-1">
+                            {t.checklist.map((item, i) => (
+                              <span key={i} className="text-[9px] text-muted-c px-1.5 py-0.5 rounded bg-surface-2 border border-border">
+                                {item}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )
                   })()}
