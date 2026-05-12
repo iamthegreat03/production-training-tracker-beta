@@ -96,8 +96,9 @@ All notable changes to this project are documented here.
 ## [v3.7] — 2026-05-13
 
 ### Features
-- **Attendance Summary card** — Dashboard "Trained Designers" card replaced with a compact stat snapshot for any selected date range. Shows five color-coded metrics: Rate %, Present, Late, Absent, and Notes count. Instantly recalculates when either date input changes.
-- **Date range picker** — Replaced the Weekly / Monthly / All Time toggle with a from → to date input pair (defaults to last 30 days). Works across any arbitrary range instead of fixed period buckets.
+- **Attendance Summary card** — Dashboard card redesigned with a hero Rate % (color-coded: green ≥80%, amber ≥60%, red <60%), Present / Late / Absent count chips, and a scrollable Trainer Notes feed. Each note shows the designer's initials avatar, name, training name, date, and the full note text.
+- **Date range picker** — Replaced the Weekly / Monthly / All Time toggle with a from → to date input pair (defaults to last 30 days). All stats and notes instantly recalculate for the selected window.
+- **Rate health strip** — A one-pixel color bar at the top of the card reflects the overall rate health at a glance (green / amber / red).
 
 ---
 

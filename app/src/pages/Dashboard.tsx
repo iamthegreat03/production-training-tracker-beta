@@ -2,10 +2,10 @@ import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   Users, BookOpen, CalendarCheck, TrendingUp,
-  AlertTriangle, Clock, Zap, ChevronRight, Star, Activity,
+  AlertTriangle, Clock, Zap, ChevronRight, Star, Activity, StickyNote,
 } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
-import { pct, fmtDs } from '@/lib/utils'
+import { pct, fmtDs, initials } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 
 const fadeUp = {
@@ -72,7 +72,8 @@ export default function Dashboard() {
 
   const rangedStats = useMemo(() => {
     if (!rangeFrom || !rangeTo || rangeFrom > rangeTo) return null
-    let presentCount = 0, lateCount = 0, absentCount = 0, notesCount = 0
+    let presentCount = 0, lateCount = 0, absentCount = 0
+    const notesList: Array<{ id: string; designerName: string; trainingName: string; date: string; text: string }> = []
     attendance.forEach(a => {
       const sess = sessions.find(s => s.id === a.session_id)
       if (!sess || !a.designer_id) return
@@ -80,12 +81,17 @@ export default function Dashboard() {
       if (a.is_present === 'true') presentCount++
       else if (a.is_present === 'late') lateCount++
       else if (a.is_present === 'false') absentCount++
-      if (a.notes) notesCount++
+      if (a.notes) {
+        const d = designers.find(x => x.id === a.designer_id)
+        const tr = trainings.find(x => x.id === sess.training_id)
+        notesList.push({ id: a.id, designerName: d?.name ?? 'Unknown', trainingName: tr?.name ?? '—', date: sess.session_date, text: a.notes })
+      }
     })
+    notesList.sort((a, b) => b.date.localeCompare(a.date))
     const total = presentCount + lateCount + absentCount
     const rate = total > 0 ? Math.round(((presentCount + lateCount) / total) * 100) : 0
-    return { presentCount, lateCount, absentCount, notesCount, total, rate }
-  }, [attendance, sessions, rangeFrom, rangeTo])
+    return { presentCount, lateCount, absentCount, notesList, total, rate }
+  }, [attendance, sessions, designers, trainings, rangeFrom, rangeTo])
 
   // Skill coverage for base platforms
   const PLATFORMS = ['Clickfunnels', 'GoHighLevel', 'Shopify', 'Wix', 'Wordpress']
@@ -231,49 +237,83 @@ export default function Dashboard() {
         </motion.div>
       </div>
 
-      {/* Trained Designers */}
+      {/* Attendance Summary */}
       <motion.div variants={fadeUp} custom={8} initial="hidden" animate="show"
-        className="card rounded-xl p-4">
-        <div className="flex items-center gap-2 mb-4 flex-wrap gap-y-2">
-          <Activity className="w-4 h-4 text-orange-400 shrink-0" />
-          <h2 className="font-semibold text-sm text-primary">Attendance Summary</h2>
-          <div className="flex items-center gap-1.5 ml-auto">
-            <input
-              type="date"
-              value={rangeFrom}
-              max={rangeTo}
-              onChange={e => setRangeFrom(e.target.value)}
-              className="input h-7 px-2 text-[11px] w-32 tabular-nums"
-            />
-            <span className="text-[10px] text-muted-c font-bold">→</span>
-            <input
-              type="date"
-              value={rangeTo}
-              min={rangeFrom}
-              max={today}
-              onChange={e => setRangeTo(e.target.value)}
-              className="input h-7 px-2 text-[11px] w-32 tabular-nums"
-            />
-          </div>
-        </div>
-        {!rangedStats || rangedStats.total === 0 ? (
-          <p className="text-sm text-muted-c text-center py-4">No attendance data in this range</p>
-        ) : (
-          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-            {[
-              { label: 'Rate', value: `${rangedStats.rate}%`, color: 'text-orange-500', bg: 'bg-orange-500/8' },
-              { label: 'Present', value: rangedStats.presentCount, color: 'text-emerald-400', bg: 'bg-emerald-500/8' },
-              { label: 'Late', value: rangedStats.lateCount, color: 'text-amber-400', bg: 'bg-amber-500/8' },
-              { label: 'Absent', value: rangedStats.absentCount, color: 'text-red-400', bg: 'bg-red-500/8' },
-              { label: 'Notes', value: rangedStats.notesCount, color: 'text-blue-400', bg: 'bg-blue-500/8' },
-            ].map(({ label, value, color, bg }) => (
-              <div key={label} className={cn('rounded-xl p-3 text-center', bg)}>
-                <div className={cn('text-lg font-bold tabular-nums leading-none', color)}>{value}</div>
-                <div className="text-[9px] font-bold text-muted-c uppercase tracking-widest mt-1">{label}</div>
-              </div>
-            ))}
-          </div>
+        className="card rounded-xl overflow-hidden">
+        {rangedStats && rangedStats.total > 0 && (
+          <div className={cn('h-1', rangedStats.rate >= 80 ? 'bg-gradient-to-r from-emerald-500 to-emerald-400' : rangedStats.rate >= 60 ? 'bg-gradient-to-r from-amber-500 to-amber-400' : 'bg-gradient-to-r from-red-500 to-red-400')} />
         )}
+        <div className="p-4 space-y-4">
+          {/* Header */}
+          <div className="flex items-center gap-2 flex-wrap gap-y-2">
+            <Activity className="w-4 h-4 text-orange-400 shrink-0" />
+            <h2 className="font-semibold text-sm text-primary">Attendance Summary</h2>
+            <div className="flex items-center gap-1.5 ml-auto">
+              <input type="date" value={rangeFrom} max={rangeTo} onChange={e => setRangeFrom(e.target.value)} className="input h-7 px-2 text-[11px] w-32 tabular-nums" />
+              <span className="text-[10px] text-muted-c font-bold">→</span>
+              <input type="date" value={rangeTo} min={rangeFrom} max={today} onChange={e => setRangeTo(e.target.value)} className="input h-7 px-2 text-[11px] w-32 tabular-nums" />
+            </div>
+          </div>
+
+          {!rangedStats || rangedStats.total === 0 ? (
+            <p className="text-sm text-muted-c text-center py-4">No attendance data in this range</p>
+          ) : (
+            <>
+              {/* Stats row */}
+              <div className="flex gap-3 flex-wrap">
+                {/* Big rate */}
+                <div className="flex-shrink-0 w-28 p-4 rounded-xl bg-surface-2 border border-border flex flex-col justify-center">
+                  <div className={cn('font-display font-bold text-4xl leading-none tabular-nums',
+                    rangedStats.rate >= 80 ? 'text-emerald-400' : rangedStats.rate >= 60 ? 'text-amber-400' : 'text-red-400'
+                  )}>{rangedStats.rate}%</div>
+                  <div className="text-[9px] font-bold text-muted-c uppercase tracking-widest mt-1.5">Rate</div>
+                  <div className="text-[10px] text-muted-c mt-0.5">{rangedStats.total} marked</div>
+                </div>
+                {/* Present / Late / Absent */}
+                <div className="grid grid-cols-3 gap-2 flex-1 min-w-0">
+                  {[
+                    { label: 'Present', value: rangedStats.presentCount, color: 'text-emerald-400', bg: 'bg-emerald-500/8' },
+                    { label: 'Late', value: rangedStats.lateCount, color: 'text-amber-400', bg: 'bg-amber-500/8' },
+                    { label: 'Absent', value: rangedStats.absentCount, color: 'text-red-400', bg: 'bg-red-500/8' },
+                  ].map(({ label, value, color, bg }) => (
+                    <div key={label} className={cn('rounded-xl p-3 text-center', bg)}>
+                      <div className={cn('text-2xl font-bold tabular-nums leading-none', color)}>{value}</div>
+                      <div className="text-[9px] font-bold text-muted-c uppercase tracking-widest mt-1">{label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Notes feed */}
+              {rangedStats.notesList.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-c uppercase tracking-widest">
+                    <StickyNote className="w-3 h-3" />
+                    {rangedStats.notesList.length} Trainer {rangedStats.notesList.length === 1 ? 'Note' : 'Notes'}
+                  </div>
+                  <div className="space-y-2 max-h-56 overflow-y-auto pr-0.5">
+                    {rangedStats.notesList.map(note => (
+                      <div key={note.id} className="flex gap-3 p-3 rounded-xl bg-surface-2 border border-border-subtle">
+                        <div className="w-8 h-8 rounded-lg bg-orange-gradient flex items-center justify-center text-white text-[10px] font-bold shrink-0">
+                          {initials(note.designerName)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-baseline gap-1.5 flex-wrap">
+                            <span className="text-xs font-bold text-primary">{note.designerName}</span>
+                            <span className="text-[10px] text-muted-c">·</span>
+                            <span className="text-[10px] text-orange-400 font-medium truncate max-w-[140px]">{note.trainingName}</span>
+                            <span className="text-[10px] text-muted-c ml-auto shrink-0">{fmtDs(note.date)}</span>
+                          </div>
+                          <p className="text-xs text-muted-c italic leading-relaxed mt-0.5">{note.text}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </motion.div>
 
       {/* Team breakdown + Skill coverage */}
