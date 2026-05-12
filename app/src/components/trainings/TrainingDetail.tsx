@@ -81,13 +81,6 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
     })
   }
 
-  function setOutputUrl(did: string, url: string) {
-    setAssessData(prev => {
-      const entry = prev[did] ?? { outputUrl: '', results: trainingChecklist.map(() => false) }
-      return { ...prev, [did]: { ...entry, outputUrl: url } }
-    })
-  }
-
   function openAssessPanel() {
     if (isHandsOn && !training.platform) {
       toast.error('Training has no platform configured — edit the training first')
@@ -375,22 +368,18 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
 
                       {/* Output URL + Checklist */}
                       <div className="px-3 pb-3 space-y-2" onClick={e => e.stopPropagation()}>
-                        <div className="flex gap-2 ml-14">
-                          <input
-                            className="input h-7 flex-1 text-xs"
-                            placeholder="Paste output link…"
-                            value={outputUrl}
-                            onChange={e => setOutputUrl(d.id, e.target.value)}
-                          />
-                          {outputUrl && (
+                        <div className="ml-14">
+                          {outputUrl ? (
                             <a
                               href={outputUrl}
                               target="_blank"
                               rel="noreferrer"
-                              className="btn-outline h-7 px-2 text-[10px] font-bold gap-1 flex items-center shrink-0"
+                              className="btn-outline h-7 px-3 text-[10px] font-bold gap-1.5 inline-flex items-center"
                             >
-                              <ExternalLink className="w-3 h-3" /> View
+                              <ExternalLink className="w-3 h-3" /> View Output
                             </a>
+                          ) : (
+                            <span className="text-[10px] text-muted-c italic">No submission yet</span>
                           )}
                         </div>
                         {trainingChecklist.length > 0 && (
