@@ -93,6 +93,14 @@ All notable changes to this project are documented here.
 
 ---
 
+## [v3.6] — 2026-05-13
+
+### Features
+- **Designer output submission** — Designers now see a "Submit Your Output" section on their Home page for any active or completed Hands-On training that has a checklist. They paste their output link directly; status shows as Pending or Submitted. The checklist criteria are displayed for reference.
+- **Assess panel pre-fills from submission** — When the trainer opens the assess panel, each designer's output URL is already populated from what the designer submitted — no manual link collection needed.
+
+---
+
 ## [v3.5] — 2026-05-12
 
 ### Features

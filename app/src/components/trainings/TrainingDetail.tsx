@@ -101,6 +101,7 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
     const initialData: Record<string, AssessEntry> = {}
     myEnrolledDesigners.forEach(d => {
       const enrollment = myEnrollments.find(e => e.designer_id === d.id)
+      // Pre-fill output URL from designer's own submission
       initialData[d.id] = {
         outputUrl: enrollment?.output_url ?? '',
         results: (enrollment?.checklist_results as boolean[] | null) ?? cl.map(() => false),
