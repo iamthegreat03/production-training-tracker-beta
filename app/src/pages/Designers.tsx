@@ -169,7 +169,7 @@ export default function Designers() {
       {/* Controls row */}
       <div className="flex flex-wrap gap-2 items-center">
         {/* Search */}
-        <div className="relative flex-1 min-w-48">
+        <div className="relative flex-1 min-w-32 sm:min-w-48">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-c" />
           <input
             className="input pl-9 h-9"

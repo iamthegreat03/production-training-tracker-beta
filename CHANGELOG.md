@@ -93,6 +93,23 @@ All notable changes to this project are documented here.
 
 ---
 
+## [v3.4] — 2026-05-12
+
+### Mobile Responsiveness
+
+- **Attendance stats grid** — `grid-cols-4` → `grid-cols-2 sm:grid-cols-4`; Present/Late/Absent/Unmarked now 2×2 on small screens
+- **Attendance filter bar** — search width `w-36` → `w-28 sm:w-36`; divider between search and bulk action buttons hidden on mobile; outer flex now wraps
+- **Training modal grids** — Platform+Level grid `grid-cols-2` → `grid-cols-1 sm:grid-cols-2`; Date+Status grid `grid-cols-3` → `grid-cols-1 sm:grid-cols-3`
+- **Skill Set controls** — matrix filter row now `flex-wrap` and `min-w-0` so chips wrap instead of overflowing; sticky designer column narrowed on mobile (`min-w-[140px] sm:min-w-[200px]`, `w-40 sm:w-64`)
+- **Skill Set team coverage** — `grid-cols-5` → `grid-cols-3 sm:grid-cols-5`
+- **Roster view mark buttons** — "Present", "Late", "Absent" text labels hidden on mobile (`hidden sm:inline`), icons-only on small screens
+- **Training Detail banner** — `h-32` → `h-24 sm:h-32`; footer now `flex-wrap` with `gap-2`; "Attendance" and "Assess" button text truncated on mobile
+- **Training Detail roster info** — `grid-cols-2` → `grid-cols-1 sm:grid-cols-2`
+- **Matrix view** — sticky designer column `min-w-[180px]` → `min-w-[140px] sm:min-w-[180px]`; session cells `min-w-[56px]` → `min-w-[44px] sm:min-w-[56px]`
+- **Designers search** — `min-w-48` → `min-w-32 sm:min-w-48`
+
+---
+
 ## [v3.2] — 2026-05-12
 
 ### Bug Fixes

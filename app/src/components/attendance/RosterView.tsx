@@ -133,7 +133,7 @@ export default function RosterView({
                             : 'bg-surface-2 border-border text-muted-c hover:border-emerald-500/40 hover:text-emerald-500'
                         )}
                       >
-                        <Check className="w-3 h-3" /> Present
+                        <Check className="w-3 h-3" /><span className="hidden sm:inline"> Present</span>
                       </button>
                       <button
                         onClick={() => onMark(d.id, 'late')}
@@ -144,7 +144,7 @@ export default function RosterView({
                             : 'bg-surface-2 border-border text-muted-c hover:border-amber-500/40 hover:text-amber-500'
                         )}
                       >
-                        <Clock className="w-3 h-3" /> Late
+                        <Clock className="w-3 h-3" /><span className="hidden sm:inline"> Late</span>
                       </button>
                       <button
                         onClick={() => onMark(d.id, 'false')}
@@ -155,7 +155,7 @@ export default function RosterView({
                             : 'bg-surface-2 border-border text-muted-c hover:border-red-500/40 hover:text-red-400'
                         )}
                       >
-                        <X className="w-3 h-3" /> Absent
+                        <X className="w-3 h-3" /><span className="hidden sm:inline"> Absent</span>
                       </button>
                     </div>
                   </td>

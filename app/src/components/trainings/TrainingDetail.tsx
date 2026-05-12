@@ -161,7 +161,7 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
         className="glass rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden"
       >
         {/* Banner / Header */}
-        <div className="relative h-32 shrink-0 bg-surface-2 overflow-hidden">
+        <div className="relative h-24 sm:h-32 shrink-0 bg-surface-2 overflow-hidden">
           <div className="absolute inset-0 bg-orange-glow opacity-30" />
           <div className="absolute inset-0 bg-grid-dark opacity-10" />
 
@@ -336,7 +336,7 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
                 <AnimatePresence mode="wait">
                   {activeTab === 'roster' ? (
                     <motion.div key="roster" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.18, ease: [0.16,1,0.3,1] }} className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="p-3 rounded-xl bg-surface-2 border border-border">
                           <div className="text-[10px] font-bold text-muted-c uppercase tracking-widest mb-1 flex items-center gap-1">
                             <Target className="w-3 h-3" /> Focus
@@ -420,7 +420,7 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
               </div>
 
               {/* Actions Footer */}
-              <div className="p-5 bg-surface-2 border-t border-border flex items-center justify-between shrink-0">
+              <div className="p-4 bg-surface-2 border-t border-border flex flex-wrap items-center justify-between gap-2 shrink-0">
                 <button
                   onClick={handleDelete}
                   disabled={deleting}
@@ -429,13 +429,13 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
                   <Trash2 className="w-5 h-5" />
                 </button>
 
-                <div className="flex gap-2">
-                  <button onClick={goToAttendance} className="btn-outline h-10 px-6 gap-2">
-                    <Users className="w-4 h-4" /> Go to Attendance
+                <div className="flex flex-wrap gap-2">
+                  <button onClick={goToAttendance} className="btn-outline h-10 px-4 gap-2">
+                    <Users className="w-4 h-4" /><span className="hidden sm:inline">Go to</span> Attendance
                   </button>
                   {training.status === 'completed' && can('canAddEditTrainings') && (
-                    <button className="btn-primary h-10 px-6 gap-2" onClick={openAssessPanel}>
-                      <CheckCircle2 className="w-4 h-4" /> Finish & Assess
+                    <button className="btn-primary h-10 px-4 gap-2" onClick={openAssessPanel}>
+                      <CheckCircle2 className="w-4 h-4" /><span className="hidden sm:inline">Finish &</span> Assess
                     </button>
                   )}
                 </div>

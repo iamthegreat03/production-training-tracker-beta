@@ -65,11 +65,11 @@ export default function MatrixView({
           <thead>
             <tr>
               {/* Sticky designer column header */}
-              <th className="sticky left-0 z-20 bg-surface border-b border-r border-border px-4 py-3 text-left min-w-[180px]">
+              <th className="sticky left-0 z-20 bg-surface border-b border-r border-border px-4 py-3 text-left min-w-[140px] sm:min-w-[180px]">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-muted-c">Designer</span>
               </th>
               {sessions.map(s => (
-                <th key={s.id} className="border-b border-border px-2 py-3 text-center min-w-[56px]">
+                <th key={s.id} className="border-b border-border px-2 py-3 text-center min-w-[44px] sm:min-w-[56px]">
                   <div className="flex flex-col items-center gap-0.5">
                     <span className="text-[8px] font-bold uppercase tracking-widest text-muted-c">
                       {s.day_of_week?.slice(0, 3)}

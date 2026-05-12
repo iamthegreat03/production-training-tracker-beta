@@ -304,7 +304,7 @@ export default function TrainingModal({ training, onClose, onSaved }: Props) {
                         + New Platform
                       </button>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="space-y-1.5">
                         <label className="text-xs font-semibold uppercase tracking-wider text-muted-c">Platform</label>
                         {platformMode === 'existing' ? (
@@ -331,7 +331,7 @@ export default function TrainingModal({ training, onClose, onSaved }: Props) {
                   </div>
                 )}
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold uppercase tracking-wider text-muted-c">Start Date</label>
                     <input type="date" className="input" value={startDate} onChange={e => setStartDate(e.target.value)} />

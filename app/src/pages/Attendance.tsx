@@ -471,7 +471,7 @@ export default function AttendancePage() {
           {showSessionSelector && selSId && sessionStats && (
             <motion.div
               initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
-              className="grid grid-cols-4 gap-2 shrink-0"
+              className="grid grid-cols-2 sm:grid-cols-4 gap-2 shrink-0"
             >
               {[
                 { label: 'Present',  value: sessionStats.present,  color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
@@ -527,13 +527,13 @@ export default function AttendancePage() {
                   )
                 })}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-c" />
-                  <input className="input h-9 w-36 pl-9 text-xs" placeholder="Search…"
+                  <input className="input h-9 w-28 sm:w-36 pl-9 text-xs" placeholder="Search…"
                     value={search} onChange={e => setSearch(e.target.value)} />
                 </div>
-                <div className="h-8 w-px bg-border" />
+                <div className="hidden sm:block h-8 w-px bg-border" />
                 <button onClick={() => markAll('true')}
                   className="btn-outline h-9 px-3 text-[10px] uppercase tracking-widest font-bold text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/5">
                   All Present

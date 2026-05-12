@@ -140,7 +140,7 @@ export default function SkillSet() {
                {teamCoverage.map(t => (
                  <div key={t.team} className="space-y-3">
                     <div className="text-xs font-bold text-primary">{t.team}</div>
-                    <div className="grid grid-cols-5 gap-2">
+                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                        {t.platformStats.map(ps => (
                          <div key={ps.platform} className="space-y-1">
                             <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-tighter text-muted-c">
@@ -231,7 +231,7 @@ export default function SkillSet() {
       <div className="card rounded-2xl flex flex-col overflow-hidden">
         {/* Matrix Controls */}
         <div className="p-4 border-b border-border bg-surface-2/50 flex flex-wrap items-center justify-between gap-4">
-           <div className="flex items-center gap-4 flex-1 min-w-[300px]">
+           <div className="flex flex-wrap items-center gap-4 flex-1 min-w-0">
               <div className="relative flex-1 max-w-sm">
                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-c" />
                  <input className="input h-9 pl-9 text-xs" placeholder="Filter by name or team..." value={search} onChange={e => setSearch(e.target.value)} />
@@ -254,7 +254,7 @@ export default function SkillSet() {
            <table className="w-full text-left border-collapse">
               <thead>
                  <tr className="bg-surface-2/30">
-                    <th className="sticky left-0 z-20 bg-surface border-r border-border p-4 w-64 min-w-[200px]">
+                    <th className="sticky left-0 z-20 bg-surface border-r border-border p-4 w-40 min-w-[140px] sm:w-64 sm:min-w-[200px]">
                        <div className="text-[10px] font-bold text-muted-c uppercase tracking-widest">Designer</div>
                     </th>
                     {visiblePlatforms.map(p => (
