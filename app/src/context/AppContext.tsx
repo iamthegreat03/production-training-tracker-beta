@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useReducer, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useReducer, useRef, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { normAtt } from '@/lib/utils'
@@ -56,6 +56,7 @@ const AppContext = createContext<AppContextValue | null>(null)
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initial)
+  const authedUserIdRef = useRef<string | null>(null)
 
   async function loadAll() {
     dispatch({ type: 'SET_LOADING', payload: true })
@@ -143,18 +144,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
 
       const perms = { ...DEFAULT_PERMS, ...(roleData?.permissions ?? {}) }
-      const defaultPage = roleData?.role === 'designer' ? 'home' : 'dashboard'
+      const isNewLogin = authedUserIdRef.current !== session.user.id
+      authedUserIdRef.current = session.user.id
 
-      dispatch({
-        type: 'SET_AUTH',
-        payload: {
-          user: session.user,
-          role: roleData?.role ?? null,
-          designer,
-          perms,
-          page: defaultPage,
-        },
-      })
+      const payload: Partial<AppState> = {
+        user: session.user,
+        role: roleData?.role ?? null,
+        designer,
+        perms,
+      }
+      if (isNewLogin) {
+        payload.page = roleData?.role === 'designer' ? 'home' : 'dashboard'
+      }
+
+      dispatch({ type: 'SET_AUTH', payload })
       await loadAll()
     } catch (err) {
       console.error('Auth error:', err)
@@ -179,6 +182,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (event === 'SIGNED_IN') {
         applySession(session!)
       } else if (event === 'SIGNED_OUT') {
+        authedUserIdRef.current = null
         dispatch({ type: 'SIGN_OUT' })
       }
       // INITIAL_SESSION handled by getSession() above; TOKEN_REFRESHED is
