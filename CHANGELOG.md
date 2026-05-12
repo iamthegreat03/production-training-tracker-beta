@@ -93,6 +93,30 @@ All notable changes to this project are documented here.
 
 ---
 
+## [v3.5] — 2026-05-12
+
+### Features
+- **Output Checklist on Trainings** — Hands-On trainings can now define a list of pass/fail output criteria when creating or editing the training (Step 1 → Output Checklist section). Items are saved as a `checklist` array on the training record.
+- **Output scoring in Assess panel** — Each designer card in the assess panel now shows:
+  - A URL input to paste and view their submitted output link
+  - Checklist items as toggleable pass/fail chips
+  - Auto-calculated scores: Attendance (40%) + Output (60%) = Final Score (%)
+  - Color-coded score badge (green ≥80, amber ≥60, red <60)
+- **Assessment data persisted** — On confirm, each selected enrollment record saves `output_url`, `checklist_results`, `output_score`, `attendance_score`, and `final_score` to Supabase
+
+### Database Migration Required
+Run the following in Supabase SQL editor:
+```sql
+ALTER TABLE trainings ADD COLUMN IF NOT EXISTS checklist TEXT[] DEFAULT '{}';
+ALTER TABLE training_enrollments ADD COLUMN IF NOT EXISTS output_url TEXT;
+ALTER TABLE training_enrollments ADD COLUMN IF NOT EXISTS checklist_results JSONB DEFAULT '[]';
+ALTER TABLE training_enrollments ADD COLUMN IF NOT EXISTS output_score NUMERIC(5,2);
+ALTER TABLE training_enrollments ADD COLUMN IF NOT EXISTS attendance_score NUMERIC(5,2);
+ALTER TABLE training_enrollments ADD COLUMN IF NOT EXISTS final_score NUMERIC(5,2);
+```
+
+---
+
 ## [v3.4] — 2026-05-12
 
 ### Mobile Responsiveness

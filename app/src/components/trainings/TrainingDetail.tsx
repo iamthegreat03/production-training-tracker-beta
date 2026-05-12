@@ -27,6 +27,9 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
   const [showAssessPanel, setShowAssessPanel] = useState(false)
   const [assessSelections, setAssessSelections] = useState<Set<string>>(new Set())
 
+  interface AssessEntry { outputUrl: string; results: boolean[] }
+  const [assessData, setAssessData] = useState<Record<string, AssessEntry>>({})
+
   const myEnrollments = enrollments.filter(e => e.training_id === training.id)
   const mySessions = sessions.filter(s => s.training_id === training.id)
     .sort((a, b) => a.session_date.localeCompare(b.session_date))
@@ -41,6 +44,7 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
   const isHandsOn = training.type === 'Hands-On'
   const awardPlatform = isHandsOn ? training.platform : `DSG: ${training.name}`
   const awardLevel = isHandsOn ? (training.skill_level ?? 'Intermediate') : 'Completed'
+  const trainingChecklist = training.checklist ?? []
 
   function getAttCount(designerId: string) {
     return attendance.filter(a =>
@@ -48,6 +52,40 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
       a.designer_id === designerId &&
       (normAtt(a.is_present) === 'true' || normAtt(a.is_present) === 'late')
     ).length
+  }
+
+  function getAttScore(did: string): number {
+    if (mySessions.length === 0) return 0
+    return Math.round((getAttCount(did) / mySessions.length) * 100)
+  }
+
+  function getOutputScore(did: string): number {
+    if (trainingChecklist.length === 0) return 100
+    const results = assessData[did]?.results ?? []
+    const passed = results.filter(Boolean).length
+    return Math.round((passed / trainingChecklist.length) * 100)
+  }
+
+  function getFinalScore(did: string): number {
+    const att = getAttScore(did)
+    if (trainingChecklist.length === 0) return att
+    return Math.round(att * 0.4 + getOutputScore(did) * 0.6)
+  }
+
+  function toggleResult(did: string, idx: number) {
+    setAssessData(prev => {
+      const entry = prev[did] ?? { outputUrl: '', results: trainingChecklist.map(() => false) }
+      const results = [...entry.results]
+      results[idx] = !results[idx]
+      return { ...prev, [did]: { ...entry, results } }
+    })
+  }
+
+  function setOutputUrl(did: string, url: string) {
+    setAssessData(prev => {
+      const entry = prev[did] ?? { outputUrl: '', results: trainingChecklist.map(() => false) }
+      return { ...prev, [did]: { ...entry, outputUrl: url } }
+    })
   }
 
   function openAssessPanel() {
@@ -59,6 +97,16 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
       myEnrolledDesigners.filter(d => getAttCount(d.id) > 0).map(d => d.id)
     )
     setAssessSelections(preSelected)
+    const cl = training.checklist ?? []
+    const initialData: Record<string, AssessEntry> = {}
+    myEnrolledDesigners.forEach(d => {
+      const enrollment = myEnrollments.find(e => e.designer_id === d.id)
+      initialData[d.id] = {
+        outputUrl: enrollment?.output_url ?? '',
+        results: (enrollment?.checklist_results as boolean[] | null) ?? cl.map(() => false),
+      }
+    })
+    setAssessData(initialData)
     setShowAssessPanel(true)
   }
 
@@ -92,6 +140,26 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
     }
     setCompleting(true)
     try {
+      // Save assessment scores + output data to enrollment records
+      const cl = training.checklist ?? []
+      for (const did of selectedIds) {
+        const enrollment = myEnrollments.find(e => e.designer_id === did)
+        if (!enrollment) continue
+        const data = assessData[did] ?? { outputUrl: '', results: cl.map(() => false) }
+        const passed = data.results.filter(Boolean).length
+        const outputScore = cl.length > 0 ? Math.round((passed / cl.length) * 100) : 100
+        const attCount = getAttCount(did)
+        const attScore = mySessions.length > 0 ? Math.round((attCount / mySessions.length) * 100) : 0
+        const finalScore = cl.length > 0 ? Math.round(attScore * 0.4 + outputScore * 0.6) : attScore
+        await supabase.from('training_enrollments').update({
+          output_url: data.outputUrl || null,
+          checklist_results: data.results,
+          output_score: outputScore,
+          attendance_score: attScore,
+          final_score: finalScore,
+        }).eq('id', enrollment.id)
+      }
+
       const LEVEL_ORDER: Record<string, number> = { Intermediate: 0, Advanced: 1, Expert: 2, Completed: 3 }
 
       const rowsToUpsert = selectedIds
@@ -229,11 +297,14 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
                 <div className="w-8 h-8 rounded-lg bg-orange-gradient flex items-center justify-center shrink-0">
                   {isHandsOn ? <Zap className="w-4 h-4 text-white" /> : <MessageSquare className="w-4 h-4 text-white" />}
                 </div>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <div className="text-xs font-bold text-orange-500">Awarding: {awardPlatform}</div>
-                  <div className="text-[10px] text-muted-c uppercase tracking-widest">{awardLevel} Level</div>
+                  <div className="text-[10px] text-muted-c uppercase tracking-widest">
+                    {awardLevel} Level
+                    {trainingChecklist.length > 0 && ' · 40% Attendance + 60% Output'}
+                  </div>
                 </div>
-                <div className="ml-auto text-xs font-bold text-primary shrink-0">
+                <div className="text-xs font-bold text-primary shrink-0">
                   {assessSelections.size} selected
                 </div>
               </div>
@@ -245,48 +316,109 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
                 )}
                 {myEnrolledDesigners.map(d => {
                   const attCount = getAttCount(d.id)
-                  const attended = attCount > 0
                   const checked = assessSelections.has(d.id)
                   const existing = designerSkills.find(s => s.designer_id === d.id && s.platform === awardPlatform)
-                  const attendRate = pct(attCount, mySessions.length)
+                  const outputUrl = assessData[d.id]?.outputUrl ?? ''
+                  const finalScore = getFinalScore(d.id)
+                  const passedCount = (assessData[d.id]?.results ?? []).filter(Boolean).length
 
                   return (
-                    <button
+                    <div
                       key={d.id}
-                      onClick={() => toggleAssess(d.id)}
                       className={cn(
-                        'w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left',
-                        checked ? 'border-orange-500/40 bg-orange-500/5' : 'border-border bg-surface-2 hover:border-border'
+                        'rounded-xl border transition-all',
+                        checked ? 'border-orange-500/40 bg-orange-500/5' : 'border-border bg-surface-2'
                       )}
                     >
-                      {/* Checkbox */}
-                      <div className={cn(
-                        'w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all',
-                        checked ? 'border-orange-500 bg-orange-500' : 'border-border'
-                      )}>
-                        {checked && <Check className="w-3 h-3 text-white" />}
-                      </div>
-
-                      {/* Avatar */}
-                      <div className="w-8 h-8 rounded-full bg-orange-gradient flex items-center justify-center text-white text-[10px] font-bold shrink-0">
-                        {initials(d.name)}
-                      </div>
-
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-primary">{d.name}</div>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className={cn('text-[10px] font-bold uppercase tracking-wider', attended ? 'text-emerald-400' : 'text-muted-c')}>
-                            {attended ? `${attCount}/${mySessions.length} sessions · ${attendRate}%` : 'No attendance'}
-                          </span>
-                          {existing && (
-                            <span className="text-[10px] text-purple-400 font-bold uppercase tracking-wider">
-                              Already {existing.level}
+                      {/* Top row — click to toggle selection */}
+                      <div
+                        className="flex items-center gap-3 p-3 cursor-pointer"
+                        onClick={() => toggleAssess(d.id)}
+                      >
+                        <div className={cn(
+                          'w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all',
+                          checked ? 'border-orange-500 bg-orange-500' : 'border-border'
+                        )}>
+                          {checked && <Check className="w-3 h-3 text-white" />}
+                        </div>
+                        <div className="w-8 h-8 rounded-full bg-orange-gradient flex items-center justify-center text-white text-[10px] font-bold shrink-0">
+                          {initials(d.name)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-primary">{d.name}</div>
+                          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                            <span className={cn('text-[10px] font-bold uppercase tracking-wider', attCount > 0 ? 'text-emerald-400' : 'text-muted-c')}>
+                              {attCount > 0 ? `${attCount}/${mySessions.length} att` : 'No attendance'}
                             </span>
-                          )}
+                            {trainingChecklist.length > 0 && (
+                              <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">
+                                {passedCount}/{trainingChecklist.length} ✓
+                              </span>
+                            )}
+                            {existing && (
+                              <span className="text-[10px] text-purple-400 font-bold uppercase tracking-wider">
+                                {existing.level}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className={cn(
+                          'text-xs font-bold px-2 py-1 rounded-lg shrink-0',
+                          finalScore >= 80 ? 'bg-emerald-500/10 text-emerald-400' :
+                          finalScore >= 60 ? 'bg-amber-500/10 text-amber-400' :
+                          'bg-red-500/10 text-red-400'
+                        )}>
+                          {finalScore}%
                         </div>
                       </div>
-                    </button>
+
+                      {/* Output URL + Checklist */}
+                      <div className="px-3 pb-3 space-y-2" onClick={e => e.stopPropagation()}>
+                        <div className="flex gap-2 ml-14">
+                          <input
+                            className="input h-7 flex-1 text-xs"
+                            placeholder="Paste output link…"
+                            value={outputUrl}
+                            onChange={e => setOutputUrl(d.id, e.target.value)}
+                          />
+                          {outputUrl && (
+                            <a
+                              href={outputUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="btn-outline h-7 px-2 text-[10px] font-bold gap-1 flex items-center shrink-0"
+                            >
+                              <ExternalLink className="w-3 h-3" /> View
+                            </a>
+                          )}
+                        </div>
+                        {trainingChecklist.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 ml-14">
+                            {trainingChecklist.map((item, idx) => {
+                              const passed = assessData[d.id]?.results[idx] ?? false
+                              return (
+                                <button
+                                  key={idx}
+                                  onClick={() => toggleResult(d.id, idx)}
+                                  className={cn(
+                                    'flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[10px] font-medium transition-all',
+                                    passed
+                                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                                      : 'bg-surface border-border text-muted-c hover:border-orange-500/30'
+                                  )}
+                                >
+                                  {passed
+                                    ? <Check className="w-2.5 h-2.5" />
+                                    : <div className="w-2.5 h-2.5 rounded-sm border border-current opacity-40" />
+                                  }
+                                  {item}
+                                </button>
+                              )
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   )
                 })}
               </div>

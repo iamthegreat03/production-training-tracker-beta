@@ -41,6 +41,7 @@ export interface Training {
   topic: string | null
   facilitator: string | null
   resources_url: string | null
+  checklist: string[] | null
 }
 
 export interface TrainingEnrollment {
@@ -49,6 +50,11 @@ export interface TrainingEnrollment {
   designer_id: string | null
   enrolled_at: string | null
   designer_schedule: string[] | null
+  output_url: string | null
+  checklist_results: boolean[] | null
+  output_score: number | null
+  attendance_score: number | null
+  final_score: number | null
 }
 
 export interface TrainingSession {

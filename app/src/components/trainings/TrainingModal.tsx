@@ -34,6 +34,10 @@ export default function TrainingModal({ training, onClose, onSaved }: Props) {
   const [notes, setNotes] = useState(training?.notes ?? '')
   const [schedule, setSchedule] = useState<string[]>(training?.schedule ?? [])
   
+  // Checklist (Hands-On only)
+  const [checklist, setChecklist] = useState<string[]>(training?.checklist ?? [])
+  const [newChecklistItem, setNewChecklistItem] = useState('')
+
   // Discussion specific
   const [newDiscDate, setNewDiscDate] = useState('')
 
@@ -86,6 +90,13 @@ export default function TrainingModal({ training, onClose, onSaved }: Props) {
     setSchedule(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day])
   }
 
+  function addChecklistItem() {
+    const item = newChecklistItem.trim()
+    if (!item || checklist.includes(item)) return
+    setChecklist(prev => [...prev, item])
+    setNewChecklistItem('')
+  }
+
   function addDiscDate() {
     if (!newDiscDate || schedule.includes(newDiscDate)) return
     setSchedule(prev => [...prev, newDiscDate].sort())
@@ -128,6 +139,7 @@ export default function TrainingModal({ training, onClose, onSaved }: Props) {
         status,
         notes: notes.trim() || null,
         schedule,
+        checklist: isHandsOn ? checklist : null,
         updated_at: new Date().toISOString()
       }
 
@@ -383,6 +395,48 @@ export default function TrainingModal({ training, onClose, onSaved }: Props) {
                     </div>
                   )}
                 </div>
+
+                {/* Checklist — Hands-On only */}
+                {isHandsOn && (
+                  <div className="space-y-2 p-4 rounded-xl bg-surface-2 border border-border">
+                    <label className="text-xs font-bold uppercase tracking-widest text-primary block">
+                      Output Checklist
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        className="input h-9 flex-1 text-sm"
+                        placeholder="Add a checklist item…"
+                        value={newChecklistItem}
+                        onChange={e => setNewChecklistItem(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addChecklistItem() } }}
+                      />
+                      <button type="button" onClick={addChecklistItem} className="btn-outline h-9 px-4 shrink-0">
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+                    {checklist.length === 0 ? (
+                      <p className="text-[11px] text-muted-c italic">
+                        Add criteria that designers must meet to pass assessment.
+                      </p>
+                    ) : (
+                      <div className="space-y-1.5 mt-1">
+                        {checklist.map((item, idx) => (
+                          <div key={idx} className="flex items-center gap-2 py-1.5 px-3 rounded-lg bg-surface border border-border">
+                            <div className="w-3 h-3 rounded border border-border shrink-0" />
+                            <span className="text-sm text-primary flex-1">{item}</span>
+                            <button
+                              type="button"
+                              onClick={() => setChecklist(prev => prev.filter((_, i) => i !== idx))}
+                              className="text-muted-c hover:text-red-400 transition-colors"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </motion.div>
             ) : (
               <motion.div key="step2" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.2, ease: [0.16,1,0.3,1] }} className="space-y-4">
