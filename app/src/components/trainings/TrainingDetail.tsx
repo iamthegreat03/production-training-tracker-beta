@@ -141,7 +141,12 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
   }
 
   async function handleDelete() {
-    if (!confirm('Are you sure you want to delete this training? All sessions and attendance will be lost.')) return
+    const message = isAssessed
+      ? `This training has been assessed.\n\nDeleting it will permanently remove all sessions, attendance records, and assessment scores.\n\nDesigner skill awards will NOT be revoked — they keep their skill levels.\n\nThis cannot be undone. Delete anyway?`
+      : training.status === 'completed'
+      ? `This training is marked as completed.\n\nDeleting it will permanently remove all sessions and attendance records.\n\nThis cannot be undone. Delete anyway?`
+      : `Are you sure you want to delete this training? All sessions and attendance will be lost.`
+    if (!confirm(message)) return
     setDeleting(true)
     const { error } = await supabase.from('trainings').delete().eq('id', training.id)
     if (error) {
