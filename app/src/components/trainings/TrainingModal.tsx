@@ -206,6 +206,8 @@ export default function TrainingModal({ training, onClose, onSaved }: Props) {
       const existingDates = new Set((existingSessions ?? []).map((s: any) => s.session_date))
 
       const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
+      const localDateStr = (d: Date) =>
+        `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
       const newSessions: { training_id: string; session_date: string; day_of_week: string }[] = []
 
       if (isHandsOn) {
@@ -213,11 +215,11 @@ export default function TrainingModal({ training, onClose, onSaved }: Props) {
         const cur = new Date(startDate + 'T00:00:00')
         const end = new Date(targetDate + 'T00:00:00')
         while (cur <= end) {
-          const dayName = DAY_NAMES[cur.getDay()]
-          if (schedule.includes(dayName)) {
-            const dateStr = cur.toISOString().split('T')[0]
+          const dow = DAY_NAMES[cur.getDay()]
+          if (schedule.includes(dow)) {
+            const dateStr = localDateStr(cur)
             if (!existingDates.has(dateStr)) {
-              newSessions.push({ training_id: trainingId, session_date: dateStr, day_of_week: dayName })
+              newSessions.push({ training_id: trainingId, session_date: dateStr, day_of_week: dow })
             }
           }
           cur.setDate(cur.getDate() + 1)
@@ -294,14 +296,14 @@ export default function TrainingModal({ training, onClose, onSaved }: Props) {
                 {/* Type Selector */}
                 <div className="flex gap-2">
                   <button
-                    onClick={() => setType('Hands-On')}
+                    onClick={() => { if (type !== 'Hands-On') { setSchedule([]); setEnrolled({}) } setType('Hands-On') }}
                     className={cn('flex-1 btn-outline h-12 flex-col gap-0 items-start px-4', type === 'Hands-On' && 'border-orange-500/50 bg-orange-500/5 text-orange-500')}
                   >
                     <span className="text-xs font-bold flex items-center gap-1.5"><Zap className="w-3 h-3" /> Hands-On</span>
                     <span className="text-[10px] opacity-60">Recurring skills training</span>
                   </button>
                   <button
-                    onClick={() => setType('Discussion')}
+                    onClick={() => { if (type !== 'Discussion') { setSchedule([]); setEnrolled({}) } setType('Discussion') }}
                     className={cn('flex-1 btn-outline h-12 flex-col gap-0 items-start px-4', type === 'Discussion' && 'border-purple-500/50 bg-purple-500/5 text-purple-500')}
                   >
                     <span className="text-xs font-bold flex items-center gap-1.5"><MessageSquare className="w-3 h-3" /> Discussion</span>

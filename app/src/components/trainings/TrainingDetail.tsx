@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   X, Pencil, Calendar, Users, Zap,
   MessageSquare, ExternalLink, Trash2, CheckCircle2,
-  Plus, PlayCircle, History, Target, ChevronLeft, Check
+  History, Target, ChevronLeft, Check
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useApp } from '@/context/AppContext'
@@ -143,7 +143,12 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
   async function handleDelete() {
     if (!confirm('Are you sure you want to delete this training? All sessions and attendance will be lost.')) return
     setDeleting(true)
-    await supabase.from('trainings').delete().eq('id', training.id)
+    const { error } = await supabase.from('trainings').delete().eq('id', training.id)
+    if (error) {
+      toast.error(error.message)
+      setDeleting(false)
+      return
+    }
     await loadAll()
     onClose()
   }
@@ -542,9 +547,6 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
                                   </div>
                                 </div>
                               </div>
-                              <button className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-orange-500/10 text-orange-500 transition-all">
-                                <PlayCircle className="w-4 h-4" />
-                              </button>
                             </div>
                           ))
                         )}
@@ -552,13 +554,8 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
                     </motion.div>
                   ) : (
                     <motion.div key="sessions" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.18, ease: [0.16,1,0.3,1] }} className="space-y-3">
-                      <div className="flex items-center justify-between px-1 mb-2">
+                      <div className="px-1 mb-2">
                         <div className="text-[10px] font-bold text-muted-c uppercase tracking-widest">History Log</div>
-                        {can('canAddSessions') && (
-                          <button className="text-[10px] font-bold text-orange-500 uppercase tracking-widest flex items-center gap-1 hover:underline">
-                            <Plus className="w-3 h-3" /> Add Manual Session
-                          </button>
-                        )}
                       </div>
                       {mySessions.length === 0 ? (
                         <div className="py-12 text-center text-muted-c">
