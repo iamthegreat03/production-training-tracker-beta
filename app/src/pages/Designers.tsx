@@ -12,6 +12,7 @@ import { toast } from 'sonner'
 import type { Designer } from '@/types/database'
 import DesignerModal from '@/components/designers/DesignerModal'
 import DesignerProfile from '@/components/designers/DesignerProfile'
+import ConfirmModal from '@/components/shared/ConfirmModal'
 
 type SortCol = 'name' | 'team' | 'rank'
 type SortDir = 'asc' | 'desc'
@@ -42,6 +43,8 @@ export default function Designers() {
   const [bulkTraining, setBulkTraining] = useState('')
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<Designer | null>(null)
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false)
 
   // Filtered + sorted list
   const visible = useMemo(() => {
@@ -89,10 +92,11 @@ export default function Designers() {
     else setSelected(new Set(visible.map(d => d.id)))
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm('Delete this designer? This cannot be undone.')) return
-    setDeleting(id)
-    const { error } = await supabase.from('designers').delete().eq('id', id)
+  async function handleDelete() {
+    if (!deleteTarget) return
+    setDeleting(deleteTarget.id)
+    setDeleteTarget(null)
+    const { error } = await supabase.from('designers').delete().eq('id', deleteTarget.id)
     if (error) toast.error(error.message)
     else toast.success('Designer removed')
     await loadAll()
@@ -132,8 +136,8 @@ export default function Designers() {
   }
 
   async function handleBulkDelete() {
-    if (!confirm(`Delete ${selected.size} designer(s)? This cannot be undone.`)) return
     setSaving(true)
+    setShowBulkDeleteConfirm(false)
     await supabase.from('designers').delete().in('id', [...selected])
     await loadAll()
     setSaving(false)
@@ -221,7 +225,7 @@ export default function Designers() {
               </button>
               {can('canDeleteDesigners') && (
                 <button className="btn-outline h-8 px-3 text-xs border-red-500/30 text-red-400 hover:border-red-400"
-                  onClick={handleBulkDelete} disabled={saving}>
+                  onClick={() => setShowBulkDeleteConfirm(true)} disabled={saving}>
                   <Trash2 className="w-3.5 h-3.5" /> Delete
                 </button>
               )}
@@ -337,7 +341,7 @@ export default function Designers() {
                         </button>
                         {can('canDeleteDesigners') && (
                           <button
-                            onClick={() => handleDelete(d.id)}
+                            onClick={() => setDeleteTarget(d)}
                             disabled={isDel}
                             className="p-1.5 rounded-lg hover:bg-red-500/10 hover:text-red-400 text-muted-c transition-colors"
                             title="Delete"
@@ -456,6 +460,34 @@ export default function Designers() {
               </div>
             </div>
           </Modal>
+        )}
+      </AnimatePresence>
+
+      {/* Single Delete Confirm */}
+      <AnimatePresence>
+        {deleteTarget && (
+          <ConfirmModal
+            title="Delete Designer"
+            message={<>Permanently delete <span className="font-semibold text-primary">{deleteTarget.name}</span>? All their attendance records and enrollments will also be removed. This cannot be undone.</>}
+            confirmLabel="Delete Designer"
+            danger
+            onConfirm={handleDelete}
+            onCancel={() => setDeleteTarget(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Bulk Delete Confirm */}
+      <AnimatePresence>
+        {showBulkDeleteConfirm && (
+          <ConfirmModal
+            title={`Delete ${selected.size} Designer${selected.size !== 1 ? 's' : ''}`}
+            message={<>Permanently delete <span className="font-semibold text-primary">{selected.size} selected designer{selected.size !== 1 ? 's' : ''}</span>? All their attendance records and enrollments will also be removed. This cannot be undone.</>}
+            confirmLabel={`Delete ${selected.size}`}
+            danger
+            onConfirm={handleBulkDelete}
+            onCancel={() => setShowBulkDeleteConfirm(false)}
+          />
         )}
       </AnimatePresence>
     </div>

@@ -15,6 +15,7 @@ import MatrixView from '@/components/attendance/MatrixView'
 import RosterView from '@/components/attendance/RosterView'
 import StatsView from '@/components/attendance/StatsView'
 import AddSessionModal from '@/components/attendance/AddSessionModal'
+import ConfirmModal from '@/components/shared/ConfirmModal'
 
 type AttLayout = 'cards' | 'matrix' | 'roster' | 'stats'
 
@@ -68,6 +69,8 @@ export default function AttendancePage() {
   const [savingMakeup, setSavingMakeup] = useState(false)
 
   const [optimistic, setOptimistic] = useState<Record<string, AttendanceValue>>({})
+  const [pendingOverdueDes, setPendingOverdueDes] = useState<Designer[] | null>(null)
+  const [pendingMarkAllValue, setPendingMarkAllValue] = useState<AttendanceValue | null>(null)
 
   // Drag-to-scroll on session selector
   const sessionScrollRef = useRef<HTMLDivElement>(null)
@@ -215,12 +218,18 @@ export default function AttendancePage() {
     await loadAll()
   }
 
-  async function markOverdueAbsent() {
+  function markOverdueAbsent() {
     if (!selSId || !sessionIsOverdue) return
     const enrolledIds = new Set(enrollments.filter(e => e.training_id === selTId).map(e => e.designer_id))
     const overdueDes = designers.filter(d => enrolledIds.has(d.id) && getVal(selSId, d.id) === null)
     if (overdueDes.length === 0) return
-    if (!confirm(`Mark ${overdueDes.length} unmarked designer(s) as absent for this session?`)) return
+    setPendingOverdueDes(overdueDes)
+  }
+
+  async function confirmMarkOverdueAbsent() {
+    const overdueDes = pendingOverdueDes
+    if (!overdueDes || !selSId) return
+    setPendingOverdueDes(null)
     setOptimistic(prev => {
       const next = { ...prev }
       overdueDes.forEach(d => { next[`${selSId}_${d.id}`] = 'false' })
@@ -301,10 +310,16 @@ export default function AttendancePage() {
     setNotesTarget(null)
   }
 
-  async function markAll(value: AttendanceValue) {
+  function markAll(value: AttendanceValue) {
     if (!selSId || visibleDesigners.length === 0) return
+    setPendingMarkAllValue(value)
+  }
+
+  async function confirmMarkAll() {
+    const value = pendingMarkAllValue
+    if (!selSId || !value || visibleDesigners.length === 0) return
     const label = value === 'true' ? 'PRESENT' : 'ABSENT'
-    if (!confirm(`Mark all ${visibleDesigners.length} visible designers as ${label}?`)) return
+    setPendingMarkAllValue(null)
     setOptimistic(prev => {
       const next = { ...prev }
       visibleDesigners.forEach(d => { next[`${selSId}_${d.id}`] = value })
@@ -743,6 +758,32 @@ export default function AttendancePage() {
               </div>
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+
+      {/* Mark Overdue Absent Confirm */}
+      <AnimatePresence>
+        {pendingOverdueDes && (
+          <ConfirmModal
+            title="Mark Overdue as Absent"
+            message={<><span className="font-semibold text-primary">{pendingOverdueDes.length} designer{pendingOverdueDes.length !== 1 ? 's' : ''}</span> are still unmarked and the session week has ended. Mark them all as absent?</>}
+            confirmLabel="Mark Absent"
+            onConfirm={confirmMarkOverdueAbsent}
+            onCancel={() => setPendingOverdueDes(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Mark All Confirm */}
+      <AnimatePresence>
+        {pendingMarkAllValue !== null && (
+          <ConfirmModal
+            title={pendingMarkAllValue === 'true' ? 'Mark All Present' : 'Mark All Absent'}
+            message={<>Mark all <span className="font-semibold text-primary">{visibleDesigners.length} visible designer{visibleDesigners.length !== 1 ? 's' : ''}</span> as <span className="font-semibold text-primary">{pendingMarkAllValue === 'true' ? 'present' : 'absent'}</span>? This will overwrite any existing attendance for this session.</>}
+            confirmLabel={pendingMarkAllValue === 'true' ? 'Mark All Present' : 'Mark All Absent'}
+            onConfirm={confirmMarkAll}
+            onCancel={() => setPendingMarkAllValue(null)}
+          />
         )}
       </AnimatePresence>
 

@@ -7,7 +7,9 @@ import {
 import { useApp } from '@/context/AppContext'
 import { supabase } from '@/lib/supabase'
 import { cn, pct, initials } from '@/lib/utils'
+import { toast } from 'sonner'
 import type { Team, Designer } from '@/types/database'
+import ConfirmModal from '@/components/shared/ConfirmModal'
 
 export default function Teams() {
   const { state, loadAll, can } = useApp()
@@ -18,6 +20,7 @@ export default function Teams() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [newTeamName, setNewTeamName] = useState('')
   const [saving, setSaving] = useState(false)
+  const [teamToDelete, setTeamToDelete] = useState<Team | null>(null)
 
   // Compute team statistics
   const teamData = useMemo(() => {
@@ -79,17 +82,15 @@ export default function Teams() {
      setSaving(false)
   }
 
-  async function handleDeleteTeam(team: Team) {
-     const count = designers.filter(d => d.team === team.name).length
-     if (!confirm(`Delete team "${team.name}"? ${count} designers will be moved to Uncategorized.`)) return
-     
+  async function confirmDeleteTeam() {
+     if (!teamToDelete) return
      setSaving(true)
-     // 1. Move designers to null
-     await supabase.from('designers').update({ team: null }).eq('team', team.name)
-     // 2. Delete team
-     await supabase.from('teams').delete().eq('id', team.id)
+     setTeamToDelete(null)
+     await supabase.from('designers').update({ team: null }).eq('team', teamToDelete.name)
+     await supabase.from('teams').delete().eq('id', teamToDelete.id)
      await loadAll()
      setSaving(false)
+     toast.success(`Team "${teamToDelete.name}" deleted`)
   }
 
   return (
@@ -144,7 +145,7 @@ export default function Teams() {
             reshuffleMode={reshuffleMode}
             allTeams={teams}
             onMove={(did, t) => setReshuffleChanges(prev => ({ ...prev, [did]: t }))}
-            onDelete={() => handleDeleteTeam(team)}
+            onDelete={() => setTeamToDelete(team)}
             canManage={can('canManageUsers')}
             index={i}
           />
@@ -162,6 +163,24 @@ export default function Teams() {
           />
         )}
       </div>
+
+      {/* Delete Team Confirm */}
+      <AnimatePresence>
+        {teamToDelete && (
+          <ConfirmModal
+            title="Delete Team"
+            message={(() => {
+              const count = designers.filter(d => d.team === teamToDelete.name).length
+              return <>Delete team <span className="font-semibold text-primary">"{teamToDelete.name}"</span>?{count > 0 && <> {count} designer{count !== 1 ? 's' : ''} will be moved to Uncategorized.</>} This cannot be undone.</>
+            })()}
+            confirmLabel="Delete Team"
+            danger
+            loading={saving}
+            onConfirm={confirmDeleteTeam}
+            onCancel={() => setTeamToDelete(null)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Add Team Modal */}
       <AnimatePresence>

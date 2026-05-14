@@ -7,8 +7,10 @@ import {
 import { useApp } from '@/context/AppContext'
 import { supabase } from '@/lib/supabase'
 import { cn, initials, pct } from '@/lib/utils'
+import { toast } from 'sonner'
 import type { Designer, DesignerSkill, SkillLevel } from '@/types/database'
 import SkillEditModal from '@/components/skillset/SkillEditModal'
+import ConfirmModal from '@/components/shared/ConfirmModal'
 
 const BASE_PLATFORMS = ['Clickfunnels', 'GoHighLevel', 'Shopify', 'Wix', 'Wordpress']
 const LEVELS: SkillLevel[] = ['Intermediate', 'Advanced', 'Expert']
@@ -21,6 +23,7 @@ export default function SkillSet() {
   const [search, setSearch] = useState('')
   const [platFilter, setPlatFilter] = useState('ALL')
   const [editTarget, setEditTarget] = useState<{ designer: Designer, platform: string } | null>(null)
+  const [platformToDelete, setPlatformToDelete] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
   // 1. Identify all unique platforms (Base + Dynamic)
@@ -86,12 +89,13 @@ export default function SkillSet() {
   }, [designerSkills, allPlatforms])
 
   // --- Actions ---
-  async function deletePlatform(platform: string) {
-    if (!confirm(`Delete all skill records for "${platform}"? This cannot be undone.`)) return
+  async function confirmDeletePlatform() {
+    if (!platformToDelete) return
     setSaving(true)
-    const { error } = await supabase.from('designer_skills').delete().eq('platform', platform)
+    const { error } = await supabase.from('designer_skills').delete().eq('platform', platformToDelete)
     setSaving(false)
-    if (error) { alert(error.message); return }
+    if (error) { toast.error(error.message); return }
+    setPlatformToDelete(null)
     await loadAll()
   }
 
@@ -263,7 +267,7 @@ export default function SkillSet() {
                             {p}
                             {!BASE_PLATFORMS.includes(p) && can('canAddEditTrainings') && (
                               <button
-                                onClick={() => deletePlatform(p)}
+                                onClick={() => setPlatformToDelete(p)}
                                 disabled={saving}
                                 className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-500 transition-opacity"
                               >
@@ -326,6 +330,20 @@ export default function SkillSet() {
             skill={designerSkills.find(s => s.designer_id === editTarget.designer.id && s.platform === editTarget.platform) || null}
             onClose={() => setEditTarget(null)}
             onSaved={loadAll}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {platformToDelete && (
+          <ConfirmModal
+            title="Delete Platform"
+            message={<>All skill records for <span className="font-semibold text-primary">"{platformToDelete}"</span> will be permanently deleted for every designer. This cannot be undone.</>}
+            confirmLabel="Delete Platform"
+            danger
+            loading={saving}
+            onConfirm={confirmDeletePlatform}
+            onCancel={() => setPlatformToDelete(null)}
           />
         )}
       </AnimatePresence>

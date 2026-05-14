@@ -7,8 +7,10 @@ import {
 import { useApp } from '@/context/AppContext'
 import { supabase } from '@/lib/supabase'
 import { cn, initials } from '@/lib/utils'
+import { toast } from 'sonner'
 import type { UserRoleRecord, UserRole } from '@/types/database'
 import UserModal from '@/components/users/UserModal'
+import ConfirmModal from '@/components/shared/ConfirmModal'
 
 type RoleFilter = 'ALL' | UserRole
 
@@ -26,6 +28,7 @@ export default function UserManagement() {
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('ALL')
   const [editTarget, setEditTarget] = useState<UserRoleRecord | null | 'new'>(null)
+  const [deleteTarget, setDeleteTarget] = useState<typeof enriched[0] | null>(null)
   const [saving, setSaving] = useState(false)
 
   // Enrich each user record with designer name/email if linked
@@ -51,10 +54,13 @@ export default function UserManagement() {
     return list
   }, [enriched, search, roleFilter])
 
-  async function handleDelete(u: UserRoleRecord) {
-    if (!confirm(`Remove this user's access?`)) return
+  async function handleDelete() {
+    if (!deleteTarget) return
     setSaving(true)
-    await supabase.from('user_roles').delete().eq('id', u.id)
+    const { error } = await supabase.from('user_roles').delete().eq('id', deleteTarget.id)
+    if (error) toast.error(error.message)
+    else toast.success('User access removed')
+    setDeleteTarget(null)
     await loadAll()
     setSaving(false)
   }
@@ -174,7 +180,7 @@ export default function UserManagement() {
                                 <Pencil className="w-4 h-4" />
                               </button>
                               <button
-                                onClick={() => handleDelete(u)}
+                                onClick={() => setDeleteTarget(u)}
                                 disabled={saving}
                                 className="p-2 rounded-xl hover:bg-red-500/10 text-muted-c hover:text-red-400 transition-all"
                               >
@@ -213,6 +219,20 @@ export default function UserManagement() {
             user={editTarget === 'new' ? null : editTarget}
             onClose={() => setEditTarget(null)}
             onSaved={loadAll}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {deleteTarget && (
+          <ConfirmModal
+            title="Remove User Access"
+            message={<>Removing <span className="font-semibold text-primary">{deleteTarget.displayName}</span> will revoke their access to the system. Their designer profile (if any) will remain intact.</>}
+            confirmLabel="Remove Access"
+            danger
+            loading={saving}
+            onConfirm={handleDelete}
+            onCancel={() => setDeleteTarget(null)}
           />
         )}
       </AnimatePresence>
