@@ -23,6 +23,7 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
 
   const [activeTab, setActiveTab] = useState<'roster' | 'sessions'>('roster')
   const [deleting, setDeleting] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [completing, setCompleting] = useState(false)
   const [showAssessPanel, setShowAssessPanel] = useState(false)
   const [viewOnlyMode, setViewOnlyMode] = useState(false)
@@ -141,13 +142,8 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
   }
 
   async function handleDelete() {
-    const message = isAssessed
-      ? `This training has been assessed.\n\nDeleting it will permanently remove all sessions, attendance records, and assessment scores.\n\nDesigner skill awards will NOT be revoked — they keep their skill levels.\n\nThis cannot be undone. Delete anyway?`
-      : training.status === 'completed'
-      ? `This training is marked as completed.\n\nDeleting it will permanently remove all sessions and attendance records.\n\nThis cannot be undone. Delete anyway?`
-      : `Are you sure you want to delete this training? All sessions and attendance will be lost.`
-    if (!confirm(message)) return
     setDeleting(true)
+    setShowDeleteConfirm(false)
     const { error } = await supabase.from('trainings').delete().eq('id', training.id)
     if (error) {
       toast.error(error.message)
@@ -593,7 +589,7 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
               {/* Actions Footer */}
               <div className="p-4 bg-surface-2 border-t border-border flex flex-wrap items-center justify-between gap-2 shrink-0">
                 <button
-                  onClick={handleDelete}
+                  onClick={() => setShowDeleteConfirm(true)}
                   disabled={deleting}
                   className="p-2.5 rounded-xl text-muted-c hover:bg-red-500/10 hover:text-red-400 transition-all"
                 >
@@ -621,6 +617,77 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
           )}
         </AnimatePresence>
       </motion.div>
+
+      {/* Delete confirmation modal */}
+      <AnimatePresence>
+        {showDeleteConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 z-[60] flex items-center justify-center p-4"
+            onClick={() => setShowDeleteConfirm(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              transition={{ type: 'spring', damping: 24, stiffness: 320 }}
+              onClick={e => e.stopPropagation()}
+              className="glass rounded-2xl w-full max-w-sm p-6 space-y-4"
+            >
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center shrink-0">
+                  <Trash2 className="w-5 h-5 text-red-400" />
+                </div>
+                <div>
+                  <div className="font-display font-bold text-primary text-sm">Delete Training</div>
+                  <div className="text-xs text-muted-c mt-0.5">
+                    {isAssessed
+                      ? 'This training has been assessed.'
+                      : training.status === 'completed'
+                      ? 'This training is marked as completed.'
+                      : 'This action cannot be undone.'}
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-xs text-secondary leading-relaxed">
+                {isAssessed ? (
+                  <>
+                    All sessions, attendance records, and assessment scores will be <span className="text-red-400 font-semibold">permanently deleted</span>.
+                    <br /><br />
+                    Designer skill awards will <span className="text-emerald-400 font-semibold">not be revoked</span> — they keep their skill levels.
+                  </>
+                ) : training.status === 'completed' ? (
+                  <>
+                    All sessions and attendance records will be <span className="text-red-400 font-semibold">permanently deleted</span>.
+                    <br /><br />
+                    This cannot be undone.
+                  </>
+                ) : (
+                  'All sessions and attendance records will be permanently deleted.'
+                )}
+              </div>
+
+              <div className="flex gap-2 pt-1">
+                <button
+                  className="btn-ghost flex-1 h-10"
+                  onClick={() => setShowDeleteConfirm(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="flex-1 h-10 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-bold transition-colors flex items-center justify-center gap-2"
+                  onClick={handleDelete}
+                  disabled={deleting}
+                >
+                  <Trash2 className="w-4 h-4" />
+                  {deleting ? 'Deleting…' : 'Delete'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
