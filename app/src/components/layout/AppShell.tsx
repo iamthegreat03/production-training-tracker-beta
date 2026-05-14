@@ -63,7 +63,7 @@ export default function AppShell({ children }: AppShellProps) {
     : 'Designer'
 
   return (
-    <div className="flex h-dvh bg-app overflow-hidden">
+    <div className="flex h-dvh bg-app">
       {/* ── Sidebar (desktop) ── */}
       <aside className="hidden md:flex flex-col w-60 border-r shrink-0"
              style={{ borderColor: 'rgb(var(--border))', background: 'rgb(var(--surface))' }}>
@@ -111,7 +111,7 @@ export default function AppShell({ children }: AppShellProps) {
       </AnimatePresence>
 
       {/* ── Main content ── */}
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+      <div className="flex flex-col flex-1 min-w-0">
         {/* Top bar (mobile) */}
         <header className="md:hidden flex items-center justify-between px-4 py-3 border-b shrink-0"
                 style={{ borderColor: 'rgb(var(--border))', background: 'rgb(var(--surface))' }}>

@@ -25,12 +25,14 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
   const [deleting, setDeleting] = useState(false)
   const [completing, setCompleting] = useState(false)
   const [showAssessPanel, setShowAssessPanel] = useState(false)
+  const [viewOnlyMode, setViewOnlyMode] = useState(false)
   const [assessSelections, setAssessSelections] = useState<Set<string>>(new Set())
 
   interface AssessEntry { outputUrl: string; results: boolean[] }
   const [assessData, setAssessData] = useState<Record<string, AssessEntry>>({})
 
   const myEnrollments = enrollments.filter(e => e.training_id === training.id)
+  const isAssessed = myEnrollments.some(e => e.final_score !== null)
   const mySessions = sessions.filter(s => s.training_id === training.id)
     .sort((a, b) => a.session_date.localeCompare(b.session_date))
 
@@ -101,6 +103,26 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
       }
     })
     setAssessData(initialData)
+    setShowAssessPanel(true)
+  }
+
+  function openViewPanel() {
+    const cl = training.checklist ?? []
+    const initialData: Record<string, AssessEntry> = {}
+    const awarded = new Set<string>()
+    myEnrolledDesigners.forEach(d => {
+      const enrollment = myEnrollments.find(e => e.designer_id === d.id)
+      initialData[d.id] = {
+        outputUrl: enrollment?.output_url ?? '',
+        results: (enrollment?.checklist_results as boolean[] | null) ?? cl.map(() => false),
+      }
+      if (enrollment?.final_score !== null && enrollment?.final_score !== undefined) {
+        awarded.add(d.id)
+      }
+    })
+    setAssessData(initialData)
+    setAssessSelections(awarded)
+    setViewOnlyMode(true)
     setShowAssessPanel(true)
   }
 
@@ -277,13 +299,18 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
             >
               {/* Assess header */}
               <div className="flex items-center justify-between px-6 py-3 border-b border-border shrink-0">
-                <button onClick={() => setShowAssessPanel(false)} className="flex items-center gap-1.5 text-xs font-bold text-muted-c hover:text-primary transition-colors">
+                <button onClick={() => { setShowAssessPanel(false); setViewOnlyMode(false) }} className="flex items-center gap-1.5 text-xs font-bold text-muted-c hover:text-primary transition-colors">
                   <ChevronLeft className="w-4 h-4" /> Back
                 </button>
-                <span className="text-xs font-bold text-primary uppercase tracking-widest">Assess Designers</span>
-                <button onClick={selectAllAttendees} className="text-xs font-bold text-orange-500 hover:underline">
-                  Select Attendees
-                </button>
+                <span className="text-xs font-bold text-primary uppercase tracking-widest">
+                  {viewOnlyMode ? 'Assessment Results' : 'Assess Designers'}
+                </span>
+                {!viewOnlyMode && (
+                  <button onClick={selectAllAttendees} className="text-xs font-bold text-orange-500 hover:underline">
+                    Select Attendees
+                  </button>
+                )}
+                {viewOnlyMode && <div className="w-20" />}
               </div>
 
               {/* Award info */}
@@ -324,17 +351,26 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
                         checked ? 'border-orange-500/40 bg-orange-500/5' : 'border-border bg-surface-2'
                       )}
                     >
-                      {/* Top row — click to toggle selection */}
+                      {/* Top row — click to toggle selection (disabled in view-only mode) */}
                       <div
-                        className="flex items-center gap-3 p-3 cursor-pointer"
-                        onClick={() => toggleAssess(d.id)}
+                        className={cn('flex items-center gap-3 p-3', viewOnlyMode ? 'cursor-default' : 'cursor-pointer')}
+                        onClick={() => { if (!viewOnlyMode) toggleAssess(d.id) }}
                       >
-                        <div className={cn(
-                          'w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all',
-                          checked ? 'border-orange-500 bg-orange-500' : 'border-border'
-                        )}>
-                          {checked && <Check className="w-3 h-3 text-white" />}
-                        </div>
+                        {viewOnlyMode ? (
+                          <div className={cn(
+                            'w-5 h-5 rounded-md flex items-center justify-center shrink-0',
+                            checked ? 'bg-emerald-500/20 border border-emerald-500/40' : 'bg-surface-2 border border-border'
+                          )}>
+                            {checked && <Check className="w-3 h-3 text-emerald-400" />}
+                          </div>
+                        ) : (
+                          <div className={cn(
+                            'w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all',
+                            checked ? 'border-orange-500 bg-orange-500' : 'border-border'
+                          )}>
+                            {checked && <Check className="w-3 h-3 text-white" />}
+                          </div>
+                        )}
                         <div className="w-8 h-8 rounded-full bg-orange-gradient flex items-center justify-center text-white text-[10px] font-bold shrink-0">
                           {initials(d.name)}
                         </div>
@@ -389,12 +425,15 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
                               return (
                                 <button
                                   key={idx}
-                                  onClick={() => toggleResult(d.id, idx)}
+                                  onClick={() => { if (!viewOnlyMode) toggleResult(d.id, idx) }}
+                                  disabled={viewOnlyMode}
                                   className={cn(
                                     'flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[10px] font-medium transition-all',
                                     passed
                                       ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-                                      : 'bg-surface border-border text-muted-c hover:border-orange-500/30'
+                                      : 'bg-surface border-border text-muted-c',
+                                    !viewOnlyMode && !passed && 'hover:border-orange-500/30',
+                                    viewOnlyMode && 'cursor-default'
                                   )}
                                 >
                                   {passed
@@ -415,17 +454,25 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
 
               {/* Assess footer */}
               <div className="p-5 bg-surface-2 border-t border-border flex gap-2 shrink-0">
-                <button className="btn-ghost flex-1" onClick={() => setShowAssessPanel(false)}>
-                  Cancel
-                </button>
-                <button
-                  className="btn-primary flex-1 gap-2"
-                  onClick={handleAssess}
-                  disabled={completing || assessSelections.size === 0}
-                >
-                  <CheckCircle2 className="w-4 h-4" />
-                  {completing ? 'Awarding…' : `Award to ${assessSelections.size} Designer${assessSelections.size !== 1 ? 's' : ''}`}
-                </button>
+                {viewOnlyMode ? (
+                  <button className="btn-ghost flex-1" onClick={() => { setShowAssessPanel(false); setViewOnlyMode(false) }}>
+                    Close
+                  </button>
+                ) : (
+                  <>
+                    <button className="btn-ghost flex-1" onClick={() => setShowAssessPanel(false)}>
+                      Cancel
+                    </button>
+                    <button
+                      className="btn-primary flex-1 gap-2"
+                      onClick={handleAssess}
+                      disabled={completing || assessSelections.size === 0}
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
+                      {completing ? 'Awarding…' : `Award to ${assessSelections.size} Designer${assessSelections.size !== 1 ? 's' : ''}`}
+                    </button>
+                  </>
+                )}
               </div>
             </motion.div>
           ) : (
@@ -556,9 +603,15 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
                     <Users className="w-4 h-4" /><span className="hidden sm:inline">Go to</span> Attendance
                   </button>
                   {training.status === 'completed' && can('canAddEditTrainings') && (
-                    <button className="btn-primary h-10 px-4 gap-2" onClick={openAssessPanel}>
-                      <CheckCircle2 className="w-4 h-4" /><span className="hidden sm:inline">Finish &</span> Assess
-                    </button>
+                    isAssessed ? (
+                      <button className="btn-outline h-10 px-4 gap-2" onClick={openViewPanel}>
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400" /> View Assessment
+                      </button>
+                    ) : (
+                      <button className="btn-primary h-10 px-4 gap-2" onClick={openAssessPanel}>
+                        <CheckCircle2 className="w-4 h-4" /><span className="hidden sm:inline">Finish &</span> Assess
+                      </button>
+                    )
                   )}
                 </div>
               </div>

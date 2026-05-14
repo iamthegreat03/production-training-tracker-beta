@@ -38,6 +38,29 @@ export default function Trainings() {
 
   const columns: TrainingStatus[] = ['upcoming', 'active', 'on-hold', 'completed']
 
+  const kanbanRef = useRef<HTMLDivElement>(null)
+  const panRef = useRef({ active: false, startX: 0, scrollLeft: 0 })
+  const [isPanning, setIsPanning] = useState(false)
+
+  function startPan(e: React.MouseEvent<HTMLDivElement>) {
+    const target = e.target as HTMLElement
+    if (target.closest('button') || target.closest('a') || target.closest('[draggable]') || target.closest('input')) return
+    if (!kanbanRef.current) return
+    panRef.current = { active: true, startX: e.clientX, scrollLeft: kanbanRef.current.scrollLeft }
+    setIsPanning(true)
+    e.preventDefault()
+  }
+
+  function doPan(e: React.MouseEvent<HTMLDivElement>) {
+    if (!panRef.current.active || !kanbanRef.current) return
+    kanbanRef.current.scrollLeft = panRef.current.scrollLeft - (e.clientX - panRef.current.startX)
+  }
+
+  function stopPan() {
+    panRef.current.active = false
+    setIsPanning(false)
+  }
+
   const enrolledCount = (id: string) => enrollments.filter(e => e.training_id === id).length
 
   const grouped = useMemo(() => {
@@ -137,10 +160,17 @@ export default function Trainings() {
         {layout === 'kanban' ? (
           <motion.div
             key="kanban"
+            ref={kanbanRef}
             initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.2, ease: [0.16,1,0.3,1] }}
-            className="flex-1 flex gap-4 overflow-x-auto pb-4 min-h-0"
+            className="flex-1 min-h-0 overflow-x-auto overflow-y-hidden pb-4 select-none"
+            style={{ cursor: isPanning ? 'grabbing' : 'grab' }}
+            onMouseDown={startPan}
+            onMouseMove={doPan}
+            onMouseUp={stopPan}
+            onMouseLeave={stopPan}
           >
+            <div className="flex gap-4 h-full min-w-max">
             {columns.map(status => {
               const isDragTarget = dragOverCol === status && dragId !== null
               const cfg = STATUS_CONFIG[status]
@@ -197,6 +227,7 @@ export default function Trainings() {
                 </div>
               )
             })}
+            </div>
           </motion.div>
         ) : (
           <motion.div

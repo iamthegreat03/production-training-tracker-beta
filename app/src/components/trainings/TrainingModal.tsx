@@ -154,20 +154,48 @@ export default function TrainingModal({ training, onClose, onSaved }: Props) {
       if (!trainingId) throw new Error('Failed to save training')
 
       // Save Enrollments
-      // 1. Delete old
       if (training) {
-        await supabase.from('training_enrollments').delete().eq('training_id', trainingId)
-      }
-      
-      // 2. Insert new
-      const enrollRows = Object.entries(enrolled).map(([did, sched]) => ({
-        training_id: trainingId,
-        designer_id: did,
-        designer_schedule: sched
-      }))
-      
-      if (enrollRows.length > 0) {
-        await supabase.from('training_enrollments').insert(enrollRows)
+        // Diff: only remove/add/update what changed — preserve score columns on existing rows
+        const existingEnrollments = enrollments.filter(e => e.training_id === trainingId)
+        const existingMap = new Map(existingEnrollments.map(e => [e.designer_id!, e]))
+        const newIds = new Set(Object.keys(enrolled))
+        const oldIds = new Set([...existingMap.keys()])
+
+        const toRemove = [...oldIds].filter(id => !newIds.has(id))
+        if (toRemove.length > 0) {
+          await supabase.from('training_enrollments')
+            .delete()
+            .eq('training_id', trainingId)
+            .in('designer_id', toRemove)
+        }
+
+        const toAdd = Object.entries(enrolled).filter(([did]) => !oldIds.has(did))
+        if (toAdd.length > 0) {
+          await supabase.from('training_enrollments').insert(
+            toAdd.map(([did, sched]) => ({ training_id: trainingId, designer_id: did, designer_schedule: sched }))
+          )
+        }
+
+        const scheduleUpdates = Object.entries(enrolled)
+          .filter(([did, sched]) => {
+            const ex = existingMap.get(did)
+            return ex && JSON.stringify(ex.designer_schedule) !== JSON.stringify(sched)
+          })
+        await Promise.all(scheduleUpdates.map(([did, sched]) =>
+          supabase.from('training_enrollments')
+            .update({ designer_schedule: sched })
+            .eq('id', existingMap.get(did)!.id)
+        ))
+      } else {
+        // New training: insert all
+        const enrollRows = Object.entries(enrolled).map(([did, sched]) => ({
+          training_id: trainingId,
+          designer_id: did,
+          designer_schedule: sched
+        }))
+        if (enrollRows.length > 0) {
+          await supabase.from('training_enrollments').insert(enrollRows)
+        }
       }
 
       // 3. Auto-generate sessions (skip dates that already exist)

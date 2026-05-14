@@ -93,6 +93,18 @@ All notable changes to this project are documented here.
 
 ---
 
+## [v3.9] — 2026-05-15
+
+### Bug Fixes
+- **Enrollment edit destroying assessment data** — editing an enrolled training used a delete-all-then-reinsert pattern which wiped `output_url`, `checklist_results`, `output_score`, `attendance_score`, and `final_score` from all enrollment records. Replaced with a three-way diff: unenrolled designers are removed, newly enrolled designers are inserted, and existing enrollments only update `designer_schedule` when it changed — all assessment data is preserved.
+- **Blank page crash when opening training cards** — `isAssessed` was declared before `myEnrollments` in `TrainingDetail.tsx`, triggering a JavaScript `const` temporal dead zone (TDZ) `ReferenceError` at runtime. Fixed by reordering the declarations so `isAssessed` follows `myEnrollments`.
+
+### Enhancements
+- **View Assessment (read-only panel)** — once any enrollment in a training has a `final_score`, the "Finish & Assess" button is replaced with a "View Assessment" button. Clicking it opens a read-only version of the assess panel pre-populated with each designer's saved output URL, checklist results, and computed scores. Re-assessment is blocked.
+- **Kanban drag-to-pan** — click and drag on the kanban board background to scroll horizontally, identical to Trello. Cursor shows `grab` on hover and `grabbing` while panning. Card drag-and-drop between columns is unaffected; pan is suppressed when clicking any card, button, or interactive element.
+
+---
+
 ## [v3.8] — 2026-05-13
 
 ### Bug Fixes

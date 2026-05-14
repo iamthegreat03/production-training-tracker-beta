@@ -1,6 +1,6 @@
 # Production Training Tracker — System Documentation
 
-**Version:** 3.0
+**Version:** 3.9
 **Stack:** React 19 · Vite · TypeScript · Supabase (PostgreSQL + Auth) · Tailwind CSS · Framer Motion
 **Deployment:** Netlify (static PWA)
 **Last Updated:** May 2026
