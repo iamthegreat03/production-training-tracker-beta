@@ -129,6 +129,24 @@ export interface SkillGap {
   updated_at: string | null
 }
 
+export type HubCategory = 'learn' | 'assets' | 'inspiration' | 'code'
+
+export interface HubResource {
+  id: string
+  category: HubCategory
+  title: string
+  description: string | null
+  icon_name: string | null
+  thumbnail_url: string | null
+  content: string | null
+  language: string | null
+  external_url: string | null
+  tags: string[] | null
+  order_index: number
+  created_by: string | null
+  created_at: string | null
+}
+
 export interface AppState {
   user: import('@supabase/supabase-js').User | null
   role: UserRole | null
@@ -144,6 +162,7 @@ export interface AppState {
   makeups: MakeupSession[]
   makeupRequests: MakeupRequest[]
   users: UserRoleRecord[]
+  hubResources: HubResource[]
   page: string
   loading: boolean
 }

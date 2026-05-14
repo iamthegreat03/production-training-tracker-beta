@@ -12,6 +12,7 @@ import DesignerHome from '@/pages/DesignerHome'
 import DesignerRoadmap from '@/pages/DesignerRoadmap'
 import DesignerHistory from '@/pages/DesignerHistory'
 import DesignerBadges from '@/pages/DesignerBadges'
+import DesignerHub from '@/pages/DesignerHub'
 
 function PageRouter() {
   const { state } = useApp()
@@ -19,23 +20,25 @@ function PageRouter() {
 
   if (role === 'designer') {
     switch (page) {
-      case 'home':    return <DesignerHome />
+      case 'home': return <DesignerHome />
       case 'roadmap': return <DesignerRoadmap />
       case 'history': return <DesignerHistory />
-      case 'badges':  return <DesignerBadges />
-      default:        return <DesignerHome />
+      case 'badges': return <DesignerBadges />
+      case 'hub': return <DesignerHub />
+      default: return <DesignerHome />
     }
   }
 
   switch (page) {
-    case 'dashboard':  return <Dashboard />
-    case 'designers':  return <Designers />
-    case 'trainings':  return <Trainings />
+    case 'dashboard': return <Dashboard />
+    case 'designers': return <Designers />
+    case 'trainings': return <Trainings />
     case 'attendance': return <Attendance />
-    case 'teams':      return <Teams />
-    case 'skillset':   return <SkillSet />
-    case 'users':      return <Users />
-    default:           return <Dashboard />
+    case 'teams': return <Teams />
+    case 'skillset': return <SkillSet />
+    case 'hub': return <DesignerHub />
+    case 'users': return <Users />
+    default: return <Dashboard />
   }
 }
 

@@ -5,7 +5,7 @@ import { normAtt } from '@/lib/utils'
 import type {
   AppState, Designer, Team, Training, TrainingEnrollment,
   TrainingSession, Attendance, DesignerSkill, MakeupSession,
-  MakeupRequest, UserRoleRecord,
+  MakeupRequest, UserRoleRecord, HubResource,
 } from '@/types/database'
 
 const DEFAULT_PERMS: Record<string, boolean> = {
@@ -21,7 +21,7 @@ const initial: AppState = {
   user: null, role: null, designer: null, perms: DEFAULT_PERMS,
   designers: [], teams: [], trainings: [], enrollments: [],
   sessions: [], attendance: [], designerSkills: [],
-  makeups: [], makeupRequests: [], users: [],
+  makeups: [], makeupRequests: [], users: [], hubResources: [],
   page: 'dashboard', loading: true,
 }
 
@@ -65,7 +65,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         { data: designers }, { data: teams }, { data: trainings },
         { data: enrollments }, { data: sessions }, { data: attendance },
         { data: designerSkills }, { data: makeups }, { data: makeupRequests },
-        { data: users },
+        { data: users }, { data: hubResources },
       ] = await Promise.all([
         supabase.from('designers').select('*').order('name'),
         supabase.from('teams').select('*').order('name'),
@@ -77,6 +77,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         supabase.from('makeup_sessions').select('*'),
         supabase.from('makeup_requests').select('*'),
         supabase.from('user_roles').select('*'),
+        supabase.from('hub_resources').select('*').order('created_at', { ascending: true }),
       ])
 
       const normAttendance = (attendance ?? []).map((a: Attendance) => ({
@@ -96,6 +97,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           makeups: (makeups ?? []) as MakeupSession[],
           makeupRequests: (makeupRequests ?? []) as MakeupRequest[],
           users: (users ?? []) as UserRoleRecord[],
+          hubResources: (hubResources ?? []) as HubResource[],
         },
       })
     } catch (err) {
