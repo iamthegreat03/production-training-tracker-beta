@@ -215,7 +215,7 @@ export default function Trainings() {
                           enrolledCount={enrolledCount(t.id)}
                           onClick={() => setDetailTarget(t)}
                           onEdit={() => setEditTarget(t)}
-                          canEdit={can('canAddEditTrainings')}
+                          canEdit={can('canAddEditTrainings') && t.status !== 'completed'}
                           index={i}
                           onDragStart={() => setDragId(t.id)}
                           onDragEnd={() => { setDragId(null); setDragOverCol(null) }}
@@ -343,7 +343,7 @@ export default function Trainings() {
                         {/* Actions */}
                         <td onClick={e => e.stopPropagation()}>
                           <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            {can('canAddEditTrainings') && (
+                            {can('canAddEditTrainings') && t.status !== 'completed' && (
                               <button
                                 onClick={() => setEditTarget(t)}
                                 className="p-1.5 rounded-lg hover:bg-orange-500/10 hover:text-orange-500 text-muted-c transition-colors"

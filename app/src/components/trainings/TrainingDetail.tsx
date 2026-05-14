@@ -255,7 +255,7 @@ export default function TrainingDetail({ training, onClose, onEdit }: Props) {
           <div className="absolute inset-0 bg-grid-dark opacity-10" />
 
           <div className="absolute top-4 right-4 flex gap-2">
-            {!showAssessPanel && can('canAddEditTrainings') && (
+            {!showAssessPanel && can('canAddEditTrainings') && training.status !== 'completed' && (
               <button onClick={() => onEdit(training)} className="p-2 rounded-xl glass hover:bg-orange-500/10 hover:text-orange-500 transition-colors">
                 <Pencil className="w-4 h-4" />
               </button>
