@@ -3,11 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Search, Filter, CheckCircle2, XCircle, Clock, Plus,
   Users, Pencil, X, LayoutGrid, Table2, List, BarChart2,
-  AlertTriangle, CalendarClock,
+  AlertTriangle, CalendarClock, Lock,
 } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
 import { supabase } from '@/lib/supabase'
-import { cn, fmtDs, normAtt, pct } from '@/lib/utils'
+import { cn, fmtDs, normAtt, pct, isSessionFuture } from '@/lib/utils'
 import type { Attendance, AttendanceValue, Designer } from '@/types/database'
 import { toast } from 'sonner'
 import AttendanceCard from '@/components/attendance/AttendanceCard'
@@ -183,6 +183,7 @@ export default function AttendancePage() {
   }, [attendance, optimistic, selSId, selTId, enrollments])
 
   // Week-based reschedule flags for the selected session
+  const selSFuture = selS ? isSessionFuture(selS.session_date) : false
   const sessionIsOverdue = selS ? isSessionWeekOver(selS.session_date) : false
   const sessionCanReschedule = selS ? !isSessionWeekOver(selS.session_date) && new Date(selS.session_date + 'T00:00:00') < new Date() : false
 
@@ -424,22 +425,30 @@ export default function AttendancePage() {
                 onMouseUp={onSessionMouseUp}
                 onMouseLeave={onSessionMouseUp}
               >
-                {tSessions.map(s => (
-                  <button
-                    key={s.id}
-                    onClick={() => { if (dragState.current.dragged) return; setSelSId(s.id) }}
-                    className={cn(
-                      'flex flex-col items-center justify-center min-w-[60px] h-14 rounded-xl border transition-all',
-                      selSId === s.id
-                        ? 'bg-orange-gradient text-white border-orange-500 shadow-orange-sm'
-                        : 'bg-surface-2 border-border text-muted-c hover:border-orange-500/30'
-                    )}
-                  >
-                    <span className="text-[9px] font-bold uppercase tracking-tighter opacity-80">{s.day_of_week?.slice(0, 3)}</span>
-                    <span className="text-sm font-bold leading-tight">{fmtDs(s.session_date).split(' ')[1]}</span>
-                    <span className="text-[8px] opacity-60">{fmtDs(s.session_date).split(' ')[0]}</span>
-                  </button>
-                ))}
+                {tSessions.map(s => {
+                  const future = isSessionFuture(s.session_date)
+                  return (
+                    <button
+                      key={s.id}
+                      onClick={() => { if (dragState.current.dragged) return; setSelSId(s.id) }}
+                      className={cn(
+                        'flex flex-col items-center justify-center min-w-[60px] h-14 rounded-xl border transition-all',
+                        selSId === s.id
+                          ? 'bg-orange-gradient text-white border-orange-500 shadow-orange-sm'
+                          : future
+                            ? 'bg-surface-2 border-border text-muted-c opacity-50'
+                            : 'bg-surface-2 border-border text-muted-c hover:border-orange-500/30'
+                      )}
+                    >
+                      {future
+                        ? <Lock className="w-2.5 h-2.5 opacity-60 mb-0.5" />
+                        : <span className="text-[9px] font-bold uppercase tracking-tighter opacity-80">{s.day_of_week?.slice(0, 3)}</span>
+                      }
+                      <span className="text-sm font-bold leading-tight">{fmtDs(s.session_date).split(' ')[1]}</span>
+                      <span className="text-[8px] opacity-60">{fmtDs(s.session_date).split(' ')[0]}</span>
+                    </button>
+                  )
+                })}
               </div>
               <button
                 onClick={() => setShowAddSession(true)}
@@ -602,6 +611,7 @@ export default function AttendancePage() {
                           onReschedule={() => openRescheduleModal(d)}
                           canReschedule={sessionCanReschedule}
                           isOverdue={sessionIsOverdue}
+                          isFuture={selSFuture}
                           index={i}
                         />
                       )
@@ -640,6 +650,7 @@ export default function AttendancePage() {
                   onReschedule={openRescheduleModal}
                   canReschedule={sessionCanReschedule}
                   isOverdue={sessionIsOverdue}
+                  isFuture={selSFuture}
                 />
               </motion.div>
             )}

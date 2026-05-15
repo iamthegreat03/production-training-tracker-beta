@@ -55,6 +55,11 @@ export function normAtt(val: unknown): 'true' | 'false' | 'late' | null {
   return null
 }
 
+/** True if the session date is strictly in the future (enabled at 12am on the date) */
+export function isSessionFuture(sessionDate: string): boolean {
+  return sessionDate > today()
+}
+
 /** Day-of-week from YYYY-MM-DD */
 export function dayName(d: string): string {
   return new Date(`${d}T00:00:00`).toLocaleDateString('en-US', { weekday: 'long' })

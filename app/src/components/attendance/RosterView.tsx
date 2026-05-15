@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Check, Clock, X, Undo2, MessageSquare, CalendarClock, AlertTriangle } from 'lucide-react'
+import { Check, Clock, X, Undo2, MessageSquare, CalendarClock, AlertTriangle, Lock } from 'lucide-react'
 import { cn, initials, normAtt, pct } from '@/lib/utils'
 import type { Designer, Attendance, TrainingSession, AttendanceValue } from '@/types/database'
 
@@ -14,11 +14,12 @@ interface Props {
   onReschedule?: (designer: Designer) => void
   canReschedule?: boolean
   isOverdue?: boolean
+  isFuture?: boolean
 }
 
 export default function RosterView({
   designers, sessions, attendance, optimistic, selSId, onMark, onOpenNotes,
-  onReschedule, canReschedule = false, isOverdue = false,
+  onReschedule, canReschedule = false, isOverdue = false, isFuture = false,
 }: Props) {
   function getVal(designerId: string): AttendanceValue {
     if (!selSId) return null
@@ -123,41 +124,48 @@ export default function RosterView({
 
                   {/* Mark buttons */}
                   <td>
-                    <div className="flex items-center justify-center gap-1.5">
-                      <button
-                        onClick={() => onMark(d.id, 'true')}
-                        className={cn(
-                          'flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold transition-all border',
-                          val === 'true'
-                            ? 'bg-emerald-500 border-emerald-400 text-white'
-                            : 'bg-surface-2 border-border text-muted-c hover:border-emerald-500/40 hover:text-emerald-500'
-                        )}
-                      >
-                        <Check className="w-3 h-3" /><span className="hidden sm:inline"> Present</span>
-                      </button>
-                      <button
-                        onClick={() => onMark(d.id, 'late')}
-                        className={cn(
-                          'flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold transition-all border',
-                          val === 'late'
-                            ? 'bg-amber-500 border-amber-400 text-white'
-                            : 'bg-surface-2 border-border text-muted-c hover:border-amber-500/40 hover:text-amber-500'
-                        )}
-                      >
-                        <Clock className="w-3 h-3" /><span className="hidden sm:inline"> Late</span>
-                      </button>
-                      <button
-                        onClick={() => onMark(d.id, 'false')}
-                        className={cn(
-                          'flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold transition-all border',
-                          val === 'false'
-                            ? 'bg-red-500 border-red-400 text-white'
-                            : 'bg-surface-2 border-border text-muted-c hover:border-red-500/40 hover:text-red-400'
-                        )}
-                      >
-                        <X className="w-3 h-3" /><span className="hidden sm:inline"> Absent</span>
-                      </button>
-                    </div>
+                    {isFuture ? (
+                      <div className="flex items-center justify-center gap-1 text-muted-c opacity-50">
+                        <Lock className="w-3 h-3" />
+                        <span className="text-[9px] font-bold uppercase tracking-widest">Upcoming</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button
+                          onClick={() => onMark(d.id, 'true')}
+                          className={cn(
+                            'flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold transition-all border',
+                            val === 'true'
+                              ? 'bg-emerald-500 border-emerald-400 text-white'
+                              : 'bg-surface-2 border-border text-muted-c hover:border-emerald-500/40 hover:text-emerald-500'
+                          )}
+                        >
+                          <Check className="w-3 h-3" /><span className="hidden sm:inline"> Present</span>
+                        </button>
+                        <button
+                          onClick={() => onMark(d.id, 'late')}
+                          className={cn(
+                            'flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold transition-all border',
+                            val === 'late'
+                              ? 'bg-amber-500 border-amber-400 text-white'
+                              : 'bg-surface-2 border-border text-muted-c hover:border-amber-500/40 hover:text-amber-500'
+                          )}
+                        >
+                          <Clock className="w-3 h-3" /><span className="hidden sm:inline"> Late</span>
+                        </button>
+                        <button
+                          onClick={() => onMark(d.id, 'false')}
+                          className={cn(
+                            'flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold transition-all border',
+                            val === 'false'
+                              ? 'bg-red-500 border-red-400 text-white'
+                              : 'bg-surface-2 border-border text-muted-c hover:border-red-500/40 hover:text-red-400'
+                          )}
+                        >
+                          <X className="w-3 h-3" /><span className="hidden sm:inline"> Absent</span>
+                        </button>
+                      </div>
+                    )}
                   </td>
 
                   {/* Actions */}

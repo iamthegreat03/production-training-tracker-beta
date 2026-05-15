@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Check, X, Clock, MessageSquare, Undo2, CalendarClock, AlertTriangle } from 'lucide-react'
+import { Check, X, Clock, MessageSquare, Undo2, CalendarClock, AlertTriangle, Lock } from 'lucide-react'
 import { cn, initials, pct, normAtt } from '@/lib/utils'
 import type { Designer, Attendance, TrainingSession, AttendanceValue } from '@/types/database'
 
@@ -15,12 +15,13 @@ interface Props {
   onReschedule?: () => void
   canReschedule?: boolean
   isOverdue?: boolean
+  isFuture?: boolean
   index: number
 }
 
 export default function AttendanceCard({
   designer, attendance, allAttendance, sessions, scheduledSessionIds,
-  onMark, onSaveNotes, onReschedule, canReschedule = false, isOverdue = false, index,
+  onMark, onSaveNotes, onReschedule, canReschedule = false, isOverdue = false, isFuture = false, index,
 }: Props) {
   const currentVal = normAtt(attendance?.is_present)
   const [showNotes, setShowNotes] = useState(false)
@@ -88,40 +89,47 @@ export default function AttendanceCard({
         </div>
 
         {/* Marking Actions */}
-        <div className="grid grid-cols-3 gap-2 mt-1">
-          <button
-            onClick={(e) => { e.stopPropagation(); onMark('true') }}
-            className={cn(
-              'flex flex-col items-center justify-center gap-1 py-2 rounded-xl border transition-all',
-              currentVal === 'true' ? 'bg-emerald-500 border-emerald-400 text-white shadow-emerald-500/20 shadow-lg' : 'bg-surface-2 border-border text-muted-c hover:border-emerald-500/40'
-            )}
-          >
-            <Check className="w-4 h-4" />
-            <span className="text-[8px] font-bold uppercase tracking-widest">Present</span>
-          </button>
+        {isFuture ? (
+          <div className="flex items-center justify-center gap-2 py-3 rounded-xl border border-border bg-surface-2/50 text-muted-c opacity-60">
+            <Lock className="w-3.5 h-3.5" />
+            <span className="text-[10px] font-bold uppercase tracking-widest">Session not yet started</span>
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-2 mt-1">
+            <button
+              onClick={(e) => { e.stopPropagation(); onMark('true') }}
+              className={cn(
+                'flex flex-col items-center justify-center gap-1 py-2 rounded-xl border transition-all',
+                currentVal === 'true' ? 'bg-emerald-500 border-emerald-400 text-white shadow-emerald-500/20 shadow-lg' : 'bg-surface-2 border-border text-muted-c hover:border-emerald-500/40'
+              )}
+            >
+              <Check className="w-4 h-4" />
+              <span className="text-[8px] font-bold uppercase tracking-widest">Present</span>
+            </button>
 
-          <button
-            onClick={(e) => { e.stopPropagation(); onMark('late') }}
-            className={cn(
-              'flex flex-col items-center justify-center gap-1 py-2 rounded-xl border transition-all',
-              currentVal === 'late' ? 'bg-amber-500 border-amber-400 text-white shadow-amber-500/20 shadow-lg' : 'bg-surface-2 border-border text-muted-c hover:border-amber-500/40'
-            )}
-          >
-            <Clock className="w-4 h-4" />
-            <span className="text-[8px] font-bold uppercase tracking-widest">Late</span>
-          </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onMark('late') }}
+              className={cn(
+                'flex flex-col items-center justify-center gap-1 py-2 rounded-xl border transition-all',
+                currentVal === 'late' ? 'bg-amber-500 border-amber-400 text-white shadow-amber-500/20 shadow-lg' : 'bg-surface-2 border-border text-muted-c hover:border-amber-500/40'
+              )}
+            >
+              <Clock className="w-4 h-4" />
+              <span className="text-[8px] font-bold uppercase tracking-widest">Late</span>
+            </button>
 
-          <button
-            onClick={(e) => { e.stopPropagation(); onMark('false') }}
-            className={cn(
-              'flex flex-col items-center justify-center gap-1 py-2 rounded-xl border transition-all',
-              currentVal === 'false' ? 'bg-red-500 border-red-400 text-white shadow-red-500/20 shadow-lg' : 'bg-surface-2 border-border text-muted-c hover:border-red-500/40'
-            )}
-          >
-            <X className="w-4 h-4" />
-            <span className="text-[8px] font-bold uppercase tracking-widest">Absent</span>
-          </button>
-        </div>
+            <button
+              onClick={(e) => { e.stopPropagation(); onMark('false') }}
+              className={cn(
+                'flex flex-col items-center justify-center gap-1 py-2 rounded-xl border transition-all',
+                currentVal === 'false' ? 'bg-red-500 border-red-400 text-white shadow-red-500/20 shadow-lg' : 'bg-surface-2 border-border text-muted-c hover:border-red-500/40'
+              )}
+            >
+              <X className="w-4 h-4" />
+              <span className="text-[8px] font-bold uppercase tracking-widest">Absent</span>
+            </button>
+          </div>
+        )}
 
         {/* Reschedule / Overdue indicator */}
         {currentVal === null && (canReschedule || isOverdue) && (
