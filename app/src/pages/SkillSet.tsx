@@ -587,7 +587,6 @@ export default function SkillSet() {
             </table>
           </div>
         </div>
-      </div>
 
       {/* ── Modals ── */}
       <AnimatePresence>

@@ -3,10 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Users, BookOpen, ClipboardCheck,
   UserCog, Shield, Star, Map, History, Trophy, Library,
-  X, LogOut, Sun, Moon, Zap, ChevronRight,
+  X, LogOut, Sun, Moon, Zap, ChevronRight, Settings,
 } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
 import { cn, initials } from '@/lib/utils'
+import SettingsPanel, { useGlassBlur, applyStoredGlassBlur } from './SettingsPanel'
 
 const STAFF_TABS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -47,6 +48,10 @@ interface AppShellProps { children: React.ReactNode }
 export default function AppShell({ children }: AppShellProps) {
   const { state, dispatch, signOut, tabHidden } = useApp()
   const [dark, toggleDark] = useDarkMode()
+  const [blur, setBlur] = useGlassBlur()
+  const [settingsOpen, setSettingsOpen] = useState(false)
+
+  useEffect(() => { applyStoredGlassBlur() }, [])
 
   const tabs = state.role === 'designer' ? DESIGNER_TABS : STAFF_TABS
   const visibleTabs = tabs.filter(t => !tabHidden(t.id))
@@ -87,6 +92,7 @@ export default function AppShell({ children }: AppShellProps) {
           displayName={displayName}
           roleLabel={roleLabel}
           signOut={signOut}
+          onSettings={() => setSettingsOpen(v => !v)}
         />
       </aside>
 
@@ -104,6 +110,9 @@ export default function AppShell({ children }: AppShellProps) {
           <div className="flex items-center gap-1">
             <button onClick={toggleDark} className="p-1.5 rounded-lg btn-ghost">
               {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+            <button onClick={() => setSettingsOpen(v => !v)} className="p-1.5 rounded-lg btn-ghost text-muted-c hover:text-orange-400 transition-colors">
+              <Settings className="w-4 h-4" />
             </button>
             <button onClick={signOut} className="p-1.5 rounded-lg btn-ghost text-muted-c hover:text-red-400 transition-colors">
               <LogOut className="w-4 h-4" />
@@ -149,6 +158,13 @@ export default function AppShell({ children }: AppShellProps) {
           })}
         </nav>
       </div>
+
+      <SettingsPanel
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        blur={blur}
+        setBlur={setBlur}
+      />
     </div>
   )
 }
@@ -163,10 +179,11 @@ interface SidebarContentProps {
   roleLabel: string
   signOut: () => void
   onClose?: () => void
+  onSettings?: () => void
 }
 
 function SidebarContent({
-  tabs, page, navigate, dark, toggleDark, displayName, roleLabel, signOut, onClose,
+  tabs, page, navigate, dark, toggleDark, displayName, roleLabel, signOut, onClose, onSettings,
 }: SidebarContentProps) {
   return (
     <div className="flex flex-col h-full">
@@ -213,17 +230,28 @@ function SidebarContent({
 
       {/* Footer */}
       <div className="p-3 border-t space-y-2" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-        {/* Theme toggle */}
-        <button
-          onClick={toggleDark}
-          className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm transition-all"
-          style={{ color: 'rgb(var(--text-secondary))' }}
-        >
-          {dark
-            ? <Sun className="w-4 h-4 text-amber-400" />
-            : <Moon className="w-4 h-4 text-blue-400" />}
-          <span>{dark ? 'Light Mode' : 'Dark Mode'}</span>
-        </button>
+        {/* Theme + Settings row */}
+        <div className="flex items-center gap-1">
+          <button
+            onClick={toggleDark}
+            className="flex items-center gap-2 flex-1 px-3 py-2 rounded-lg text-sm transition-all"
+            style={{ color: 'rgb(var(--text-secondary))' }}
+          >
+            {dark
+              ? <Sun className="w-4 h-4 text-amber-400" />
+              : <Moon className="w-4 h-4 text-blue-400" />}
+            <span>{dark ? 'Light Mode' : 'Dark Mode'}</span>
+          </button>
+          {onSettings && (
+            <button
+              onClick={onSettings}
+              className="p-2 rounded-lg transition-colors text-muted-c hover:text-orange-400 hover:bg-orange-500/10"
+              title="Appearance settings"
+            >
+              <Settings className="w-4 h-4" />
+            </button>
+          )}
+        </div>
 
         {/* User avatar + sign out */}
         <div className="flex items-center gap-2.5 px-2 py-2 rounded-xl"

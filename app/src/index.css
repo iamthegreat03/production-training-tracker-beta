@@ -20,6 +20,13 @@
     --orange: 249 115 22;
     --orange-light: 251 146 60;
     --sidebar-w: 240px;
+    /* Glass blur — unitless, set by JS settings */
+    --glass-blur: 2;
+    --glass-blur-px:        calc(var(--glass-blur) * 1px);
+    --glass-blur-input-px:  calc(var(--glass-blur) * 3px);
+    --glass-blur-strong-px: calc(var(--glass-blur) * 4px);
+    --glass-blur-modal-px:  calc(var(--glass-blur) * 10px);
+    --glass-blur-max-px:    calc(var(--glass-blur) * 12px);
   }
 
   .dark {
@@ -77,8 +84,8 @@
   .bg-surface-3  { background-color: rgb(var(--surface-3)); }
   .dark .bg-surface-2 {
     background-color: rgba(24, 24, 24, 0.42);
-    backdrop-filter: blur(2px);
-    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(var(--glass-blur-px));
+    -webkit-backdrop-filter: blur(var(--glass-blur-px));
   }
 
   /* Text */
@@ -111,8 +118,8 @@
   }
   .dark .glass {
     background: rgba(20, 20, 20, 0.42);
-    backdrop-filter: blur(2px);
-    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(var(--glass-blur-px));
+    -webkit-backdrop-filter: blur(var(--glass-blur-px));
     border-color: rgba(255, 255, 255, 0.05);
   }
 
@@ -120,13 +127,13 @@
   .modal-glass {
     background: rgba(250, 250, 250, 0.82);
     border: 1px solid rgba(0, 0, 0, 0.07);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(var(--glass-blur-modal-px));
+    -webkit-backdrop-filter: blur(var(--glass-blur-modal-px));
   }
   .dark .modal-glass {
     background: rgba(14, 14, 14, 0.38);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(var(--glass-blur-modal-px));
+    -webkit-backdrop-filter: blur(var(--glass-blur-modal-px));
     border-color: rgba(255, 255, 255, 0.05);
   }
 
@@ -231,8 +238,8 @@
   .card:hover { border-color: rgba(249,115,22,0.25); }
   .dark .card {
     background: rgba(20, 20, 20, 0.42);
-    backdrop-filter: blur(2px);
-    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(var(--glass-blur-px));
+    -webkit-backdrop-filter: blur(var(--glass-blur-px));
     border-color: rgba(255, 255, 255, 0.05);
   }
   .card-interactive { will-change: transform; }
@@ -300,8 +307,8 @@
   .btn-outline:active:not(:disabled) { transform: scale(0.97); }
   .dark .btn-outline {
     background: rgba(20, 20, 20, 0.42);
-    backdrop-filter: blur(2px);
-    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(var(--glass-blur-px));
+    -webkit-backdrop-filter: blur(var(--glass-blur-px));
     border-color: rgba(255, 255, 255, 0.05);
   }
 
@@ -334,8 +341,8 @@
   .dark .input {
     background: rgba(24, 24, 24, 0.55);
     border-color: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(var(--glass-blur-input-px));
+    -webkit-backdrop-filter: blur(var(--glass-blur-input-px));
   }
 
   /* Progress bar */
@@ -428,8 +435,8 @@
   }
   .dark .chip {
     background: rgba(20, 20, 20, 0.42);
-    backdrop-filter: blur(2px);
-    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(var(--glass-blur-px));
+    -webkit-backdrop-filter: blur(var(--glass-blur-px));
     border-color: rgba(255, 255, 255, 0.05);
   }
 }

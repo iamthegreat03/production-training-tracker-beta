@@ -505,7 +505,7 @@ export default function AttendancePage() {
 
           {/* Overdue banner */}
           {showSessionSelector && selSId && sessionIsOverdue && overdueCount > 0 && (
-            <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl border border-amber-500/20 shrink-0" style={{ background: 'rgba(245,158,11,0.08)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}>
+            <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl border border-amber-500/20 shrink-0" style={{ background: 'rgba(245,158,11,0.08)', backdropFilter: 'blur(var(--glass-blur-strong-px))', WebkitBackdropFilter: 'blur(var(--glass-blur-strong-px))' }}>
               <div className="flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
                 <span className="text-xs font-semibold text-amber-400">
