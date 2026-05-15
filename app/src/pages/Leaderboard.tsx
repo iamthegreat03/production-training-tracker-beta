@@ -31,7 +31,7 @@ const RANK_META = [
     shadow: '0 0 40px rgba(234,179,8,0.25)',
     accent: 'rgba(234,179,8,0.55)',
     accentSolid: '#EAB308',
-    heroH: 280,
+    heroH: 330,
   },
   {
     place: 2, icon: Medal, label: '2nd',
@@ -39,7 +39,7 @@ const RANK_META = [
     shadow: '0 0 28px rgba(148,163,184,0.15)',
     accent: 'rgba(148,163,184,0.5)',
     accentSolid: '#94A3B8',
-    heroH: 280,
+    heroH: 330,
   },
   {
     place: 3, icon: Award, label: '3rd',
@@ -47,7 +47,7 @@ const RANK_META = [
     shadow: '0 0 28px rgba(180,100,20,0.15)',
     accent: 'rgba(180,100,20,0.55)',
     accentSolid: '#B45309',
-    heroH: 280,
+    heroH: 330,
   },
 ]
 
