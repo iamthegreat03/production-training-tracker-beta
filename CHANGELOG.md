@@ -4,6 +4,13 @@ All notable changes to this project are documented here.
 
 ---
 
+## [v3.14] — 2026-05-16
+
+### Features
+- **Dashboard Upcoming Sessions — mini calendar** — replaced the flat session list with a month grid calendar. Orange dot indicators appear on days that have sessions, today is highlighted with an orange ring, past days are dimmed. Click any date to reveal its sessions below the grid. Prev/next arrows for month navigation.
+
+---
+
 ## [v3.13] — 2026-05-16
 
 ### Features
