@@ -39,7 +39,7 @@ const RANK_META = [
     shadow: '0 0 28px rgba(148,163,184,0.15)',
     accent: 'rgba(148,163,184,0.5)',
     accentSolid: '#94A3B8',
-    heroH: 160,
+    heroH: 200,
   },
   {
     place: 3, icon: Award, label: '3rd',
@@ -47,7 +47,7 @@ const RANK_META = [
     shadow: '0 0 28px rgba(180,100,20,0.15)',
     accent: 'rgba(180,100,20,0.55)',
     accentSolid: '#B45309',
-    heroH: 160,
+    heroH: 200,
   },
 ]
 
@@ -112,7 +112,7 @@ function PodiumCard({ entry, meta, index }: { entry: DesignerScore; meta: typeof
 
         {/* Score — top right */}
         <div className="absolute top-2 right-2 text-right">
-          <div className={cn('font-display font-black leading-none', meta.color, isFirst ? 'text-xl' : 'text-lg')}>
+          <div className={cn('font-display font-black leading-none text-xl', meta.color)}>
             {entry.overall}
           </div>
           <div className="text-[8px] text-white/50 uppercase tracking-widest">pts</div>
@@ -128,7 +128,7 @@ function PodiumCard({ entry, meta, index }: { entry: DesignerScore; meta: typeof
           <div className="text-[9px] font-bold uppercase tracking-widest" style={{ color: meta.accentSolid }}>
             {entry.designer.team || 'Uncategorized'}
           </div>
-          <div className={cn('font-display font-black text-white leading-tight truncate', isFirst ? 'text-base' : 'text-sm')}>
+          <div className="font-display font-black text-white leading-tight truncate text-base">
             {entry.designer.name}
           </div>
         </div>
