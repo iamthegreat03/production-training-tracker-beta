@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   Users, BookOpen, CalendarCheck, TrendingUp,
-  AlertTriangle, Clock, Zap, ChevronRight, Activity, StickyNote,
+  AlertTriangle, Clock, Zap, ChevronRight, Activity, StickyNote, ChevronLeft,
 } from 'lucide-react'
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -31,11 +31,35 @@ export default function Dashboard() {
   // Active trainings
   const active = trainings.filter(t => t.status === 'active')
 
-  // Upcoming sessions (next 7 days)
+  // Upcoming sessions (next 7 days) — kept for reference
   const next7 = new Date(); next7.setDate(next7.getDate() + 7)
   const upcoming = sessions
     .filter(s => s.session_date >= today && s.session_date <= next7.toISOString().split('T')[0])
     .slice(0, 5)
+
+  // Calendar state
+  const [calDate, setCalDate] = useState(() => new Date())
+  const [selectedDay, setSelectedDay] = useState<string | null>(today)
+
+  const calYear = calDate.getFullYear()
+  const calMonth = calDate.getMonth()
+  const monthLabel = calDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  const firstDow = new Date(calYear, calMonth, 1).getDay()
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate()
+  const calMonthStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}`
+
+  const sessionsByDate = useMemo(() => {
+    const map: Record<string, typeof sessions> = {}
+    sessions.forEach(s => {
+      if (s.session_date.startsWith(calMonthStr)) {
+        map[s.session_date] = map[s.session_date] ?? []
+        map[s.session_date].push(s)
+      }
+    })
+    return map
+  }, [sessions, calMonthStr])
+
+  const selectedSessions = selectedDay ? (sessionsByDate[selectedDay] ?? []) : []
 
   // Critical alerts: designers with 2+ consecutive absences
   const alerts: string[] = []
@@ -222,36 +246,96 @@ export default function Dashboard() {
           )}
         </motion.div>
 
-        {/* Upcoming sessions */}
+        {/* Upcoming sessions — calendar */}
         <motion.div variants={fadeUp} custom={7} initial="hidden" animate="show"
-          className="card rounded-xl p-4">
-          <div className="flex items-center gap-2 mb-4">
-            <Clock className="w-4 h-4 text-blue-400" />
+          className="card rounded-xl p-4 flex flex-col gap-3">
+
+          {/* Header */}
+          <div className="flex items-center gap-2">
+            <CalendarCheck className="w-4 h-4 text-blue-400 shrink-0" />
             <h2 className="font-semibold text-sm text-primary">Upcoming Sessions</h2>
-            <span className="text-xs text-muted-c ml-auto">Next 7 days</span>
-          </div>
-          {upcoming.length === 0 ? (
-            <p className="text-sm text-muted-c text-center py-4">No sessions this week</p>
-          ) : (
-            <div className="space-y-2">
-              {upcoming.map(s => {
-                const tr = trainings.find(t => t.id === s.training_id)
-                return (
-                  <div key={s.id} className="flex items-center gap-3 p-2.5 rounded-lg"
-                       style={{ background: 'rgb(var(--surface-2))' }}>
-                    <div className="w-9 h-9 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
-                      <CalendarCheck className="w-4 h-4 text-blue-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs font-semibold text-primary truncate">{tr?.name ?? '—'}</div>
-                      <div className="text-[11px] text-muted-c">{s.day_of_week}</div>
-                    </div>
-                    <span className="text-xs font-medium text-orange-500 shrink-0">{fmtDs(s.session_date)}</span>
-                  </div>
-                )
-              })}
+            <div className="flex items-center gap-1 ml-auto">
+              <button
+                onClick={() => setCalDate(d => new Date(d.getFullYear(), d.getMonth() - 1, 1))}
+                className="p-1 rounded-lg text-muted-c hover:text-primary hover:bg-surface-2 transition-colors"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+              <span className="text-[11px] font-bold text-primary px-1 min-w-[100px] text-center">{monthLabel}</span>
+              <button
+                onClick={() => setCalDate(d => new Date(d.getFullYear(), d.getMonth() + 1, 1))}
+                className="p-1 rounded-lg text-muted-c hover:text-primary hover:bg-surface-2 transition-colors"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
             </div>
-          )}
+          </div>
+
+          {/* Day labels */}
+          <div className="grid grid-cols-7 text-center">
+            {['S','M','T','W','T','F','S'].map((d, i) => (
+              <div key={i} className="text-[9px] font-bold text-muted-c uppercase tracking-widest py-1">{d}</div>
+            ))}
+          </div>
+
+          {/* Calendar grid */}
+          <div className="grid grid-cols-7 gap-y-1">
+            {Array.from({ length: firstDow }).map((_, i) => <div key={`e${i}`} />)}
+            {Array.from({ length: daysInMonth }).map((_, i) => {
+              const day = i + 1
+              const dateStr = `${calMonthStr}-${String(day).padStart(2, '0')}`
+              const hasSessions = !!sessionsByDate[dateStr]
+              const isToday = dateStr === today
+              const isSelected = dateStr === selectedDay
+              const isPast = dateStr < today
+
+              return (
+                <button
+                  key={day}
+                  onClick={() => setSelectedDay(isSelected ? null : dateStr)}
+                  className={cn(
+                    'relative flex flex-col items-center justify-center h-8 rounded-lg text-xs font-medium transition-all mx-0.5',
+                    isSelected ? 'bg-orange-500 text-white shadow-sm shadow-orange-500/30' :
+                    isToday ? 'bg-orange-500/15 text-orange-500 ring-1 ring-orange-500/40' :
+                    hasSessions ? 'hover:bg-surface-2 text-primary' :
+                    isPast ? 'text-muted-c/40' : 'text-muted-c hover:bg-surface-2'
+                  )}
+                >
+                  <span className="leading-none">{day}</span>
+                  {hasSessions && (
+                    <span className={cn(
+                      'absolute bottom-1 w-1 h-1 rounded-full',
+                      isSelected ? 'bg-white/70' : 'bg-orange-500'
+                    )} />
+                  )}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Selected day sessions */}
+          <div className="min-h-[52px]">
+            {selectedDay && selectedSessions.length === 0 && (
+              <p className="text-xs text-muted-c text-center py-3 italic">No sessions on this day</p>
+            )}
+            {selectedSessions.length > 0 && (
+              <div className="space-y-1.5">
+                {selectedSessions.map(s => {
+                  const tr = trainings.find(t => t.id === s.training_id)
+                  return (
+                    <div key={s.id} className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-surface-2 border border-border-subtle">
+                      <div className={cn('w-1.5 h-1.5 rounded-full shrink-0', tr?.type === 'Hands-On' ? 'bg-orange-500' : 'bg-purple-500')} />
+                      <span className="text-xs font-semibold text-primary truncate flex-1">{tr?.name ?? '—'}</span>
+                      <span className="text-[10px] text-muted-c shrink-0">{s.day_of_week?.slice(0, 3)}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+            {!selectedDay && (
+              <p className="text-xs text-muted-c text-center py-3 italic">Select a date to see sessions</p>
+            )}
+          </div>
         </motion.div>
       </div>
 
