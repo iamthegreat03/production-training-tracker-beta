@@ -25,9 +25,30 @@ const FILTER_TABS: { id: FilterTab; label: string; icon: React.ComponentType<{ c
 ]
 
 const RANK_META = [
-  { place: 1, icon: Crown, color: 'text-yellow-400', glow: 'shadow-yellow-500/30', border: 'border-yellow-500/40', bg: 'from-yellow-500/20 to-yellow-600/5', ring: 'ring-yellow-500/50', label: '1st', size: 'w-20 h-20' },
-  { place: 2, icon: Medal, color: 'text-slate-300', glow: 'shadow-slate-400/20', border: 'border-slate-400/30', bg: 'from-slate-400/15 to-slate-500/5', ring: 'ring-slate-400/40', label: '2nd', size: 'w-16 h-16' },
-  { place: 3, icon: Award, color: 'text-amber-600', glow: 'shadow-amber-700/20', border: 'border-amber-700/30', bg: 'from-amber-700/15 to-amber-800/5', ring: 'ring-amber-700/40', label: '3rd', size: 'w-16 h-16' },
+  {
+    place: 1, icon: Crown, label: '1st',
+    color: 'text-yellow-400', border: 'border-yellow-500/50',
+    shadow: '0 0 40px rgba(234,179,8,0.25)',
+    accent: 'rgba(234,179,8,0.55)',
+    accentSolid: '#EAB308',
+    heroH: 200,
+  },
+  {
+    place: 2, icon: Medal, label: '2nd',
+    color: 'text-slate-300', border: 'border-slate-400/40',
+    shadow: '0 0 28px rgba(148,163,184,0.15)',
+    accent: 'rgba(148,163,184,0.5)',
+    accentSolid: '#94A3B8',
+    heroH: 160,
+  },
+  {
+    place: 3, icon: Award, label: '3rd',
+    color: 'text-amber-600', border: 'border-amber-700/40',
+    shadow: '0 0 28px rgba(180,100,20,0.15)',
+    accent: 'rgba(180,100,20,0.55)',
+    accentSolid: '#B45309',
+    heroH: 160,
+  },
 ]
 
 function ScoreBar({ value, color }: { value: number; color: string }) {
@@ -36,7 +57,7 @@ function ScoreBar({ value, color }: { value: number; color: string }) {
       <motion.div
         initial={{ width: 0 }}
         animate={{ width: `${value}%` }}
-        transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
+        transition={{ duration: 0.8, ease: 'easeOut', delay: 0.3 }}
         className={cn('h-full rounded-full', color)}
       />
     </div>
@@ -49,81 +70,79 @@ function PodiumCard({ entry, meta, index }: { entry: DesignerScore; meta: typeof
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: isFirst ? 30 : 20, scale: 0.95 }}
+      initial={{ opacity: 0, y: isFirst ? 40 : 24, scale: 0.94 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ type: 'spring', damping: 24, stiffness: 300, delay: index * 0.12 }}
-      className={cn(
-        'relative flex flex-col items-center rounded-2xl border overflow-hidden',
-        isFirst ? 'flex-1 max-w-[200px]' : 'flex-1 max-w-[160px]',
-        meta.border,
-        'shadow-lg', meta.glow,
-      )}
+      transition={{ type: 'spring', damping: 22, stiffness: 280, delay: index * 0.1 }}
+      className={cn('relative flex flex-col rounded-2xl border overflow-hidden flex-1', meta.border)}
+      style={{ boxShadow: meta.shadow }}
     >
-      {/* Background cover art */}
-      <div className="absolute inset-0">
+      {/* ── Hero area ── */}
+      <div className="relative overflow-hidden shrink-0" style={{ height: meta.heroH }}>
+        {/* Cover art base */}
         <img
           src="/cover_background.png"
           alt=""
-          className="w-full h-full object-cover opacity-20"
+          className="absolute inset-0 w-full h-full object-cover opacity-25"
         />
-        <div className={cn('absolute inset-0 bg-gradient-to-b', meta.bg)} />
-        <div className="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent" />
+
+        {/* Diagonal color split: dark-left / accent-right */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `linear-gradient(125deg, rgba(8,8,20,0.92) 42%, ${meta.accent} 42%)`,
+          }}
+        />
+
+        {/* Subtle vignette at bottom to blend into info area */}
+        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/60 to-transparent" />
+
+        {/* Avatar — full height, bottom-anchored */}
+        <img
+          src="/avatar.png"
+          alt={entry.designer.name}
+          className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[95%] object-contain object-bottom"
+          style={{ filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.7))' }}
+        />
+
+        {/* Rank badge — top left */}
+        <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-1 rounded-lg bg-black/50 backdrop-blur-sm border border-white/10">
+          <Icon className={cn('w-3 h-3', meta.color)} />
+          <span className={cn('text-[9px] font-black uppercase tracking-widest', meta.color)}>{meta.label}</span>
+        </div>
+
+        {/* Score — top right */}
+        <div className="absolute top-2 right-2 text-right">
+          <div className={cn('font-display font-black leading-none', meta.color, isFirst ? 'text-xl' : 'text-lg')}>
+            {entry.overall}
+          </div>
+          <div className="text-[8px] text-white/50 uppercase tracking-widest">pts</div>
+        </div>
       </div>
 
-      <div className={cn('relative z-10 flex flex-col items-center', isFirst ? 'pt-5 pb-4 px-4 gap-3' : 'pt-4 pb-3 px-3 gap-2.5')}>
-        {/* Rank badge */}
-        <div className={cn(
-          'flex items-center justify-center rounded-full',
-          isFirst ? 'w-8 h-8' : 'w-7 h-7',
-          'bg-black/40 ring-1', meta.ring,
-        )}>
-          <Icon className={cn(isFirst ? 'w-4 h-4' : 'w-3.5 h-3.5', meta.color)} />
-        </div>
-
-        {/* Avatar */}
-        <div className={cn(
-          'rounded-full ring-2 overflow-hidden shrink-0',
-          meta.ring,
-          'shadow-lg', meta.glow,
-          meta.size,
-        )}>
-          <img src="/avatar.png" alt={entry.designer.name} className="w-full h-full object-cover" />
-        </div>
-
-        {/* Name + team */}
-        <div className="text-center">
-          <div className={cn('font-display font-bold text-primary leading-tight', isFirst ? 'text-sm' : 'text-xs')}>
-            {entry.designer.name}
-          </div>
-          <div className="text-[9px] text-muted-c uppercase tracking-widest mt-0.5">
+      {/* ── Info area ── */}
+      <div
+        className="flex flex-col gap-2 px-3 py-3"
+        style={{ background: 'rgba(8,8,20,0.95)' }}
+      >
+        <div>
+          <div className="text-[9px] font-bold uppercase tracking-widest" style={{ color: meta.accentSolid }}>
             {entry.designer.team || 'Uncategorized'}
           </div>
-        </div>
-
-        {/* Score */}
-        <div className={cn('font-display font-black', meta.color, isFirst ? 'text-2xl' : 'text-xl')}>
-          {entry.overall}
-          <span className={cn('font-medium opacity-60', isFirst ? 'text-xs' : 'text-[10px]')}>pts</span>
-        </div>
-
-        {/* Sub-scores */}
-        <div className={cn('w-full space-y-1', isFirst ? '' : 'hidden sm:block')}>
-          <div className="flex justify-between text-[9px] text-muted-c">
-            <span>ATT</span><span className="text-emerald-400">{entry.attendance}%</span>
+          <div className={cn('font-display font-black text-white leading-tight truncate', isFirst ? 'text-base' : 'text-sm')}>
+            {entry.designer.name}
           </div>
-          <ScoreBar value={entry.attendance} color="bg-emerald-500" />
-          <div className="flex justify-between text-[9px] text-muted-c">
-            <span>SKILLS</span><span className="text-blue-400">{entry.skills}%</span>
-          </div>
-          <ScoreBar value={entry.skills} color="bg-blue-500" />
         </div>
 
-        {/* Rank label */}
-        <div className={cn(
-          'px-3 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest',
-          'bg-black/30 ring-1', meta.ring, meta.color,
-        )}>
-          {meta.label} Place
+        {/* Stat pills */}
+        <div className="flex gap-1.5">
+          <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/20">
+            <span className="text-[8px] font-bold uppercase tracking-widest text-emerald-400">ATT</span>
+            <span className="text-[9px] font-black text-emerald-400">{entry.attendance}%</span>
+          </div>
+          <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/15 border border-blue-500/20">
+            <span className="text-[8px] font-bold uppercase tracking-widest text-blue-400">SKL</span>
+            <span className="text-[9px] font-black text-blue-400">{entry.skills}%</span>
+          </div>
         </div>
       </div>
     </motion.div>
@@ -275,25 +294,10 @@ export default function Leaderboard() {
             </div>
 
             {/* Podium layout: 2nd | 1st | 3rd */}
-            <div className="flex items-end justify-center gap-3">
-              {top3[1] && (
-                <div className="flex flex-col items-center gap-0 flex-1">
-                  <PodiumCard entry={top3[1]} meta={RANK_META[1]} index={1} />
-                  <div className="w-full h-8 rounded-b-xl bg-gradient-to-b from-slate-400/10 to-transparent border-x border-b border-slate-400/20" />
-                </div>
-              )}
-              {top3[0] && (
-                <div className="flex flex-col items-center gap-0 flex-1">
-                  <PodiumCard entry={top3[0]} meta={RANK_META[0]} index={0} />
-                  <div className="w-full h-14 rounded-b-xl bg-gradient-to-b from-yellow-500/10 to-transparent border-x border-b border-yellow-500/20" />
-                </div>
-              )}
-              {top3[2] && (
-                <div className="flex flex-col items-center gap-0 flex-1">
-                  <PodiumCard entry={top3[2]} meta={RANK_META[2]} index={2} />
-                  <div className="w-full h-4 rounded-b-xl bg-gradient-to-b from-amber-700/10 to-transparent border-x border-b border-amber-700/20" />
-                </div>
-              )}
+            <div className="flex items-stretch gap-2">
+              {top3[1] && <PodiumCard entry={top3[1]} meta={RANK_META[1]} index={1} />}
+              {top3[0] && <PodiumCard entry={top3[0]} meta={RANK_META[0]} index={0} />}
+              {top3[2] && <PodiumCard entry={top3[2]} meta={RANK_META[2]} index={2} />}
             </div>
           </div>
         )}
