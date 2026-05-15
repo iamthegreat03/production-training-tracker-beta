@@ -23,19 +23,19 @@
   }
 
   .dark {
-    /* Dark / Crypto mode */
-    --bg: 6 6 18;
-    --bg-subtle: 10 10 25;
-    --surface: 13 13 31;
-    --surface-2: 18 18 40;
-    --border: 30 30 60;
-    --border-subtle: 20 20 45;
-    --text: 248 250 252;
-    --text-secondary: 148 163 184;
-    --text-muted: 71 85 105;
-    --orange: 249 115 22;
-    --orange-light: 251 146 60;
-    --surface-3: 24 24 50;
+    /* Dark / Premium Black mode */
+    --bg:            10 10 10;
+    --bg-subtle:     14 14 14;
+    --surface:       18 18 18;
+    --surface-2:     24 24 24;
+    --surface-3:     30 30 30;
+    --border:        40 40 40;
+    --border-subtle: 28 28 28;
+    --text:          248 250 252;
+    --text-secondary: 161 161 170;
+    --text-muted:    82 82 91;
+    --orange:        249 115 22;
+    --orange-light:  251 146 60;
   }
 }
 
@@ -87,10 +87,9 @@
 
   /* Grid background */
   .bg-grid-dark {
-    background-image: var(--tw-gradient-stops);
     background-image:
-      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+      linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
     background-size: 32px 32px;
   }
   .bg-grid-light {
@@ -106,18 +105,18 @@
     border: 1px solid rgb(var(--border));
   }
   .dark .glass {
-    background: rgba(13, 13, 31, 0.75);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-color: rgba(255, 255, 255, 0.06);
+    background: rgba(18, 18, 18, 0.82);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-color: rgba(255, 255, 255, 0.07);
   }
 
-  /* Orange glow */
-  .glow-orange-sm  { box-shadow: 0 0 12px rgba(249,115,22,0.25); }
-  .glow-orange-md  { box-shadow: 0 0 24px rgba(249,115,22,0.35); }
-  .glow-orange-lg  { box-shadow: 0 0 48px rgba(249,115,22,0.45); }
+  /* Orange glow — boosted for black backgrounds */
+  .glow-orange-sm  { box-shadow: 0 0 14px rgba(249,115,22,0.32); }
+  .glow-orange-md  { box-shadow: 0 0 28px rgba(249,115,22,0.44); }
+  .glow-orange-lg  { box-shadow: 0 0 56px rgba(249,115,22,0.55); }
 
-  .shadow-orange-sm { box-shadow: 0 4px 12px rgba(249,115,22,0.2); }
+  .shadow-orange-sm { box-shadow: 0 4px 14px rgba(249,115,22,0.28); }
   .shadow-emerald-sm { box-shadow: 0 4px 12px rgba(16,185,129,0.2); }
   .shadow-amber-sm { box-shadow: 0 4px 12px rgba(245,158,11,0.2); }
   .shadow-red-sm { box-shadow: 0 4px 12px rgba(239,68,68,0.2); }
