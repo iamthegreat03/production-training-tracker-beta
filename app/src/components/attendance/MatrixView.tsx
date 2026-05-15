@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { Check, Clock, X } from 'lucide-react'
 import { cn, initials, normAtt, pct, fmtDs } from '@/lib/utils'
 import type {
@@ -36,6 +37,22 @@ interface Props {
 export default function MatrixView({
   designers, sessions, attendance, optimistic, training, enrollments, onMark,
 }: Props) {
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const drag = useRef({ active: false, x: 0, sl: 0, moved: false })
+
+  function onMouseDown(e: React.MouseEvent) {
+    const target = e.target as HTMLElement
+    if (target.closest('button')) return
+    drag.current = { active: true, x: e.clientX, sl: scrollRef.current?.scrollLeft ?? 0, moved: false }
+  }
+  function onMouseMove(e: React.MouseEvent) {
+    if (!drag.current.active || !scrollRef.current) return
+    const dx = e.clientX - drag.current.x
+    if (Math.abs(dx) > 4) drag.current.moved = true
+    scrollRef.current.scrollLeft = drag.current.sl - dx
+  }
+  function onMouseUp() { drag.current.active = false }
+
   function getVal(sessionId: string, designerId: string): AttendanceValue {
     const key = `${sessionId}_${designerId}`
     if (key in optimistic) return optimistic[key]
@@ -59,7 +76,14 @@ export default function MatrixView({
   }
 
   return (
-    <div className="flex-1 overflow-auto min-h-0">
+    <div
+      ref={scrollRef}
+      className="flex-1 overflow-auto min-h-0 cursor-grab active:cursor-grabbing select-none"
+      onMouseDown={onMouseDown}
+      onMouseMove={onMouseMove}
+      onMouseUp={onMouseUp}
+      onMouseLeave={onMouseUp}
+    >
       <div className="inline-block min-w-full align-top">
         <table className="border-collapse">
           <thead>
@@ -134,7 +158,7 @@ export default function MatrixView({
                           <div className="w-7 h-7 rounded-lg bg-slate-400/[0.06] mx-auto" title="Not scheduled" />
                         ) : (
                           <button
-                            onClick={() => cycle(d.id, s.id)}
+                            onClick={e => { if (drag.current.moved) { e.preventDefault(); return } cycle(d.id, s.id) }}
                             title={val === 'true' ? 'Present' : val === 'late' ? 'Late' : val === 'false' ? 'Absent' : 'Unmarked — click to mark'}
                             className={cn(
                               'w-7 h-7 rounded-lg transition-all duration-150 flex items-center justify-center mx-auto',
