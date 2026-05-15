@@ -100,7 +100,7 @@ function PodiumCard({ entry, meta, index }: { entry: DesignerScore; meta: typeof
         <img
           src="/avatar.png"
           alt={entry.designer.name}
-          className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[95%] object-contain object-bottom"
+          className="absolute bottom-0 left-1/2 translate-x-[30%] h-[95%] object-contain object-bottom"
           style={{ filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.7))' }}
         />
 
