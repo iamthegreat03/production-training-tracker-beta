@@ -4,6 +4,44 @@ All notable changes to this project are documented here.
 
 ---
 
+## [v3.11] — 2026-05-16
+
+### UI Overhaul — Multi-Tab Visual Refinements
+
+#### SkillSet Tab
+- **Removed Skill Overview card** — redundant summary removed to reduce clutter; key stats are surfaced in the remaining cards
+- **Removed Platform Leaderboard card** — consolidated into Top Platform card
+- **Top Platform card redesigned** — left side shows platform name + level breakdown stats; right side renders a live `AreaChart` (Int / Adv / Exp per level)
+- **Layout restructured** — Distribution chart standalone row; Team Rankings + Top Platform in a 2-col grid alongside Platform Breakdown; Skill Matrix remains full-width at the bottom
+
+#### Dashboard Tab
+- **Critical Alert rows** — changed from transparent red (`bg-red-500/5`) to opaque surface cards (`bg-surface-2 border border-border`) for better readability against blurred backgrounds
+- **Removed Team Breakdown + Skill Coverage grid** — cleared the bottom section; page is now more focused
+
+#### Designers Tab
+- **Actions column always visible** — removed `opacity-0 group-hover:opacity-100` hover gate; edit and delete buttons are always shown. Actions header centered to match
+
+#### Trainings Tab
+- **Empty kanban drop zone** — glassmorphism applied (`backdrop-blur-sm + bg-white/[0.01]`) when not a drag target, so empty columns no longer look like solid boxes
+
+#### Attendance Tab
+- **Notes textarea** — reverted from inline styles to `className="input"` so it inherits the global `.dark .input` glass treatment automatically
+- **Matrix card wrapper** — matrix view container now uses `.card.glass.rounded-2xl` for consistent frosted-glass framing
+- **Warning / overdue banner** — amber alert bar now uses `rgba(245,158,11,0.08)` background + `backdrop-filter: blur(8px)` for a glassy look
+
+#### Designer Badges Tab
+- **Badge cards** — `backdrop-filter: blur(8px)` applied to each badge motion card for depth
+
+### Glassmorphism — Global Search Inputs
+- **`.dark .input`** — now uses `background: rgba(24,24,24,0.55)` + `backdrop-filter: blur(6px)` for a consistent frosted look across all search boxes and text inputs system-wide
+- **Search icon z-index fix** — `z-10` added to all search icons (Users, Designers, TrainingModal, Attendance) to prevent them from being painted behind the blurred input background due to stacking context
+
+### Attendance Matrix — Drag-to-Pan
+- **Horizontal drag-to-pan** — matrix scroll container now supports click-and-drag panning (cursor: grab / grabbing). A `moved` flag (threshold 4 px) prevents accidental cell marks during pan
+- **Sticky designers column blur** — both the column header `<th>` and all row `<td>` cells in the sticky designers column apply `backdrop-filter: blur(24px)` so content scrolling behind the column blurs through cleanly
+
+---
+
 ## [v3.10] — 2026-05-15
 
 ### Visual Polish — Glassmorphism System
