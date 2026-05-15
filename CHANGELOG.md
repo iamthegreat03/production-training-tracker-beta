@@ -4,6 +4,17 @@ All notable changes to this project are documented here.
 
 ---
 
+## [v3.13] — 2026-05-16
+
+### Features
+- **Future session locking** — attendance marking is disabled for any session whose date hasn't arrived yet (enabled at 12am on the session date). Applies across all three views:
+  - **Matrix** — future columns are dimmed (opacity-40) with a lock icon replacing the day label; cells show a locked placeholder instead of a clickable button
+  - **Cards** — the Present / Late / Absent buttons are replaced with a "Session not yet started" banner
+  - **Roster** — the mark column shows a lock icon + "Upcoming" label instead of action buttons
+  - **Session chips** — future session chips are dimmed (opacity-50) with a lock icon; still selectable for viewing, just not markable
+
+---
+
 ## [v3.12] — 2026-05-16
 
 ### Features

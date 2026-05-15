@@ -235,6 +235,13 @@ Used for all stat displays across Dashboard, Attendance, SkillSet, DesignerHome,
 
 ---
 
+## Future Session Locking
+
+`isSessionFuture(sessionDate)` in `utils.ts` — returns `true` if `sessionDate > today()`. Used to disable attendance marking across all views until midnight on the session date:
+- **Matrix**: columns dimmed + locked placeholder cells
+- **Cards/Roster**: mark buttons replaced with a locked state UI
+- **Session chips**: dimmed with lock icon
+
 ## Current Version
 
-**v3.12** — see `CHANGELOG.md` for full history.
+**v3.13** — see `CHANGELOG.md` for full history.
