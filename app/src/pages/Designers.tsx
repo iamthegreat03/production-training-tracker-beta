@@ -266,7 +266,7 @@ export default function Designers() {
                   </button>
                 </th>
                 <th className="hidden lg:table-cell">Platform</th>
-                <th className="text-right">Actions</th>
+                <th className="text-center">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -322,7 +322,7 @@ export default function Designers() {
                     </td>
                     <td className="hidden lg:table-cell text-muted-c text-xs">{d.platform ?? '—'}</td>
                     <td onClick={e => e.stopPropagation()}>
-                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center justify-center gap-1">
                         {can('canAddDesigners') && (
                           <button
                             onClick={() => setEditTarget(d)}

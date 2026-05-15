@@ -505,7 +505,7 @@ export default function AttendancePage() {
 
           {/* Overdue banner */}
           {showSessionSelector && selSId && sessionIsOverdue && overdueCount > 0 && (
-            <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 shrink-0">
+            <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl border border-amber-500/20 shrink-0" style={{ background: 'rgba(245,158,11,0.08)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}>
               <div className="flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
                 <span className="text-xs font-semibold text-amber-400">
@@ -613,7 +613,7 @@ export default function AttendancePage() {
 
             {layout === 'matrix' && (
               <motion.div key="matrix" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: 0.2, ease: [0.16,1,0.3,1] }} className="flex-1 min-h-0 flex flex-col">
+                transition={{ duration: 0.2, ease: [0.16,1,0.3,1] }} className="flex-1 min-h-0 flex flex-col card glass rounded-2xl overflow-hidden">
                 <MatrixView
                   designers={enrolledDesigners}
                   sessions={tSessions}
@@ -692,7 +692,10 @@ export default function AttendancePage() {
                   <X className="w-4 h-4" />
                 </button>
               </div>
-              <textarea className="input resize-none w-full" rows={4}
+              <textarea
+                className="resize-none w-full rounded-xl px-3 py-2.5 text-sm text-primary placeholder:text-muted-c outline-none transition-colors"
+                style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.06)' }}
+                rows={4}
                 placeholder="What did this designer work on or produce this session?"
                 value={noteText} onChange={e => setNoteText(e.target.value)} />
               <div className="flex gap-2">

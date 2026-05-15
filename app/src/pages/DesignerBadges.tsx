@@ -99,6 +99,7 @@ export default function DesignerBadges() {
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ type: 'spring', damping: 22, stiffness: 320, delay: Math.min(i * 0.05, 0.25) }}
                       className={cn('rounded-2xl border p-4 flex flex-col items-center gap-2 text-center', cfg.bg)}
+                      style={{ backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
                     >
                       <div className={cn('w-12 h-12 rounded-xl flex items-center justify-center', cfg.bg)}>
                         <Icon className={cn('w-6 h-6', cfg.color)} />

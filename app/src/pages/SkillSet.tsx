@@ -236,11 +236,8 @@ export default function SkillSet() {
         ))}
       </div>
 
-      {/* ── Row 2: Distribution Chart + Team Rankings + Top Platform ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        {/* Platform Skill Distribution — vertical grouped bars */}
-        <div className="card glass rounded-2xl overflow-hidden flex flex-col lg:col-span-2">
+      {/* ── Row 2: Distribution ── */}
+        <div className="card glass rounded-2xl overflow-hidden flex flex-col">
           <div className="p-4 border-b border-border flex items-center justify-between flex-wrap gap-3">
             <div className="flex items-center gap-2">
               <Target className="w-4 h-4 text-orange-400" />
@@ -259,9 +256,9 @@ export default function SkillSet() {
               ))}
             </div>
           </div>
-          <div className="p-4 flex-1">
+          <div className="p-4 flex-1 flex items-center">
             {distribution.length === 0 ? (
-              <div className="flex items-center justify-center h-32 text-muted-c text-sm italic">No skill data.</div>
+              <div className="flex items-center justify-center h-32 text-muted-c text-sm italic w-full">No skill data.</div>
             ) : (
               <ResponsiveContainer width="100%" height={200}>
                 <LineChart
@@ -299,10 +296,10 @@ export default function SkillSet() {
                     cursor={{ stroke: 'rgba(249,115,22,0.12)', strokeWidth: 1 }}
                   />
                   <Line
-                    type="monotone" dataKey="Intermediate" stroke="rgba(249,115,22,0.40)"
+                    type="monotone" dataKey="Intermediate" stroke="rgba(249,115,22,0.20)"
                     strokeWidth={2} strokeDasharray="4 4"
-                    dot={{ r: 3, fill: 'rgba(249,115,22,0.40)', strokeWidth: 0 }}
-                    activeDot={{ r: 5, fill: 'rgba(249,115,22,0.55)', strokeWidth: 0 }}
+                    dot={{ r: 3, fill: 'rgba(249,115,22,0.20)', strokeWidth: 0 }}
+                    activeDot={{ r: 5, fill: 'rgba(249,115,22,0.35)', strokeWidth: 0 }}
                   />
                   <Line
                     type="monotone" dataKey="Advanced" stroke="rgba(249,115,22,0.75)"
@@ -322,7 +319,8 @@ export default function SkillSet() {
           </div>
         </div>
 
-        {/* Right column */}
+      {/* ── Row 3: Team Rankings + Top Platform | Platform Breakdown ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="flex flex-col gap-6">
 
           {/* Team Coverage Rankings */}
@@ -387,57 +385,60 @@ export default function SkillSet() {
           </div>
 
           {/* Top Platform */}
-          {topPlatform && (
-            <div className="card glass rounded-2xl p-5 flex flex-col gap-3">
-              <div className="flex items-center gap-2">
-                <Star className="w-4 h-4 text-amber-400" />
-                <h3 className="text-sm font-bold text-primary">Top Platform</h3>
+          {topPlatform && (() => {
+            const chartData = [
+              { level: 'INT', count: topPlatform.int },
+              { level: 'ADV', count: topPlatform.adv },
+              { level: 'EXP', count: topPlatform.exp },
+            ]
+            return (
+              <div className="card glass rounded-2xl overflow-hidden flex flex-col">
+                <div className="p-4 border-b border-border flex items-center gap-2">
+                  <Star className="w-4 h-4 text-amber-400" />
+                  <h3 className="text-sm font-bold text-primary">Top Platform</h3>
+                </div>
+                <div className="p-4 flex items-center gap-4 flex-1">
+                  <div className="shrink-0 space-y-2">
+                    <div className="text-xl font-display font-bold text-primary">{topPlatform.platform}</div>
+                    <div className="flex flex-col gap-1">
+                      <span className="badge-orange text-[10px]">{topPlatform.total} Skills</span>
+                      <span className="text-[10px] text-muted-c">{topPlatform.exp} Expert · {topPlatform.adv} Adv</span>
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <ResponsiveContainer width="100%" height={80}>
+                      <AreaChart data={chartData} margin={{ top: 4, right: 4, left: -28, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="topPlatGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#f97316" stopOpacity={0.22} />
+                            <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <XAxis dataKey="level" tick={{ fontSize: 8, fill: 'rgb(var(--text-muted))' }} tickLine={false} axisLine={false} />
+                        <YAxis hide />
+                        <Tooltip
+                          content={({ active, payload }: any) => {
+                            if (!active || !payload?.length) return null
+                            return (
+                              <div className="bg-surface border border-border rounded-xl px-3 py-2 text-xs shadow-lg">
+                                <div className="font-bold text-primary">{payload[0].payload.level}</div>
+                                <div className="text-orange-400 font-bold mt-0.5">{payload[0].value} designers</div>
+                              </div>
+                            )
+                          }}
+                          cursor={{ stroke: 'rgba(249,115,22,0.2)', strokeWidth: 1 }}
+                        />
+                        <Area type="monotone" dataKey="count" stroke="#f97316" strokeWidth={2}
+                          fill="url(#topPlatGrad)"
+                          dot={{ r: 2.5, fill: '#f97316', strokeWidth: 0 }}
+                          activeDot={{ r: 5, fill: '#f97316', strokeWidth: 0 }} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
               </div>
-              <div className="text-2xl font-display font-bold text-primary">{topPlatform.platform}</div>
-              <div className="flex items-center gap-3 flex-wrap">
-                <span className="badge-orange">{topPlatform.total} Skills</span>
-                <span className="text-[10px] text-muted-c">{topPlatform.exp} Expert · {topPlatform.adv} Adv</span>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* ── Row 3: Skill Overview ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-        {/* Big coverage ring + team breakdown list */}
-        <div className="card glass rounded-2xl overflow-hidden flex flex-col">
-          <div className="p-4 border-b border-border flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-emerald-400" />
-            <h3 className="text-sm font-bold text-primary">Skill Overview</h3>
-          </div>
-          <div className="p-6 flex flex-col items-center gap-6">
-            <div className="flex flex-col items-center gap-2">
-              <CoverageRing value={overallCoverage} size="lg" />
-              <div className="text-xs text-muted-c font-medium">Overall Team Coverage</div>
-            </div>
-            <div className="w-full space-y-3">
-              {teamCoverage.length === 0 ? (
-                <div className="text-center text-muted-c text-sm italic">No teams yet.</div>
-              ) : (
-                [...teamCoverage]
-                  .sort((a, b) => b.avgCoverage - a.avgCoverage)
-                  .map(t => {
-                    const dot = t.avgCoverage >= 75 ? 'bg-emerald-500' : t.avgCoverage >= 40 ? 'bg-amber-500' : 'bg-red-500'
-                    const txt = t.avgCoverage >= 75 ? 'text-emerald-400' : t.avgCoverage >= 40 ? 'text-amber-400' : 'text-red-400'
-                    return (
-                      <div key={t.team} className="flex items-center gap-3">
-                        <div className={cn('w-2 h-2 rounded-full shrink-0', dot)} />
-                        <span className="text-xs font-semibold text-primary flex-1 truncate">{t.team}</span>
-                        <span className="text-[10px] text-muted-c shrink-0">{t.memberCount} member{t.memberCount !== 1 ? 's' : ''}</span>
-                        <span className={cn('text-xs font-bold tabular-nums shrink-0', txt)}>{t.avgCoverage}%</span>
-                      </div>
-                    )
-                  })
-              )}
-            </div>
-          </div>
+            )
+          })()}
         </div>
 
         {/* Platform breakdown table */}
@@ -495,47 +496,8 @@ export default function SkillSet() {
         </div>
       </div>
 
-      {/* ── Row 4: Platform Leaderboard + Skill Matrix ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        {/* Platform Leaderboard */}
-        <div className="card glass rounded-2xl overflow-hidden flex flex-col">
-          <div className="p-4 border-b border-border flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-orange-400" />
-            <h3 className="text-sm font-bold text-primary">Platform Leaderboard</h3>
-          </div>
-          <div className="p-4 space-y-3">
-            {distribution.length === 0 ? (
-              <div className="text-center text-muted-c text-sm italic py-4">No data.</div>
-            ) : (
-              [...distribution]
-                .sort((a, b) => b.total - a.total)
-                .map((d, i) => {
-                  const maxT = Math.max(...distribution.map(x => x.total), 1)
-                  return (
-                    <div key={d.platform}>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[9px] font-bold text-muted-c w-3">{i + 1}</span>
-                          <span className="text-xs font-semibold text-primary">{d.platform}</span>
-                        </div>
-                        <span className="text-[10px] font-bold text-primary tabular-nums">{d.total}</span>
-                      </div>
-                      <div className="progress-track h-1.5">
-                        <div
-                          className="h-full rounded-full bg-orange-gradient transition-all duration-500"
-                          style={{ width: `${Math.round((d.total / maxT) * 100)}%` }}
-                        />
-                      </div>
-                    </div>
-                  )
-                })
-            )}
-          </div>
-        </div>
-
-        {/* Skill Matrix */}
-        <div className="card glass rounded-2xl flex flex-col overflow-hidden lg:col-span-2">
+      {/* ── Row 4: Skill Matrix ── */}
+        <div className="card glass rounded-2xl flex flex-col overflow-hidden">
           <div className="p-4 border-b border-border bg-surface-2/50 flex flex-wrap items-center justify-between gap-4">
             <div className="flex flex-wrap items-center gap-4 flex-1 min-w-0">
               <div className="relative flex-1 max-w-sm">

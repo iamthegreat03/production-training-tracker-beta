@@ -200,8 +200,8 @@ export default function Trainings() {
                   <div className="flex-1 space-y-3 overflow-y-auto pr-1">
                     {grouped[status].length === 0 ? (
                       <div className={cn(
-                        'rounded-xl border border-dashed py-8 text-center transition-colors',
-                        isDragTarget ? 'border-orange-500/40 bg-orange-500/5' : 'border-border'
+                        'rounded-xl border border-dashed py-8 text-center transition-colors backdrop-blur-sm',
+                        isDragTarget ? 'border-orange-500/40 bg-orange-500/5' : 'border-border bg-white/[0.01]'
                       )}>
                         <p className="text-[10px] text-muted-c uppercase tracking-widest">
                           {isDragTarget ? 'Drop here' : 'Empty'}

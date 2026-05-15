@@ -2,11 +2,10 @@ import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   Users, BookOpen, CalendarCheck, TrendingUp,
-  AlertTriangle, Clock, Zap, ChevronRight, Star, Activity, StickyNote,
+  AlertTriangle, Clock, Zap, ChevronRight, Activity, StickyNote,
 } from 'lucide-react'
 import {
-  AreaChart, Area, RadarChart, Radar, PolarGrid, PolarAngleAxis,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
 import { useApp } from '@/context/AppContext'
 import { pct, fmtDs, initials } from '@/lib/utils'
@@ -203,7 +202,7 @@ export default function Dashboard() {
           ) : (
             <div className="space-y-2">
               {alerts.map(name => (
-                <div key={name} className="flex items-center gap-2.5 p-2.5 rounded-lg bg-red-500/5 border border-red-500/15">
+                <div key={name} className="flex items-center gap-2.5 p-2.5 rounded-lg bg-surface-2 border border-border-subtle">
                   <div className="w-2 h-2 rounded-full bg-red-400 animate-pulse shrink-0" />
                   <span className="text-sm text-primary">{name}</span>
                   <span className="text-xs text-red-400 ml-auto">2+ absences</span>
@@ -212,7 +211,7 @@ export default function Dashboard() {
               {overdueMakeups.map(m => {
                 const d = designers.find(d => d.id === m.designer_id)
                 return (
-                  <div key={m.id} className="flex items-center gap-2.5 p-2.5 rounded-lg bg-amber-500/5 border border-amber-500/15">
+                  <div key={m.id} className="flex items-center gap-2.5 p-2.5 rounded-lg bg-surface-2 border border-border-subtle">
                     <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0" />
                     <span className="text-sm text-primary">{d?.name ?? 'Unknown'}</span>
                     <span className="text-xs text-amber-400 ml-auto">Overdue makeup</span>
@@ -368,71 +367,6 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-      {/* Team breakdown + Skill coverage */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Team breakdown */}
-        <motion.div variants={fadeUp} custom={8} initial="hidden" animate="show"
-          className="card rounded-xl p-4">
-          <h2 className="font-semibold text-sm text-primary mb-4">Team Breakdown</h2>
-          {teamStats.length === 0 ? (
-            <p className="text-sm text-muted-c text-center py-4">No teams configured</p>
-          ) : (
-            <div className="space-y-3">
-              {teamStats.map(t => (
-                <div key={t.name}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-medium text-primary">{t.name}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-c">{t.members} members</span>
-                      <span className="text-xs font-bold text-orange-500">{t.rate}%</span>
-                    </div>
-                  </div>
-                  <div className="progress-track">
-                    <div className="progress-fill" style={{ width: `${t.rate}%` }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </motion.div>
-
-        {/* Skill coverage */}
-        <motion.div variants={fadeUp} custom={9} initial="hidden" animate="show"
-          className="card rounded-xl p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Star className="w-4 h-4 text-amber-400" />
-            <h2 className="font-semibold text-sm text-primary">Skill Coverage</h2>
-          </div>
-          <ResponsiveContainer width="100%" height={210}>
-            <RadarChart
-              data={skillCoverage.map(s => ({
-                platform: s.platform.replace('GoHighLevel', 'GHL').replace('Clickfunnels', 'CF').replace('Wordpress', 'WP'),
-                value: s.pct,
-                count: s.count,
-                total: designers.length,
-              }))}
-              cx="50%" cy="50%" outerRadius="68%"
-            >
-              <PolarGrid stroke="rgba(255,255,255,0.06)" />
-              <PolarAngleAxis dataKey="platform" tick={{ fontSize: 9, fill: 'rgb(var(--text-muted))' }} />
-              <Radar dataKey="value" stroke="#f97316" strokeWidth={1.5} fill="#f97316" fillOpacity={0.15} />
-              <Tooltip
-                content={({ active, payload }: any) => {
-                  if (!active || !payload?.length) return null
-                  const d = payload[0].payload
-                  return (
-                    <div className="bg-surface border border-border rounded-xl px-3 py-2 text-xs shadow-lg">
-                      <div className="font-bold text-primary">{d.platform}</div>
-                      <div className="text-orange-400 font-bold">{d.value}%</div>
-                      <div className="text-muted-c">{d.count}/{d.total} designers</div>
-                    </div>
-                  )
-                }}
-              />
-            </RadarChart>
-          </ResponsiveContainer>
-        </motion.div>
-      </div>
 
       {/* Trainings ending soon */}
       {(() => {
