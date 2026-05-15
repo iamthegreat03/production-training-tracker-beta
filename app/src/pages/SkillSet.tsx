@@ -140,26 +140,72 @@ export default function SkillSet() {
                <TrendingUp className="w-4 h-4 text-emerald-400" />
                <h3 className="text-sm font-bold text-primary">Team Skill Coverage</h3>
             </div>
-            <div className="p-4 space-y-6 overflow-y-auto">
-               {teamCoverage.map(t => (
-                 <div key={t.team} className="space-y-3">
-                    <div className="text-xs font-bold text-primary">{t.team}</div>
-                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-                       {t.platformStats.map(ps => (
-                         <div key={ps.platform} className="space-y-1">
-                            <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-tighter text-muted-c">
-                               <span>{ps.platform.slice(0, 4)}</span>
-                               <span>{ps.pct}%</span>
-                            </div>
-                            <div className="progress-track h-1">
-                               <div className="progress-fill" style={{ width: `${ps.pct}%` }} />
-                            </div>
-                         </div>
-                       ))}
-                    </div>
-                 </div>
-               ))}
-            </div>
+
+            {teamCoverage.length === 0 ? (
+              <div className="p-8 text-center text-muted-c text-sm italic">No teams found.</div>
+            ) : (
+              <>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="border-b border-border bg-surface-2/40">
+                        <th className="px-4 py-3 text-[10px] font-bold text-muted-c uppercase tracking-widest min-w-[130px]">
+                          Team
+                        </th>
+                        {BASE_PLATFORMS.map(p => (
+                          <th key={p} className="px-3 py-3 text-[10px] font-bold text-muted-c uppercase tracking-widest text-center whitespace-nowrap">
+                            {p}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border-subtle">
+                      {teamCoverage.map(t => {
+                        const memberCount = designers.filter(d => d.team === t.team).length
+                        return (
+                          <tr key={t.team} className="hover:bg-surface-2/40 transition-colors">
+                            <td className="px-4 py-3">
+                              <div className="text-xs font-bold text-primary leading-none">{t.team}</div>
+                              <div className="text-[10px] text-muted-c mt-1">{memberCount} member{memberCount !== 1 ? 's' : ''}</div>
+                            </td>
+                            {t.platformStats.map(ps => (
+                              <td key={ps.platform} className="px-3 py-3 text-center">
+                                {ps.pct === 0 ? (
+                                  <span className="text-[11px] font-bold text-muted-c/30">—</span>
+                                ) : (
+                                  <span className={cn(
+                                    'inline-flex items-center justify-center px-2 py-0.5 rounded-lg text-[10px] font-bold tabular-nums',
+                                    ps.pct >= 75 ? 'bg-emerald-500/15 text-emerald-400' :
+                                    ps.pct >= 40 ? 'bg-amber-500/15 text-amber-400' :
+                                    'bg-red-500/10 text-red-400'
+                                  )}>
+                                    {ps.pct}%
+                                  </span>
+                                )}
+                              </td>
+                            ))}
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Legend */}
+                <div className="px-4 py-2.5 border-t border-border-subtle flex items-center gap-4">
+                  <span className="text-[9px] font-bold text-muted-c uppercase tracking-widest">Coverage:</span>
+                  {[
+                    { color: 'bg-emerald-500/15 text-emerald-400', label: '75%+ Good' },
+                    { color: 'bg-amber-500/15 text-amber-400',     label: '40–74% Partial' },
+                    { color: 'bg-red-500/10 text-red-400',         label: '<40% Low' },
+                  ].map(l => (
+                    <span key={l.label} className={cn('px-2 py-0.5 rounded-lg text-[9px] font-bold', l.color)}>
+                      {l.label}
+                    </span>
+                  ))}
+                </div>
+              </>
+            )}
          </div>
 
          {/* Designer Skill Gaps (Discussion History) */}
