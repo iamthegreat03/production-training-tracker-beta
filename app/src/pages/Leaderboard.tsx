@@ -102,7 +102,7 @@ function PodiumCard({ entry, meta, index }: { entry: DesignerScore; meta: typeof
         />
 
         {/* Faded overlay: full black at bottom → transparent at top (foreground) */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent" />
 
         {/* Rank badge — top left */}
         <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-1 rounded-lg bg-black/50 backdrop-blur-sm border border-white/10">
