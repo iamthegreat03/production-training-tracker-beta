@@ -502,7 +502,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
       <motion.div
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
         onClick={e => e.stopPropagation()}
-        className="glass rounded-2xl w-full max-w-sm p-5"
+        className="modal-glass rounded-2xl w-full max-w-sm p-5"
       >
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-display font-semibold text-primary">{title}</h3>

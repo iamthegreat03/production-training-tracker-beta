@@ -57,7 +57,7 @@ export default function DesignerModal({ designer, teams, onClose, onSaved }: Pro
         exit={{ opacity: 0, scale: 0.97, y: 12 }}
         transition={{ type: 'spring', damping: 22, stiffness: 280, mass: 0.8 }}
         onClick={e => e.stopPropagation()}
-        className="glass rounded-2xl w-full max-w-md"
+        className="modal-glass rounded-2xl w-full max-w-md"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b"

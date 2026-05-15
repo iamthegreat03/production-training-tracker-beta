@@ -189,7 +189,7 @@ export default function Teams() {
              <motion.div
                initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
                onClick={e => e.stopPropagation()}
-               className="glass rounded-2xl w-full max-w-sm p-6"
+               className="modal-glass rounded-2xl w-full max-w-sm p-6"
              >
                 <div className="flex items-center justify-between mb-4">
                    <h2 className="font-display font-bold text-primary">New Team</h2>

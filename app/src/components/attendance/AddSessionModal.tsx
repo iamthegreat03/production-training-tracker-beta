@@ -45,7 +45,7 @@ export default function AddSessionModal({ trainingId, trainingName, onClose, onS
         exit={{ opacity: 0, scale: 0.97, y: 6 }}
         transition={{ type: 'spring', damping: 22, stiffness: 280, mass: 0.8 }}
         onClick={e => e.stopPropagation()}
-        className="glass rounded-2xl w-full max-w-sm overflow-hidden"
+        className="modal-glass rounded-2xl w-full max-w-sm overflow-hidden"
       >
         <div className="p-5 border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-3">

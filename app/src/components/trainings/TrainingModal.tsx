@@ -266,7 +266,7 @@ export default function TrainingModal({ training, onClose, onSaved }: Props) {
         exit={{ opacity: 0, scale: 0.97, y: 8 }}
         transition={{ type: 'spring', damping: 22, stiffness: 280, mass: 0.8 }}
         onClick={e => e.stopPropagation()}
-        className="glass rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col"
+        className="modal-glass rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">

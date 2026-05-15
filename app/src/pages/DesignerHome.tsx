@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
 import { cn, fmtD, pct, initials } from '@/lib/utils'
+import AnimatedNumber from '@/components/shared/AnimatedNumber'
 
 export default function DesignerHome() {
   const { state, dispatch } = useApp()
@@ -243,11 +244,11 @@ export default function DesignerHome() {
               </div>
               <div className="flex items-center justify-between pt-2">
                 <div className="text-[10px] font-bold text-muted-c uppercase">Earned Skills</div>
-                <div className="text-sm font-bold text-primary">{mySkills.length}</div>
+                <div className="text-sm font-bold text-primary"><AnimatedNumber value={mySkills.length} /></div>
               </div>
               <div className="flex items-center justify-between">
                 <div className="text-[10px] font-bold text-muted-c uppercase">Active Enrolled</div>
-                <div className="text-sm font-bold text-primary">{myActiveTrainings.length}</div>
+                <div className="text-sm font-bold text-primary"><AnimatedNumber value={myActiveTrainings.length} /></div>
               </div>
             </div>
           </div>

@@ -4,6 +4,7 @@ import { Star, Trophy, Award, Shield } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
 import { cn } from '@/lib/utils'
 import type { SkillLevel } from '@/types/database'
+import AnimatedNumber from '@/components/shared/AnimatedNumber'
 
 const LEVEL_CONFIG: Record<SkillLevel, { label: string; color: string; bg: string; icon: typeof Star }> = {
   Intermediate: { label: 'Intermediate', color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/30', icon: Star },
@@ -48,7 +49,7 @@ export default function DesignerBadges() {
         <div className="relative z-10 flex items-center justify-between">
           <div>
             <p className="text-sm text-muted-c">Total Badges Earned</p>
-            <p className="font-display font-bold text-4xl text-gradient-orange mt-1">{totalBadges}</p>
+            <p className="font-display font-bold text-4xl text-gradient-orange mt-1"><AnimatedNumber value={totalBadges} /></p>
           </div>
           <div className="w-16 h-16 rounded-2xl bg-orange-gradient flex items-center justify-center glow-orange-md">
             <Trophy className="w-8 h-8 text-white" />

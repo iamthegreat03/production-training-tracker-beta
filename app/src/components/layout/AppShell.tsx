@@ -65,10 +65,21 @@ export default function AppShell({ children }: AppShellProps) {
         : 'Designer'
 
   return (
-    <div className="flex h-dvh bg-app">
+    <div className="flex h-dvh bg-app relative overflow-hidden">
+      {/* ── Global background ── */}
+      <div className="absolute inset-0 dark:bg-grid-dark bg-grid-light pointer-events-none" />
+      <div
+        className="absolute -top-10 -left-10 w-[600px] h-[500px] pointer-events-none"
+        style={{ background: 'radial-gradient(ellipse at 10% 10%, rgba(249,115,22,0.28) 0%, rgba(249,115,22,0.08) 45%, transparent 70%)' }}
+      />
+      <div
+        className="absolute bottom-0 right-0 w-[400px] h-[400px] pointer-events-none"
+        style={{ background: 'radial-gradient(ellipse at 100% 100%, rgba(249,115,22,0.15) 0%, transparent 60%)' }}
+      />
+
       {/* ── Sidebar (desktop) ── */}
-      <aside className="hidden md:flex flex-col w-60 border-r shrink-0"
-        style={{ borderColor: 'rgb(var(--border))', background: 'rgb(var(--surface))' }}>
+      <aside className="hidden md:flex flex-col w-60 border-r shrink-0 relative z-10 glass"
+        style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
         <SidebarContent
           tabs={visibleTabs}
           page={state.page}
@@ -93,8 +104,8 @@ export default function AppShell({ children }: AppShellProps) {
             <motion.aside
               initial={{ x: -260 }} animate={{ x: 0 }} exit={{ x: -260 }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="fixed left-0 top-0 bottom-0 w-60 z-50 md:hidden flex flex-col border-r"
-              style={{ borderColor: 'rgb(var(--border))', background: 'rgb(var(--surface))' }}
+              className="fixed left-0 top-0 bottom-0 w-60 z-50 md:hidden flex flex-col border-r glass"
+              style={{ borderColor: 'rgba(255,255,255,0.05)' }}
             >
               <SidebarContent
                 tabs={visibleTabs}
@@ -192,7 +203,7 @@ function SidebarContent({
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-4 border-b"
-        style={{ borderColor: 'rgb(var(--border))' }}>
+        style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-orange-gradient flex items-center justify-center glow-orange-sm">
             <Zap className="w-4 h-4 text-white fill-white" />
@@ -232,7 +243,7 @@ function SidebarContent({
       </nav>
 
       {/* Footer */}
-      <div className="p-3 border-t space-y-2" style={{ borderColor: 'rgb(var(--border))' }}>
+      <div className="p-3 border-t space-y-2" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
         {/* Theme toggle */}
         <button
           onClick={toggleDark}
@@ -247,7 +258,7 @@ function SidebarContent({
 
         {/* User avatar + sign out */}
         <div className="flex items-center gap-2.5 px-2 py-2 rounded-xl"
-          style={{ background: 'rgb(var(--bg-subtle))' }}>
+          style={{ background: 'rgba(255,255,255,0.04)' }}>
           <div className="w-8 h-8 rounded-full bg-orange-gradient flex items-center justify-center shrink-0 text-white text-xs font-bold">
             {initials(displayName)}
           </div>

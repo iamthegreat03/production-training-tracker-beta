@@ -1,94 +1,142 @@
 import { useState, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { AnimatePresence } from 'framer-motion'
 import {
   Star, Search, Download, Trash2, Shield,
-  TrendingUp, Users, Target, Info, X
+  TrendingUp, Users, Target, Info,
 } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
 import { supabase } from '@/lib/supabase'
 import { cn, initials, pct } from '@/lib/utils'
 import { toast } from 'sonner'
-import type { Designer, DesignerSkill, SkillLevel } from '@/types/database'
+import type { Designer } from '@/types/database'
 import SkillEditModal from '@/components/skillset/SkillEditModal'
 import ConfirmModal from '@/components/shared/ConfirmModal'
+import AnimatedNumber from '@/components/shared/AnimatedNumber'
+import {
+  AreaChart, Area, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+} from 'recharts'
 
 const BASE_PLATFORMS = ['Clickfunnels', 'GoHighLevel', 'Shopify', 'Wix', 'Wordpress']
-const LEVELS: SkillLevel[] = ['Intermediate', 'Advanced', 'Expert']
 const LEVEL_SHORT: Record<string, string> = { 'Intermediate': 'INT', 'Advanced': 'ADV', 'Expert': 'EXP' }
+
+function CoverageRing({ value, size = 'sm' }: { value: number; size?: 'sm' | 'lg' }) {
+  const dim = size === 'lg' ? 120 : 72
+  const r   = size === 'lg' ? 46  : 28
+  const sw  = size === 'lg' ? 7   : 5
+  const circ  = 2 * Math.PI * r
+  const offset = circ * (1 - value / 100)
+  const color = value >= 75 ? '#10b981' : value >= 40 ? '#f59e0b' : '#ef4444'
+
+  return (
+    <div className="relative" style={{ width: dim, height: dim }}>
+      <svg viewBox={`0 0 ${dim} ${dim}`} className="w-full h-full -rotate-90">
+        <circle cx={dim / 2} cy={dim / 2} r={r} fill="none" stroke="rgba(148,163,184,0.18)" strokeWidth={sw} />
+        <circle
+          cx={dim / 2} cy={dim / 2} r={r}
+          fill="none"
+          stroke={color}
+          strokeWidth={sw}
+          strokeDasharray={circ}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          style={{ transition: 'stroke-dashoffset 0.6s cubic-bezier(0.4,0,0.2,1)' }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
+        <span
+          className={cn('font-bold tabular-nums leading-none', size === 'lg' ? 'text-2xl' : 'text-sm')}
+          style={{ color }}
+        >{value}%</span>
+        <span className={cn('text-muted-c font-medium leading-none', size === 'lg' ? 'text-[10px]' : 'text-[8px]')}>avg</span>
+      </div>
+    </div>
+  )
+}
 
 export default function SkillSet() {
   const { state, loadAll, can } = useApp()
   const { designers, designerSkills, teams } = state
 
-  const [search, setSearch] = useState('')
-  const [platFilter, setPlatFilter] = useState('ALL')
-  const [editTarget, setEditTarget] = useState<{ designer: Designer, platform: string } | null>(null)
+  const [search, setSearch]               = useState('')
+  const [platFilter, setPlatFilter]       = useState('ALL')
+  const [editTarget, setEditTarget]       = useState<{ designer: Designer; platform: string } | null>(null)
   const [platformToDelete, setPlatformToDelete] = useState<string | null>(null)
-  const [saving, setSaving] = useState(false)
+  const [saving, setSaving]               = useState(false)
 
-  // 1. Identify all unique platforms (Base + Dynamic)
+  // ── Derived data ─────────────────────────────────────────────────────────
+
   const dynamicPlatforms = useMemo(() => {
     const set = new Set<string>()
     designerSkills.forEach(s => {
-      if (!BASE_PLATFORMS.includes(s.platform) && !s.platform.startsWith('DSG:')) {
-        set.add(s.platform)
-      }
+      if (!BASE_PLATFORMS.includes(s.platform) && !s.platform.startsWith('DSG:')) set.add(s.platform)
     })
     return Array.from(set).sort()
   }, [designerSkills])
 
   const allPlatforms = useMemo(() => [...BASE_PLATFORMS, ...dynamicPlatforms], [dynamicPlatforms])
 
-  // Columns actually shown — filtered by the platform pill
   const visiblePlatforms = useMemo(() =>
     platFilter === 'ALL' ? allPlatforms : allPlatforms.filter(p => p === platFilter),
   [allPlatforms, platFilter])
 
-  // 2. Identify DSG columns
-  const dsgColumns = useMemo(() => {
-    const set = new Set<string>()
-    designerSkills.forEach(s => {
-      if (s.platform.startsWith('DSG:')) set.add(s.platform.replace('DSG: ', ''))
-    })
-    return Array.from(set).sort()
-  }, [designerSkills])
-
-  // 3. Filtered designers
   const filteredDesigners = useMemo(() => {
-    let list = [...designers]
-    if (search) {
-      const q = search.toLowerCase()
-      list = list.filter(d => d.name.toLowerCase().includes(q) || (d.team ?? '').toLowerCase().includes(q))
-    }
-    return list
+    if (!search) return designers
+    const q = search.toLowerCase()
+    return designers.filter(d => d.name.toLowerCase().includes(q) || (d.team ?? '').toLowerCase().includes(q))
   }, [designers, search])
 
-  // 4. Team Coverage stats
-  const teamCoverage = useMemo(() => {
-    return teams.map(team => {
+  const teamCoverage = useMemo(() =>
+    teams.map(team => {
       const members = designers.filter(d => d.team === team.name)
       const platformStats = BASE_PLATFORMS.map(p => {
-        const hasSkill = members.filter(m => 
-          designerSkills.some(s => s.designer_id === m.id && s.platform === p)
-        ).length
-        return { platform: p, pct: pct(hasSkill, members.length) }
+        const has = members.filter(m => designerSkills.some(s => s.designer_id === m.id && s.platform === p)).length
+        return { platform: p, pct: pct(has, members.length) }
       })
-      return { team: team.name, platformStats }
-    })
-  }, [teams, designers, designerSkills])
+      const avgCoverage = platformStats.length
+        ? Math.round(platformStats.reduce((s, ps) => s + ps.pct, 0) / platformStats.length)
+        : 0
+      return { team: team.name, memberCount: members.length, platformStats, avgCoverage }
+    }),
+  [teams, designers, designerSkills])
 
-  // 5. Global Distribution stats — all platforms (base + dynamic)
-  const distribution = useMemo(() => {
-     return allPlatforms.map(p => {
-        const platformSkills = designerSkills.filter(s => s.platform === p)
-        const int = platformSkills.filter(s => s.level === 'Intermediate').length
-        const adv = platformSkills.filter(s => s.level === 'Advanced').length
-        const exp = platformSkills.filter(s => s.level === 'Expert').length
-        return { platform: p, int, adv, exp, total: platformSkills.length }
-     })
-  }, [designerSkills, allPlatforms])
+  const distribution = useMemo(() =>
+    allPlatforms.map(p => {
+      const ps = designerSkills.filter(s => s.platform === p)
+      return {
+        platform: p,
+        int: ps.filter(s => s.level === 'Intermediate').length,
+        adv: ps.filter(s => s.level === 'Advanced').length,
+        exp: ps.filter(s => s.level === 'Expert').length,
+        total: ps.length,
+      }
+    }),
+  [designerSkills, allPlatforms])
 
-  // --- Actions ---
+  const overallCoverage = useMemo(() =>
+    teamCoverage.length
+      ? Math.round(teamCoverage.reduce((s, t) => s + t.avgCoverage, 0) / teamCoverage.length)
+      : 0,
+  [teamCoverage])
+
+  const pageStats = useMemo(() => {
+    const nonDsg = designerSkills.filter(s => !s.platform.startsWith('DSG:'))
+    return {
+      withSkills:  new Set(nonDsg.map(s => s.designer_id)).size,
+      totalLogged: nonDsg.length,
+      expertCount: nonDsg.filter(s => s.level === 'Expert').length,
+    }
+  }, [designerSkills])
+
+  const topPlatform = useMemo(() =>
+    distribution.length ? [...distribution].sort((a, b) => b.total - a.total)[0] : null,
+  [distribution])
+
+  const maxDistCount = useMemo(() =>
+    Math.max(...distribution.map(d => Math.max(d.int, d.adv, d.exp, 1))),
+  [distribution])
+
+  // ── Actions ───────────────────────────────────────────────────────────────
+
   async function confirmDeletePlatform() {
     if (!platformToDelete) return
     setSaving(true)
@@ -110,264 +158,476 @@ export default function SkillSet() {
       csv += row.join(',') + '\n'
     })
     const blob = new Blob([csv], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
+    const url  = URL.createObjectURL(blob)
+    const a    = document.createElement('a')
     a.href = url
     a.download = `skill-matrix-${new Date().toISOString().split('T')[0]}.csv`
     a.click()
   }
 
+  // ── Render ────────────────────────────────────────────────────────────────
+
   return (
-    <div className="p-4 md:p-6 space-y-8 max-w-[1600px] mx-auto">
-      {/* Header */}
+    <div className="p-4 md:p-6 space-y-6 max-w-[1600px] mx-auto">
+
+      {/* ── Header ── */}
       <div className="page-header flex items-start justify-between">
         <div>
           <h1 className="page-title font-display">Skill Set</h1>
           <p className="page-subtitle">Expertise matrix and team coverage analysis</p>
         </div>
-        <div className="flex items-center gap-2">
-           <button onClick={exportCSV} className="btn-outline h-10 px-4 gap-2">
-              <Download className="w-4 h-4" /> Export CSV
-           </button>
+        <button onClick={exportCSV} className="btn-outline h-10 px-4 gap-2">
+          <Download className="w-4 h-4" /> Export CSV
+        </button>
+      </div>
+
+      {/* ── Row 1: KPI Cards ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {([
+          {
+            label: 'Designers with Skills',
+            value: pageStats.withSkills,
+            badge: 'Active',
+            badgeClass: 'badge-orange',
+            iconBg: 'bg-orange-500/10',
+            icon: <Users className="w-4 h-4 text-orange-400" />,
+          },
+          {
+            label: 'Skills Logged',
+            value: pageStats.totalLogged,
+            badge: 'Total',
+            badgeClass: 'badge-blue',
+            iconBg: 'bg-blue-500/10',
+            icon: <Star className="w-4 h-4 text-blue-400" />,
+          },
+          {
+            label: 'Avg Team Coverage',
+            value: `${overallCoverage}%`,
+            badge: overallCoverage >= 75 ? 'Strong' : overallCoverage >= 40 ? 'Moderate' : 'Low',
+            badgeClass: overallCoverage >= 75 ? 'badge-emerald' : overallCoverage >= 40 ? 'badge-amber' : 'badge-red',
+            iconBg: 'bg-emerald-500/10',
+            icon: <TrendingUp className="w-4 h-4 text-emerald-400" />,
+          },
+          {
+            label: 'Expert Skills',
+            value: pageStats.expertCount,
+            badge: 'Expert',
+            badgeClass: 'badge-purple',
+            iconBg: 'bg-purple-500/10',
+            icon: <Shield className="w-4 h-4 text-purple-400" />,
+          },
+        ] as const).map(s => (
+          <div key={s.label} className="card glass rounded-2xl p-5 flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <div className={cn('w-9 h-9 rounded-xl flex items-center justify-center', s.iconBg)}>
+                {s.icon}
+              </div>
+              <span className={s.badgeClass}>{s.badge}</span>
+            </div>
+            <div>
+              <div className="stat-value">
+              {typeof s.value === 'string' && s.value.endsWith('%')
+                ? <AnimatedNumber value={parseInt(s.value)} suffix="%" />
+                : <AnimatedNumber value={s.value as number} />}
+            </div>
+              <div className="stat-label mt-1">{s.label}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Row 2: Distribution Chart + Team Rankings + Top Platform ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        {/* Platform Skill Distribution — vertical grouped bars */}
+        <div className="card glass rounded-2xl overflow-hidden flex flex-col lg:col-span-2">
+          <div className="p-4 border-b border-border flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-2">
+              <Target className="w-4 h-4 text-orange-400" />
+              <h3 className="text-sm font-bold text-primary">Platform Skill Distribution</h3>
+            </div>
+            <div className="flex items-center gap-4">
+              {([
+                { label: 'Intermediate', color: '#f97316', opacity: '40' },
+                { label: 'Advanced',     color: '#f97316', opacity: '75' },
+                { label: 'Expert',       color: '#f97316', opacity: 'ff' },
+              ] as const).map(l => (
+                <div key={l.label} className="flex items-center gap-1.5">
+                  <div className="w-5 h-0.5 rounded-full" style={{ background: l.color, opacity: l.opacity === 'ff' ? 1 : l.opacity === '75' ? 0.75 : 0.4 }} />
+                  <span className="text-[10px] text-muted-c font-medium">{l.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="p-4 flex-1">
+            {distribution.length === 0 ? (
+              <div className="flex items-center justify-center h-32 text-muted-c text-sm italic">No skill data.</div>
+            ) : (
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart
+                  data={distribution.map(d => ({
+                    name: d.platform === 'GoHighLevel' ? 'GHL'
+                      : d.platform === 'Clickfunnels' ? 'CF'
+                      : d.platform === 'Wordpress' ? 'WP'
+                      : d.platform,
+                    Intermediate: d.int,
+                    Advanced: d.adv,
+                    Expert: d.exp,
+                    platform: d.platform,
+                  }))}
+                  margin={{ top: 8, right: 8, left: -20, bottom: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                  <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'rgb(var(--text-muted))' }} tickLine={false} axisLine={false} />
+                  <YAxis tick={{ fontSize: 9, fill: 'rgb(var(--text-muted))' }} tickLine={false} axisLine={false} allowDecimals={false} />
+                  <Tooltip
+                    content={({ active, payload, label }: any) => {
+                      if (!active || !payload?.length) return null
+                      return (
+                        <div className="bg-surface border border-border rounded-xl px-3 py-2.5 text-xs shadow-lg space-y-1">
+                          <div className="font-bold text-primary mb-1">{payload[0]?.payload?.platform ?? label}</div>
+                          {payload.map((p: any) => (
+                            <div key={p.name} className="flex items-center gap-2">
+                              <span className="w-4 h-0.5 rounded-full inline-block" style={{ background: p.stroke }} />
+                              <span className="text-muted-c">{p.name}:</span>
+                              <span className="font-bold text-primary">{p.value}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )
+                    }}
+                    cursor={{ stroke: 'rgba(249,115,22,0.12)', strokeWidth: 1 }}
+                  />
+                  <Line
+                    type="monotone" dataKey="Intermediate" stroke="rgba(249,115,22,0.40)"
+                    strokeWidth={2} strokeDasharray="4 4"
+                    dot={{ r: 3, fill: 'rgba(249,115,22,0.40)', strokeWidth: 0 }}
+                    activeDot={{ r: 5, fill: 'rgba(249,115,22,0.55)', strokeWidth: 0 }}
+                  />
+                  <Line
+                    type="monotone" dataKey="Advanced" stroke="rgba(249,115,22,0.75)"
+                    strokeWidth={2} strokeDasharray="6 3"
+                    dot={{ r: 3, fill: 'rgba(249,115,22,0.75)', strokeWidth: 0 }}
+                    activeDot={{ r: 5, fill: 'rgba(249,115,22,0.85)', strokeWidth: 0 }}
+                  />
+                  <Line
+                    type="monotone" dataKey="Expert" stroke="#f97316"
+                    strokeWidth={2.5}
+                    dot={{ r: 3.5, fill: '#f97316', strokeWidth: 0 }}
+                    activeDot={{ r: 6, fill: '#f97316', strokeWidth: 0 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </div>
+
+        {/* Right column */}
+        <div className="flex flex-col gap-6">
+
+          {/* Team Coverage Rankings */}
+          <div className="card glass rounded-2xl overflow-hidden flex flex-col flex-1">
+            <div className="p-4 border-b border-border flex items-center gap-2">
+              <Users className="w-4 h-4 text-blue-400" />
+              <h3 className="text-sm font-bold text-primary">Team Rankings</h3>
+            </div>
+            {teamCoverage.length === 0 ? (
+              <div className="p-4 text-center text-muted-c text-sm italic">No teams yet.</div>
+            ) : (() => {
+              const ranked = [...teamCoverage].sort((a, b) => b.avgCoverage - a.avgCoverage)
+              const top = ranked[0]
+              const chartData = ranked.map(t => ({
+                team: t.team.length > 8 ? t.team.slice(0, 7) + '…' : t.team,
+                fullTeam: t.team,
+                coverage: t.avgCoverage,
+              }))
+              return (
+                <div className="p-4 flex items-start gap-3 flex-1">
+                  {/* Top team ring */}
+                  <div className="flex flex-col items-center gap-1.5 shrink-0 pt-2">
+                    <CoverageRing value={top.avgCoverage} size="sm" />
+                    <div className="text-[9px] font-bold text-muted-c uppercase tracking-widest text-center w-[72px] truncate">{top.team}</div>
+                  </div>
+                  {/* Area chart */}
+                  <div className="flex-1 min-w-0">
+                    <ResponsiveContainer width="100%" height={130}>
+                      <AreaChart data={chartData} margin={{ top: 4, right: 4, left: -28, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="teamRankGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#f97316" stopOpacity={0.22} />
+                            <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                        <XAxis dataKey="team" tick={{ fontSize: 8, fill: 'rgb(var(--text-muted))' }} tickLine={false} axisLine={false} />
+                        <YAxis domain={[0, 100]} tick={{ fontSize: 8, fill: 'rgb(var(--text-muted))' }} tickLine={false} axisLine={false} tickFormatter={v => `${v}%`} />
+                        <Tooltip
+                          content={({ active, payload }: any) => {
+                            if (!active || !payload?.length) return null
+                            const d = payload[0].payload
+                            return (
+                              <div className="bg-surface border border-border rounded-xl px-3 py-2 text-xs shadow-lg">
+                                <div className="font-bold text-primary">{d.fullTeam}</div>
+                                <div className="text-orange-400 font-bold mt-0.5">{d.coverage}% avg coverage</div>
+                              </div>
+                            )
+                          }}
+                          cursor={{ stroke: 'rgba(249,115,22,0.2)', strokeWidth: 1 }}
+                        />
+                        <Area type="monotone" dataKey="coverage" stroke="#f97316" strokeWidth={2}
+                          fill="url(#teamRankGrad)"
+                          dot={{ r: 2.5, fill: '#f97316', strokeWidth: 0 }}
+                          activeDot={{ r: 5, fill: '#f97316', strokeWidth: 0 }} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              )
+            })()}
+          </div>
+
+          {/* Top Platform */}
+          {topPlatform && (
+            <div className="card glass rounded-2xl p-5 flex flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <Star className="w-4 h-4 text-amber-400" />
+                <h3 className="text-sm font-bold text-primary">Top Platform</h3>
+              </div>
+              <div className="text-2xl font-display font-bold text-primary">{topPlatform.platform}</div>
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className="badge-orange">{topPlatform.total} Skills</span>
+                <span className="text-[10px] text-muted-c">{topPlatform.exp} Expert · {topPlatform.adv} Adv</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Secondary Sections Grid */}
+      {/* ── Row 3: Skill Overview ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-         {/* Team Skill Coverage */}
-         <div className="card rounded-2xl overflow-hidden flex flex-col">
-            <div className="p-4 border-b border-border flex items-center gap-2">
-               <TrendingUp className="w-4 h-4 text-emerald-400" />
-               <h3 className="text-sm font-bold text-primary">Team Skill Coverage</h3>
-            </div>
 
-            {teamCoverage.length === 0 ? (
-              <div className="p-8 text-center text-muted-c text-sm italic">No teams found.</div>
-            ) : (
-              <>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead>
-                      <tr className="border-b border-border bg-surface-2/40">
-                        <th className="px-4 py-3 text-[10px] font-bold text-muted-c uppercase tracking-widest min-w-[130px]">
-                          Team
-                        </th>
-                        {BASE_PLATFORMS.map(p => (
-                          <th key={p} className="px-3 py-3 text-[10px] font-bold text-muted-c uppercase tracking-widest text-center whitespace-nowrap">
-                            {p}
-                          </th>
-                        ))}
+        {/* Big coverage ring + team breakdown list */}
+        <div className="card glass rounded-2xl overflow-hidden flex flex-col">
+          <div className="p-4 border-b border-border flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-emerald-400" />
+            <h3 className="text-sm font-bold text-primary">Skill Overview</h3>
+          </div>
+          <div className="p-6 flex flex-col items-center gap-6">
+            <div className="flex flex-col items-center gap-2">
+              <CoverageRing value={overallCoverage} size="lg" />
+              <div className="text-xs text-muted-c font-medium">Overall Team Coverage</div>
+            </div>
+            <div className="w-full space-y-3">
+              {teamCoverage.length === 0 ? (
+                <div className="text-center text-muted-c text-sm italic">No teams yet.</div>
+              ) : (
+                [...teamCoverage]
+                  .sort((a, b) => b.avgCoverage - a.avgCoverage)
+                  .map(t => {
+                    const dot = t.avgCoverage >= 75 ? 'bg-emerald-500' : t.avgCoverage >= 40 ? 'bg-amber-500' : 'bg-red-500'
+                    const txt = t.avgCoverage >= 75 ? 'text-emerald-400' : t.avgCoverage >= 40 ? 'text-amber-400' : 'text-red-400'
+                    return (
+                      <div key={t.team} className="flex items-center gap-3">
+                        <div className={cn('w-2 h-2 rounded-full shrink-0', dot)} />
+                        <span className="text-xs font-semibold text-primary flex-1 truncate">{t.team}</span>
+                        <span className="text-[10px] text-muted-c shrink-0">{t.memberCount} member{t.memberCount !== 1 ? 's' : ''}</span>
+                        <span className={cn('text-xs font-bold tabular-nums shrink-0', txt)}>{t.avgCoverage}%</span>
+                      </div>
+                    )
+                  })
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Platform breakdown table */}
+        <div className="card glass rounded-2xl overflow-hidden flex flex-col">
+          <div className="p-4 border-b border-border flex items-center gap-2">
+            <Info className="w-4 h-4 text-blue-400" />
+            <h3 className="text-sm font-bold text-primary">Platform Breakdown</h3>
+          </div>
+          <div className="overflow-x-auto flex-1">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-surface-2/40 border-b border-border">
+                  <th className="px-4 py-3 text-left text-[10px] font-bold text-muted-c uppercase tracking-widest">Platform</th>
+                  <th className="px-3 py-3 text-center text-[10px] font-bold text-muted-c uppercase tracking-widest">INT</th>
+                  <th className="px-3 py-3 text-center text-[10px] font-bold text-muted-c uppercase tracking-widest">ADV</th>
+                  <th className="px-3 py-3 text-center text-[10px] font-bold text-muted-c uppercase tracking-widest">EXP</th>
+                  <th className="px-4 py-3 text-right text-[10px] font-bold text-muted-c uppercase tracking-widest">Total</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border-subtle">
+                {[...distribution]
+                  .sort((a, b) => b.total - a.total)
+                  .map(d => {
+                    const maxT = Math.max(...distribution.map(x => x.total), 1)
+                    return (
+                      <tr key={d.platform} className="hover:bg-surface-2/40 transition-colors">
+                        <td className="px-4 py-3">
+                          <div className="text-xs font-bold text-primary">{d.platform}</div>
+                          <div className="mt-1.5 h-1 rounded-full overflow-hidden" style={{ background: 'rgba(148,163,184,0.15)' }}>
+                            <div
+                              className="h-full rounded-full bg-orange-500/50 transition-all duration-500"
+                              style={{ width: `${Math.round((d.total / maxT) * 100)}%` }}
+                            />
+                          </div>
+                        </td>
+                        <td className="px-3 py-3 text-center">
+                          <span className="text-xs font-bold text-orange-400/60 tabular-nums">{d.int || '—'}</span>
+                        </td>
+                        <td className="px-3 py-3 text-center">
+                          <span className="text-xs font-bold text-orange-400 tabular-nums">{d.adv || '—'}</span>
+                        </td>
+                        <td className="px-3 py-3 text-center">
+                          <span className="text-xs font-bold text-orange-500 tabular-nums">{d.exp || '—'}</span>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <span className="text-xs font-bold text-primary tabular-nums">{d.total}</span>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border-subtle">
-                      {teamCoverage.map(t => {
-                        const memberCount = designers.filter(d => d.team === t.team).length
-                        return (
-                          <tr key={t.team} className="hover:bg-surface-2/40 transition-colors">
-                            <td className="px-4 py-3">
-                              <div className="text-xs font-bold text-primary leading-none">{t.team}</div>
-                              <div className="text-[10px] text-muted-c mt-1">{memberCount} member{memberCount !== 1 ? 's' : ''}</div>
-                            </td>
-                            {t.platformStats.map(ps => (
-                              <td key={ps.platform} className="px-3 py-3 text-center">
-                                {ps.pct === 0 ? (
-                                  <span className="text-[11px] font-bold text-muted-c/30">—</span>
-                                ) : (
-                                  <span className={cn(
-                                    'inline-flex items-center justify-center px-2 py-0.5 rounded-lg text-[10px] font-bold tabular-nums',
-                                    ps.pct >= 75 ? 'bg-emerald-500/15 text-emerald-400' :
-                                    ps.pct >= 40 ? 'bg-amber-500/15 text-amber-400' :
-                                    'bg-red-500/10 text-red-400'
-                                  )}>
-                                    {ps.pct}%
-                                  </span>
-                                )}
-                              </td>
-                            ))}
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Legend */}
-                <div className="px-4 py-2.5 border-t border-border-subtle flex items-center gap-4">
-                  <span className="text-[9px] font-bold text-muted-c uppercase tracking-widest">Coverage:</span>
-                  {[
-                    { color: 'bg-emerald-500/15 text-emerald-400', label: '75%+ Good' },
-                    { color: 'bg-amber-500/15 text-amber-400',     label: '40–74% Partial' },
-                    { color: 'bg-red-500/10 text-red-400',         label: '<40% Low' },
-                  ].map(l => (
-                    <span key={l.label} className={cn('px-2 py-0.5 rounded-lg text-[9px] font-bold', l.color)}>
-                      {l.label}
-                    </span>
-                  ))}
-                </div>
-              </>
-            )}
-         </div>
-
-         {/* Designer Skill Gaps (Discussion History) */}
-         <div className="card rounded-2xl overflow-hidden flex flex-col">
-            <div className="p-4 border-b border-border flex items-center gap-2">
-               <Shield className="w-4 h-4 text-purple-400" />
-               <h3 className="text-sm font-bold text-primary">Discussion History (Skill Gap)</h3>
-            </div>
-            <div className="p-4 overflow-x-auto">
-               {dsgColumns.length === 0 ? (
-                 <div className="py-12 text-center text-muted-c text-sm italic">No completed discussion trainings found.</div>
-               ) : (
-                 <table className="w-full text-left text-[10px]">
-                    <thead>
-                       <tr>
-                          <th className="pb-2 text-muted-c uppercase tracking-widest font-bold">Designer</th>
-                          {dsgColumns.map(c => (
-                            <th key={c} className="pb-2 text-muted-c uppercase tracking-widest font-bold text-center px-2">{c}</th>
-                          ))}
-                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border-subtle">
-                       {designers.slice(0, 15).map(d => (
-                         <tr key={d.id} className="hover:bg-surface-2/50 transition-colors">
-                            <td className="py-2 text-primary font-medium">{d.name}</td>
-                            {dsgColumns.map(c => {
-                              const has = designerSkills.some(s => s.designer_id === d.id && s.platform === `DSG: ${c}`)
-                              return (
-                                <td key={c} className="py-2 text-center">
-                                   {has ? <span className="text-emerald-400 font-bold">✓</span> : <span className="text-muted-c/20">—</span>}
-                                </td>
-                              )
-                            })}
-                         </tr>
-                       ))}
-                    </tbody>
-                 </table>
-               )}
-            </div>
-         </div>
+                    )
+                  })
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
-      {/* Global Skill Distribution */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-         {distribution.map(d => (
-           <div key={d.platform} className="card p-4 space-y-4">
-              <div className="flex items-center justify-between">
-                 <h4 className="text-xs font-bold text-primary uppercase tracking-widest">{d.platform}</h4>
-                 <div className="text-[10px] font-bold text-muted-c">{d.total} Skills</div>
-              </div>
-              <div className="space-y-2">
-                 {[
-                   { label: 'INT', count: d.int, color: 'bg-orange-500/20' },
-                   { label: 'ADV', count: d.adv, color: 'bg-orange-500/50' },
-                   { label: 'EXP', count: d.exp, color: 'bg-orange-gradient' }
-                 ].map(l => (
-                    <div key={l.label} className="space-y-1">
-                       <div className="flex items-center justify-between text-[9px] font-bold text-muted-c">
-                          <span>{l.label}</span>
-                          <span>{l.count}</span>
-                       </div>
-                       <div className="progress-track h-1 bg-surface-2">
-                          <div className={cn('h-full rounded-full', l.color)} style={{ width: `${pct(l.count, designers.length)}%` }} />
-                       </div>
+      {/* ── Row 4: Platform Leaderboard + Skill Matrix ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        {/* Platform Leaderboard */}
+        <div className="card glass rounded-2xl overflow-hidden flex flex-col">
+          <div className="p-4 border-b border-border flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-orange-400" />
+            <h3 className="text-sm font-bold text-primary">Platform Leaderboard</h3>
+          </div>
+          <div className="p-4 space-y-3">
+            {distribution.length === 0 ? (
+              <div className="text-center text-muted-c text-sm italic py-4">No data.</div>
+            ) : (
+              [...distribution]
+                .sort((a, b) => b.total - a.total)
+                .map((d, i) => {
+                  const maxT = Math.max(...distribution.map(x => x.total), 1)
+                  return (
+                    <div key={d.platform}>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[9px] font-bold text-muted-c w-3">{i + 1}</span>
+                          <span className="text-xs font-semibold text-primary">{d.platform}</span>
+                        </div>
+                        <span className="text-[10px] font-bold text-primary tabular-nums">{d.total}</span>
+                      </div>
+                      <div className="progress-track h-1.5">
+                        <div
+                          className="h-full rounded-full bg-orange-gradient transition-all duration-500"
+                          style={{ width: `${Math.round((d.total / maxT) * 100)}%` }}
+                        />
+                      </div>
                     </div>
-                 ))}
-              </div>
-           </div>
-         ))}
-      </div>
+                  )
+                })
+            )}
+          </div>
+        </div>
 
-      {/* Main Grid Card */}
-      <div className="card rounded-2xl flex flex-col overflow-hidden">
-        {/* Matrix Controls */}
-        <div className="p-4 border-b border-border bg-surface-2/50 flex flex-wrap items-center justify-between gap-4">
-           <div className="flex flex-wrap items-center gap-4 flex-1 min-w-0">
+        {/* Skill Matrix */}
+        <div className="card glass rounded-2xl flex flex-col overflow-hidden lg:col-span-2">
+          <div className="p-4 border-b border-border bg-surface-2/50 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-4 flex-1 min-w-0">
               <div className="relative flex-1 max-w-sm">
-                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-c" />
-                 <input className="input h-9 pl-9 text-xs" placeholder="Filter by name or team..." value={search} onChange={e => setSearch(e.target.value)} />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-c" />
+                <input
+                  className="input h-9 pl-9 text-xs"
+                  placeholder="Filter by name or team..."
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                />
               </div>
               <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
-                 {['ALL', ...allPlatforms].map(p => (
-                   <button key={p} onClick={() => setPlatFilter(p)} className={cn('chip whitespace-nowrap', platFilter === p && 'active')}>
-                      {p}
-                   </button>
-                 ))}
+                {['ALL', ...allPlatforms].map(p => (
+                  <button key={p} onClick={() => setPlatFilter(p)} className={cn('chip whitespace-nowrap', platFilter === p && 'active')}>
+                    {p}
+                  </button>
+                ))}
               </div>
-           </div>
-           <div className="text-[10px] font-bold text-muted-c uppercase tracking-widest">
-              Matrix: {filteredDesigners.length} Designers × {visiblePlatforms.length} Platforms
-           </div>
-        </div>
-
-        {/* The Matrix Table */}
-        <div className="overflow-x-auto">
-           <table className="w-full text-left border-collapse">
+            </div>
+            <div className="text-[10px] font-bold text-muted-c uppercase tracking-widest">
+              {filteredDesigners.length} × {visiblePlatforms.length}
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
               <thead>
-                 <tr className="bg-surface-2/30">
-                    <th className="sticky left-0 z-20 bg-surface border-r border-border p-4 w-40 min-w-[140px] sm:w-64 sm:min-w-[200px]">
-                       <div className="text-[10px] font-bold text-muted-c uppercase tracking-widest">Designer</div>
+                <tr className="bg-surface-2/30">
+                  <th className="sticky left-0 z-20 bg-surface border-r border-border p-4 w-40 min-w-[140px] sm:w-64 sm:min-w-[200px]">
+                    <div className="text-[10px] font-bold text-muted-c uppercase tracking-widest">Designer</div>
+                  </th>
+                  {visiblePlatforms.map(p => (
+                    <th key={p} className="p-4 border-b border-border min-w-[120px]">
+                      <div className="text-[10px] font-bold text-muted-c uppercase tracking-widest flex items-center justify-between group">
+                        {p}
+                        {!BASE_PLATFORMS.includes(p) && can('canAddEditTrainings') && (
+                          <button
+                            onClick={() => setPlatformToDelete(p)}
+                            disabled={saving}
+                            className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-500 transition-opacity"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
                     </th>
-                    {visiblePlatforms.map(p => (
-                      <th key={p} className="p-4 border-b border-border min-w-[120px]">
-                         <div className="text-[10px] font-bold text-muted-c uppercase tracking-widest flex items-center justify-between group">
-                            {p}
-                            {!BASE_PLATFORMS.includes(p) && can('canAddEditTrainings') && (
-                              <button
-                                onClick={() => setPlatformToDelete(p)}
-                                disabled={saving}
-                                className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-500 transition-opacity"
-                              >
-                                 <Trash2 className="w-3 h-3" />
-                              </button>
-                            )}
-                         </div>
-                      </th>
-                    ))}
-                 </tr>
+                  ))}
+                </tr>
               </thead>
               <tbody>
-                 {filteredDesigners.map(d => (
-                   <tr key={d.id} className="hover:bg-surface-2/30 transition-colors">
-                      <td className="sticky left-0 z-10 bg-surface border-r border-border p-3">
-                         <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-surface-2 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">
-                               {initials(d.name)}
-                            </div>
-                            <div className="min-w-0">
-                               <div className="text-xs font-bold text-primary truncate">{d.name}</div>
-                               <div className="text-[9px] text-muted-c font-bold uppercase tracking-widest">{d.team || 'None'}</div>
-                            </div>
-                         </div>
-                      </td>
-                      {visiblePlatforms.map(p => {
-                        const skill = designerSkills.find(s => s.designer_id === d.id && s.platform === p)
-                        const level = skill?.level ?? null
-                        return (
-                          <td key={p} className="p-2 border-b border-border-subtle">
-                             <button
-                               onClick={() => setEditTarget({ designer: d, platform: p })}
-                               disabled={!can('canAddEditTrainings')}
-                               className={cn(
-                                 'w-full py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all',
-                                 level === 'Expert' ? 'bg-orange-gradient text-white shadow-orange-sm' :
-                                 level === 'Advanced' ? 'bg-orange-500/10 text-orange-500 border border-orange-500/20' :
-                                 level === 'Intermediate' ? 'bg-orange-500/5 text-orange-500/60 border border-orange-500/10' :
-                                 'text-muted-c hover:bg-surface-2'
-                               )}
-                             >
-                               {level ? LEVEL_SHORT[level] || '✓' : '—'}
-                             </button>
-                          </td>
-                        )
-                      })}
-                   </tr>
-                 ))}
+                {filteredDesigners.map(d => (
+                  <tr key={d.id} className="hover:bg-surface-2/30 transition-colors">
+                    <td className="sticky left-0 z-10 bg-surface border-r border-border p-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-surface-2 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">
+                          {initials(d.name)}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-xs font-bold text-primary truncate">{d.name}</div>
+                          <div className="text-[9px] text-muted-c font-bold uppercase tracking-widest">{d.team || 'None'}</div>
+                        </div>
+                      </div>
+                    </td>
+                    {visiblePlatforms.map(p => {
+                      const skill = designerSkills.find(s => s.designer_id === d.id && s.platform === p)
+                      const level = skill?.level ?? null
+                      return (
+                        <td key={p} className="p-2 border-b border-border-subtle">
+                          <button
+                            onClick={() => setEditTarget({ designer: d, platform: p })}
+                            disabled={!can('canAddEditTrainings')}
+                            className={cn(
+                              'w-full py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all',
+                              level === 'Expert'       ? 'bg-orange-gradient text-white shadow-orange-sm' :
+                              level === 'Advanced'     ? 'bg-orange-500/10 text-orange-500 border border-orange-500/20' :
+                              level === 'Intermediate' ? 'bg-orange-500/5 text-orange-500/60 border border-orange-500/10' :
+                              'text-muted-c hover:bg-surface-2',
+                            )}
+                          >
+                            {level ? LEVEL_SHORT[level] || '✓' : '—'}
+                          </button>
+                        </td>
+                      )
+                    })}
+                  </tr>
+                ))}
               </tbody>
-           </table>
+            </table>
+          </div>
         </div>
       </div>
 
-      {/* Edit Modal */}
+      {/* ── Modals ── */}
       <AnimatePresence>
         {editTarget && (
           <SkillEditModal

@@ -16,6 +16,7 @@ import RosterView from '@/components/attendance/RosterView'
 import StatsView from '@/components/attendance/StatsView'
 import AddSessionModal from '@/components/attendance/AddSessionModal'
 import ConfirmModal from '@/components/shared/ConfirmModal'
+import AnimatedNumber from '@/components/shared/AnimatedNumber'
 
 type AttLayout = 'cards' | 'matrix' | 'roster' | 'stats'
 
@@ -494,8 +495,8 @@ export default function AttendancePage() {
                 { label: 'Absent',   value: sessionStats.absent,   color: 'text-red-400',     bg: 'bg-red-500/10 border-red-500/20' },
                 { label: 'Unmarked', value: sessionStats.unmarked, color: 'text-muted-c',     bg: 'bg-surface-2 border-border' },
               ].map(s => (
-                <div key={s.label} className={cn('rounded-xl border p-3 text-center', s.bg)}>
-                  <div className={cn('text-lg font-bold font-display leading-none', s.color)}>{s.value}</div>
+                <div key={s.label} className={cn('rounded-xl border p-3 text-center backdrop-blur-[2px]', s.bg)}>
+                  <div className={cn('text-lg font-bold font-display leading-none', s.color)}><AnimatedNumber value={s.value} /></div>
                   <div className="text-[9px] font-bold uppercase tracking-widest text-muted-c mt-1">{s.label}</div>
                 </div>
               ))}
@@ -680,7 +681,7 @@ export default function AttendancePage() {
               exit={{ opacity: 0, scale: 0.97, y: 8 }}
               transition={{ type: 'spring', damping: 22, stiffness: 280, mass: 0.8 }}
               onClick={e => e.stopPropagation()}
-              className="glass rounded-2xl w-full max-w-sm p-5 space-y-4"
+              className="modal-glass rounded-2xl w-full max-w-sm p-5 space-y-4"
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -716,7 +717,7 @@ export default function AttendancePage() {
               exit={{ opacity: 0, scale: 0.97, y: 8 }}
               transition={{ type: 'spring', damping: 22, stiffness: 280, mass: 0.8 }}
               onClick={e => e.stopPropagation()}
-              className="glass rounded-2xl w-full max-w-sm p-5 space-y-4"
+              className="modal-glass rounded-2xl w-full max-w-sm p-5 space-y-4"
             >
               <div className="flex items-center justify-between">
                 <div>

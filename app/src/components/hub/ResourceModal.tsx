@@ -124,7 +124,7 @@ export default function ResourceModal({ resource, mode, defaultCategory, canMana
         exit={{ opacity: 0, scale: 0.96, y: 10 }}
         transition={{ type: 'spring', damping: 26, stiffness: 320 }}
         onClick={e => e.stopPropagation()}
-        className="glass rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden"
+        className="modal-glass rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border shrink-0">

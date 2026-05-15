@@ -4,9 +4,14 @@ import {
   Users, BookOpen, CalendarCheck, TrendingUp,
   AlertTriangle, Clock, Zap, ChevronRight, Star, Activity, StickyNote,
 } from 'lucide-react'
+import {
+  AreaChart, Area, RadarChart, Radar, PolarGrid, PolarAngleAxis,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+} from 'recharts'
 import { useApp } from '@/context/AppContext'
 import { pct, fmtDs, initials } from '@/lib/utils'
 import { cn } from '@/lib/utils'
+import AnimatedNumber from '@/components/shared/AnimatedNumber'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -90,7 +95,21 @@ export default function Dashboard() {
     notesList.sort((a, b) => b.date.localeCompare(a.date))
     const total = presentCount + lateCount + absentCount
     const rate = total > 0 ? Math.round(((presentCount + lateCount) / total) * 100) : 0
-    return { presentCount, lateCount, absentCount, notesList, total, rate }
+
+    const sessionTrend = sessions
+      .filter(s => s.session_date >= rangeFrom && s.session_date <= rangeTo)
+      .sort((a, b) => a.session_date.localeCompare(b.session_date))
+      .reduce((acc, s) => {
+        const sAtt = attendance.filter(a => a.session_id === s.id)
+        const p = sAtt.filter(a => a.is_present === 'true' || a.is_present === 'late').length
+        const m = sAtt.filter(a => a.is_present !== null).length
+        if (m === 0) return acc
+        const tr = trainings.find(t => t.id === s.training_id)
+        acc.push({ date: fmtDs(s.session_date), rate: pct(p, m), training: tr?.name ?? '—' })
+        return acc
+      }, [] as Array<{ date: string; rate: number; training: string }>)
+
+    return { presentCount, lateCount, absentCount, notesList, total, rate, sessionTrend }
   }, [attendance, sessions, designers, trainings, rangeFrom, rangeTo])
 
   // Skill coverage for base platforms
@@ -101,10 +120,10 @@ export default function Dashboard() {
   })
 
   const stats = [
-    { label: 'Designers', value: designers.length, icon: Users, color: 'text-blue-400', bg: 'bg-blue-500/10' },
-    { label: 'Active Trainings', value: active.length, icon: BookOpen, color: 'text-purple-400', bg: 'bg-purple-500/10' },
-    { label: 'Sessions Logged', value: sessions.length, icon: CalendarCheck, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-    { label: 'Overall Rate', value: `${overallRate}%`, icon: TrendingUp, color: 'text-orange-400', bg: 'bg-orange-500/10' },
+    { label: 'Designers', value: designers.length, suffix: '', icon: Users, color: 'text-blue-400', bg: 'bg-blue-500/10' },
+    { label: 'Active Trainings', value: active.length, suffix: '', icon: BookOpen, color: 'text-purple-400', bg: 'bg-purple-500/10' },
+    { label: 'Sessions Logged', value: sessions.length, suffix: '', icon: CalendarCheck, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+    { label: 'Overall Rate', value: overallRate, suffix: '%', icon: TrendingUp, color: 'text-orange-400', bg: 'bg-orange-500/10' },
   ]
 
   return (
@@ -127,7 +146,7 @@ export default function Dashboard() {
           <div>
             <div className="stat-label mb-2">Overall Attendance Rate</div>
             <div className="font-display font-bold text-6xl text-gradient-orange leading-none">
-              {overallRate}%
+              <AnimatedNumber value={overallRate} suffix="%" />
             </div>
             <div className="mt-2 text-sm" style={{ color: 'rgb(var(--text-secondary))' }}>
               {present.length} present out of {marked.length} marked sessions
@@ -154,7 +173,7 @@ export default function Dashboard() {
               <div className="flex items-start justify-between">
                 <div>
                   <div className="stat-label mb-2">{s.label}</div>
-                  <div className="stat-value">{s.value}</div>
+                  <div className="stat-value"><AnimatedNumber value={s.value} suffix={s.suffix} /></div>
                 </div>
                 <div className={cn('p-2.5 rounded-xl', s.bg)}>
                   <Icon className={cn('w-5 h-5', s.color)} />
@@ -240,9 +259,6 @@ export default function Dashboard() {
       {/* Attendance Summary */}
       <motion.div variants={fadeUp} custom={8} initial="hidden" animate="show"
         className="card rounded-xl overflow-hidden">
-        {rangedStats && rangedStats.total > 0 && (
-          <div className={cn('h-1', rangedStats.rate >= 80 ? 'bg-gradient-to-r from-emerald-500 to-emerald-400' : rangedStats.rate >= 60 ? 'bg-gradient-to-r from-amber-500 to-amber-400' : 'bg-gradient-to-r from-red-500 to-red-400')} />
-        )}
         <div className="p-4 space-y-4">
           {/* Header */}
           <div className="flex items-center gap-2 flex-wrap gap-y-2">
@@ -265,7 +281,7 @@ export default function Dashboard() {
                 <div className="flex-shrink-0 w-28 p-4 rounded-xl bg-surface-2 border border-border flex flex-col justify-center">
                   <div className={cn('font-display font-bold text-4xl leading-none tabular-nums',
                     rangedStats.rate >= 80 ? 'text-emerald-400' : rangedStats.rate >= 60 ? 'text-amber-400' : 'text-red-400'
-                  )}>{rangedStats.rate}%</div>
+                  )}><AnimatedNumber value={rangedStats.rate} suffix="%" /></div>
                   <div className="text-[9px] font-bold text-muted-c uppercase tracking-widest mt-1.5">Rate</div>
                   <div className="text-[10px] text-muted-c mt-0.5">{rangedStats.total} marked</div>
                 </div>
@@ -277,12 +293,48 @@ export default function Dashboard() {
                     { label: 'Absent', value: rangedStats.absentCount, color: 'text-red-400', bg: 'bg-red-500/8' },
                   ].map(({ label, value, color, bg }) => (
                     <div key={label} className={cn('rounded-xl p-3 text-center', bg)}>
-                      <div className={cn('text-2xl font-bold tabular-nums leading-none', color)}>{value}</div>
+                      <div className={cn('text-2xl font-bold tabular-nums leading-none', color)}><AnimatedNumber value={value} /></div>
                       <div className="text-[9px] font-bold text-muted-c uppercase tracking-widest mt-1">{label}</div>
                     </div>
                   ))}
                 </div>
               </div>
+
+              {/* Attendance trend chart */}
+              {rangedStats.sessionTrend.length > 1 && (
+                <div style={{ height: 130 }} className="-mx-1">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={rangedStats.sessionTrend} margin={{ top: 4, right: 4, left: -28, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="attGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#f97316" stopOpacity={0.22} />
+                          <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                      <XAxis dataKey="date" tick={{ fontSize: 8, fill: 'rgb(var(--text-muted))' }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+                      <YAxis domain={[0, 100]} tick={{ fontSize: 8, fill: 'rgb(var(--text-muted))' }} tickLine={false} axisLine={false} tickFormatter={v => `${v}%`} />
+                      <Tooltip
+                        content={({ active, payload, label }: any) => {
+                          if (!active || !payload?.length) return null
+                          return (
+                            <div className="bg-surface border border-border rounded-xl px-3 py-2 text-xs shadow-lg">
+                              <div className="font-bold text-primary">{label}</div>
+                              <div className="text-[10px] text-muted-c truncate max-w-[160px]">{payload[0].payload.training}</div>
+                              <div className="text-orange-400 font-bold mt-0.5">{payload[0].value}% attendance</div>
+                            </div>
+                          )
+                        }}
+                        cursor={{ stroke: 'rgba(249,115,22,0.2)', strokeWidth: 1 }}
+                      />
+                      <Area type="monotone" dataKey="rate" stroke="#f97316" strokeWidth={2}
+                        fill="url(#attGrad)"
+                        dot={{ r: 2.5, fill: '#f97316', strokeWidth: 0 }}
+                        activeDot={{ r: 5, fill: '#f97316', strokeWidth: 0 }} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
 
               {/* Notes feed */}
               {rangedStats.notesList.length > 0 && (
@@ -347,26 +399,38 @@ export default function Dashboard() {
         {/* Skill coverage */}
         <motion.div variants={fadeUp} custom={9} initial="hidden" animate="show"
           className="card rounded-xl p-4">
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2 mb-3">
             <Star className="w-4 h-4 text-amber-400" />
             <h2 className="font-semibold text-sm text-primary">Skill Coverage</h2>
           </div>
-          <div className="space-y-3">
-            {skillCoverage.map(s => (
-              <div key={s.platform}>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium text-primary">{s.platform}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-c">{s.count}/{designers.length}</span>
-                    <span className="text-xs font-bold text-orange-500">{s.pct}%</span>
-                  </div>
-                </div>
-                <div className="progress-track">
-                  <div className="progress-fill" style={{ width: `${s.pct}%` }} />
-                </div>
-              </div>
-            ))}
-          </div>
+          <ResponsiveContainer width="100%" height={210}>
+            <RadarChart
+              data={skillCoverage.map(s => ({
+                platform: s.platform.replace('GoHighLevel', 'GHL').replace('Clickfunnels', 'CF').replace('Wordpress', 'WP'),
+                value: s.pct,
+                count: s.count,
+                total: designers.length,
+              }))}
+              cx="50%" cy="50%" outerRadius="68%"
+            >
+              <PolarGrid stroke="rgba(255,255,255,0.06)" />
+              <PolarAngleAxis dataKey="platform" tick={{ fontSize: 9, fill: 'rgb(var(--text-muted))' }} />
+              <Radar dataKey="value" stroke="#f97316" strokeWidth={1.5} fill="#f97316" fillOpacity={0.15} />
+              <Tooltip
+                content={({ active, payload }: any) => {
+                  if (!active || !payload?.length) return null
+                  const d = payload[0].payload
+                  return (
+                    <div className="bg-surface border border-border rounded-xl px-3 py-2 text-xs shadow-lg">
+                      <div className="font-bold text-primary">{d.platform}</div>
+                      <div className="text-orange-400 font-bold">{d.value}%</div>
+                      <div className="text-muted-c">{d.count}/{d.total} designers</div>
+                    </div>
+                  )
+                }}
+              />
+            </RadarChart>
+          </ResponsiveContainer>
         </motion.div>
       </div>
 

@@ -4,6 +4,27 @@ All notable changes to this project are documented here.
 
 ---
 
+## [v3.10] — 2026-05-15
+
+### Visual Polish — Glassmorphism System
+- **Modal glass** — all modals system-wide now use `.modal-glass` (blur 20px, semi-transparent dark bg) for a consistent frosted-glass panel effect: AddSessionModal, ConfirmModal, DesignerModal, SkillEditModal, UserModal, TrainingModal, ResourceModal, Teams inline modal, Designers inline modal, and Attendance Notes/Reschedule modals
+- **Training name pill** — Attendance tab chip now applies glassmorphism in dark mode
+- **Subtle borders** — all card, glass, and inline `borderColor` values reduced to `rgba(255,255,255,0.05)` across the entire system for near-invisible separation; `--border` reduced to `30 30 30`
+- **Search icon blur fix** — removed `backdrop-filter` from `.dark .input` which was creating a stacking context that painted over the absolutely-positioned search icon
+
+### Interactive Charts — Recharts Integration
+- **Dashboard Attendance Summary** — replaced static stat row with a live `AreaChart` (orange gradient fill) showing per-session attendance rate over the selected date range
+- **Dashboard Skill Coverage** — replaced progress bars with a `RadarChart` across base platforms (CF, GHL, Shopify, Wix, WP)
+- **StatsView (Attendance → Stats)** — upgraded from plain bar chart to a `ComposedChart` with green bars (present), red bars (absent), and an orange line for attendance rate; fixed missing `absent` field in session data so red bars render correctly
+- **SkillSet Platform Skill Distribution** — replaced custom div-based grouped bars with a Recharts `LineChart`; three dashed lines (Intermediate, Advanced, Expert) across platforms; Expert line is solid for visual hierarchy
+- **SkillSet Team Rankings** — redesigned card with `CoverageRing` for the #1 ranked team on the left and an `AreaChart` (matching Attendance Summary style) on the right; X-axis = team names, Y-axis = 0–100% avg coverage
+
+### Animated Counters
+- **`AnimatedNumber` shared component** — new `src/components/shared/AnimatedNumber.tsx` using `requestAnimationFrame` with `easeOutExpo` curve; duration 1100ms
+- Applied to all stat displays across: Dashboard, Attendance, SkillSet, DesignerHome, DesignerBadges
+
+---
+
 ## [v3.0] — 2026-05-12 (React/Vite Rewrite + Feature Expansion)
 
 ### Architecture Rewrite

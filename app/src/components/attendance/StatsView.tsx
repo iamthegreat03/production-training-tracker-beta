@@ -1,8 +1,9 @@
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell,
 } from 'recharts'
 import { cn, initials, normAtt, pct, fmtDs } from '@/lib/utils'
+import AnimatedNumber from '@/components/shared/AnimatedNumber'
 import type {
   Designer, Attendance, TrainingSession,
   Training, TrainingEnrollment,
@@ -46,6 +47,10 @@ export default function StatsView({ designers, sessions, attendance, training, e
       const rec = attendance.find(a => a.session_id === s.id && a.designer_id === d.id)
       return normAtt(rec?.is_present) === 'true' || normAtt(rec?.is_present) === 'late'
     }).length
+    const absent = scheduled.filter(d => {
+      const rec = attendance.find(a => a.session_id === s.id && a.designer_id === d.id)
+      return normAtt(rec?.is_present) === 'false'
+    }).length
     const marked = scheduled.filter(d => {
       const rec = attendance.find(a => a.session_id === s.id && a.designer_id === d.id)
       return normAtt(rec?.is_present) !== null
@@ -54,6 +59,7 @@ export default function StatsView({ designers, sessions, attendance, training, e
       label: fmtDs(s.session_date),
       rate: pct(present, marked),
       present,
+      absent,
       scheduled: scheduled.length,
       marked,
     }
@@ -96,10 +102,11 @@ export default function StatsView({ designers, sessions, attendance, training, e
     if (!active || !payload?.length) return null
     const d = payload[0].payload
     return (
-      <div className="bg-surface border border-border rounded-xl p-3 text-xs shadow-lg">
-        <div className="font-bold text-primary mb-1">{label}</div>
-        <div className="text-emerald-400">Rate: {d.rate}%</div>
-        <div className="text-muted-c">{d.present} present / {d.scheduled} scheduled</div>
+      <div className="bg-surface border border-border rounded-xl p-3 text-xs shadow-lg space-y-1">
+        <div className="font-bold text-primary">{label}</div>
+        <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-emerald-500/80" /><span className="text-emerald-400">{d.present} present</span></div>
+        <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-red-500/60" /><span className="text-red-400">{d.absent} absent</span></div>
+        <div className="text-orange-400 font-bold pt-0.5 border-t border-border">Rate: {d.rate}%</div>
       </div>
     )
   }
@@ -109,13 +116,15 @@ export default function StatsView({ designers, sessions, attendance, training, e
       {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: 'Sessions',   value: sessions.length,           color: 'text-blue-400' },
-          { label: 'Avg Rate',   value: `${avgRate}%`,             color: 'text-orange-400' },
-          { label: 'Best Session', value: bestSession ? `${bestSession.rate}%` : '—', color: 'text-emerald-400' },
-          { label: 'At Risk',    value: atRisk,                    color: atRisk > 0 ? 'text-red-400' : 'text-muted-c' },
+          { label: 'Sessions',     num: sessions.length,        suffix: '',  color: 'text-blue-400' },
+          { label: 'Avg Rate',     num: avgRate,                suffix: '%', color: 'text-orange-400' },
+          { label: 'Best Session', num: bestSession?.rate ?? null, suffix: '%', color: 'text-emerald-400' },
+          { label: 'At Risk',      num: atRisk,                 suffix: '',  color: atRisk > 0 ? 'text-red-400' : 'text-muted-c' },
         ].map(s => (
           <div key={s.label} className="card p-4 text-center">
-            <div className={cn('text-2xl font-display font-bold leading-none', s.color)}>{s.value}</div>
+            <div className={cn('text-2xl font-display font-bold leading-none', s.color)}>
+              {s.num !== null ? <AnimatedNumber value={s.num} suffix={s.suffix} /> : '—'}
+            </div>
             <div className="text-[10px] font-bold uppercase tracking-widest text-muted-c mt-1.5">{s.label}</div>
           </div>
         ))}
@@ -124,36 +133,37 @@ export default function StatsView({ designers, sessions, attendance, training, e
       {/* Session attendance chart */}
       {sessionData.length > 0 && (
         <div className="card p-5">
-          <div className="text-xs font-bold uppercase tracking-widest text-muted-c mb-4">
-            Attendance Rate per Session
+          <div className="flex items-center justify-between mb-4">
+            <div className="text-xs font-bold uppercase tracking-widest text-muted-c">
+              Session Breakdown
+            </div>
+            <div className="flex items-center gap-3 text-[10px] text-muted-c">
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-emerald-500/80 inline-block" />Present</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-red-500/60 inline-block" />Absent</span>
+              <span className="flex items-center gap-1"><span className="w-5 h-0.5 bg-orange-500 inline-block" />Rate</span>
+            </div>
           </div>
-          <ResponsiveContainer width="100%" height={180}>
-            <BarChart data={sessionData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgb(var(--border))" vertical={false} />
-              <XAxis
-                dataKey="label"
-                tick={{ fontSize: 9, fill: 'rgb(var(--text-muted))' }}
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis
-                domain={[0, 100]}
-                tick={{ fontSize: 9, fill: 'rgb(var(--text-muted))' }}
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={v => `${v}%`}
-              />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(249,115,22,0.05)' }} />
-              <Bar dataKey="rate" radius={[4, 4, 0, 0]} maxBarSize={40}>
-                {sessionData.map((entry, i) => (
-                  <Cell
-                    key={i}
-                    fill={entry.rate >= 80 ? '#10b981' : entry.rate >= 60 ? '#f59e0b' : '#ef4444'}
-                    fillOpacity={0.85}
-                  />
-                ))}
-              </Bar>
-            </BarChart>
+          <ResponsiveContainer width="100%" height={200}>
+            <ComposedChart data={sessionData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+              <defs>
+                <linearGradient id="presentBar" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#10b981" stopOpacity={0.9} />
+                  <stop offset="100%" stopColor="#10b981" stopOpacity={0.5} />
+                </linearGradient>
+                <linearGradient id="absentBar" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#ef4444" stopOpacity={0.75} />
+                  <stop offset="100%" stopColor="#ef4444" stopOpacity={0.35} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+              <XAxis dataKey="label" tick={{ fontSize: 9, fill: 'rgb(var(--text-muted))' }} tickLine={false} axisLine={false} />
+              <YAxis yAxisId="count" tick={{ fontSize: 9, fill: 'rgb(var(--text-muted))' }} tickLine={false} axisLine={false} />
+              <YAxis yAxisId="rate" orientation="right" domain={[0, 100]} tick={{ fontSize: 9, fill: 'rgb(var(--text-muted))' }} tickLine={false} axisLine={false} tickFormatter={v => `${v}%`} />
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(249,115,22,0.04)' }} />
+              <Bar yAxisId="count" dataKey="present" fill="url(#presentBar)" radius={[3, 3, 0, 0]} maxBarSize={28} />
+              <Bar yAxisId="count" dataKey="absent" fill="url(#absentBar)" radius={[3, 3, 0, 0]} maxBarSize={28} />
+              <Line yAxisId="rate" type="monotone" dataKey="rate" stroke="#f97316" strokeWidth={2} dot={{ r: 2.5, fill: '#f97316', strokeWidth: 0 }} activeDot={{ r: 5, fill: '#f97316', strokeWidth: 0 }} />
+            </ComposedChart>
           </ResponsiveContainer>
         </div>
       )}

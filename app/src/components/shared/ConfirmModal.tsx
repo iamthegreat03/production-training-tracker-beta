@@ -37,7 +37,7 @@ export default function ConfirmModal({
         exit={{ opacity: 0, scale: 0.95, y: 8 }}
         transition={{ type: 'spring', damping: 24, stiffness: 320 }}
         onClick={e => e.stopPropagation()}
-        className="glass rounded-2xl w-full max-w-sm p-6 space-y-4"
+        className="modal-glass rounded-2xl w-full max-w-sm p-6 space-y-4"
       >
         <div className="flex items-start gap-3">
           <div className={cn(
