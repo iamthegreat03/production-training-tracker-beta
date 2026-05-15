@@ -93,9 +93,6 @@ function PodiumCard({ entry, meta, index }: { entry: DesignerScore; meta: typeof
           }}
         />
 
-        {/* Faded overlay: full black at bottom → transparent at top */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-
         {/* Avatar — full height, bottom-anchored */}
         <img
           src="/avatar.png"
@@ -103,6 +100,9 @@ function PodiumCard({ entry, meta, index }: { entry: DesignerScore; meta: typeof
           className="absolute bottom-0 left-1/2 translate-x-[30%] h-[95%] object-contain object-bottom"
           style={{ filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.7))' }}
         />
+
+        {/* Faded overlay: full black at bottom → transparent at top (foreground) */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
 
         {/* Rank badge — top left */}
         <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-1 rounded-lg bg-black/50 backdrop-blur-sm border border-white/10">
