@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Users, BookOpen, ClipboardCheck,
   UserCog, Shield, Star, Map, History, Trophy, Library,
-  Menu, X, LogOut, Sun, Moon, Zap, ChevronRight,
+  X, LogOut, Sun, Moon, Zap, ChevronRight,
 } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
 import { cn, initials } from '@/lib/utils'
@@ -46,7 +46,6 @@ interface AppShellProps { children: React.ReactNode }
 
 export default function AppShell({ children }: AppShellProps) {
   const { state, dispatch, signOut, tabHidden } = useApp()
-  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [dark, toggleDark] = useDarkMode()
 
   const tabs = state.role === 'designer' ? DESIGNER_TABS : STAFF_TABS
@@ -54,7 +53,6 @@ export default function AppShell({ children }: AppShellProps) {
 
   function navigate(page: string) {
     dispatch({ type: 'SET_PAGE', payload: page })
-    setSidebarOpen(false)
   }
 
   const designer = state.designer
@@ -92,45 +90,11 @@ export default function AppShell({ children }: AppShellProps) {
         />
       </aside>
 
-      {/* ── Mobile overlay sidebar ── */}
-      <AnimatePresence>
-        {sidebarOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 z-40 md:hidden"
-              onClick={() => setSidebarOpen(false)}
-            />
-            <motion.aside
-              initial={{ x: -260 }} animate={{ x: 0 }} exit={{ x: -260 }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="fixed left-0 top-0 bottom-0 w-60 z-50 md:hidden flex flex-col border-r glass"
-              style={{ borderColor: 'rgba(255,255,255,0.05)' }}
-            >
-              <SidebarContent
-                tabs={visibleTabs}
-                page={state.page}
-                navigate={navigate}
-                dark={dark}
-                toggleDark={toggleDark}
-                displayName={displayName}
-                roleLabel={roleLabel}
-                signOut={signOut}
-                onClose={() => setSidebarOpen(false)}
-              />
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
-
       {/* ── Main content ── */}
       <div className="flex flex-col flex-1 min-w-0">
         {/* Top bar (mobile) */}
         <header className="md:hidden flex items-center justify-between px-4 py-3 border-b shrink-0"
           style={{ borderColor: 'rgb(var(--border))', background: 'rgb(var(--surface))' }}>
-          <button onClick={() => setSidebarOpen(true)} className="p-1.5 rounded-lg btn-ghost">
-            <Menu className="w-5 h-5" />
-          </button>
           <div className="flex items-center gap-1.5">
             <div className="w-6 h-6 rounded-lg bg-orange-gradient flex items-center justify-center">
               <Zap className="w-3.5 h-3.5 text-white fill-white" />
