@@ -4,6 +4,26 @@ All notable changes to this project are documented here.
 
 ---
 
+## [v3.12] — 2026-05-16
+
+### Features
+
+#### Appearance Settings Panel
+- **Gear icon** — accessible from the mobile top bar (between dark mode toggle and logout) and the desktop sidebar footer
+- **Glass blur slider** — range 0–8 with five quick-select presets: Off, Subtle, Default, Strong, Max
+- **All glass surfaces respond** — a single `--glass-blur` CSS variable (plus derived `--glass-blur-px`, `--glass-blur-input-px`, `--glass-blur-modal-px`, `--glass-blur-strong-px`, `--glass-blur-max-px`) drives every blurred surface: cards, chips, inputs, modals, sticky matrix column, badge cards, and the attendance warning banner
+- **Persists across sessions** — setting saved to `localStorage` and reapplied on load
+
+### Mobile Navigation Fixes
+- **Removed mobile overlay sidebar** — the hamburger-triggered slide-in sidebar has been removed; the bottom tab bar is now the sole navigation on mobile
+- **Logout button on mobile** — added to the top bar (right side, red on hover) since it was previously only accessible inside the sidebar
+- **Settings gear on mobile** — added to the top bar alongside dark mode toggle and logout
+
+### Bug Fixes
+- **SkillSet parse error** — an extra `</div>` after the Skill Matrix section was closing the main wrapper prematurely, pushing the `<AnimatePresence>` modal blocks outside the JSX root and causing an OXC parse error. Removed the orphaned tag.
+
+---
+
 ## [v3.11] — 2026-05-16
 
 ### UI Overhaul — Multi-Tab Visual Refinements
