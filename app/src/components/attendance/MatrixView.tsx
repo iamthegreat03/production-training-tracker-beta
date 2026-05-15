@@ -89,7 +89,7 @@ export default function MatrixView({
           <thead>
             <tr>
               {/* Sticky designer column header */}
-              <th className="sticky left-0 z-20 bg-surface border-b border-r border-border px-4 py-3 text-left min-w-[140px] sm:min-w-[180px]">
+              <th className="sticky left-0 z-20 bg-surface border-b border-r border-border px-4 py-3 text-left min-w-[140px] sm:min-w-[180px]" style={{ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
                 <span className="text-[10px] font-bold uppercase tracking-widest text-muted-c">Designer</span>
               </th>
               {sessions.map(s => (
@@ -133,10 +133,13 @@ export default function MatrixView({
                   )}
                 >
                   {/* Sticky designer cell */}
-                  <td className={cn(
-                    'sticky left-0 z-10 border-r border-border px-4 py-2',
-                    i % 2 === 0 ? 'bg-surface' : 'bg-surface-2/40',
-                  )}>
+                  <td
+                    className={cn(
+                      'sticky left-0 z-10 border-r border-border px-4 py-2',
+                      i % 2 === 0 ? 'bg-surface' : 'bg-surface-2/40',
+                    )}
+                    style={{ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
+                  >
                     <div className="flex items-center gap-2.5">
                       <div className="w-7 h-7 rounded-full bg-orange-gradient flex items-center justify-center text-white text-[9px] font-bold shrink-0">
                         {initials(d.name)}
