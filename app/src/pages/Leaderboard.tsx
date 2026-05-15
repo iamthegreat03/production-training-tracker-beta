@@ -121,14 +121,15 @@ function PodiumCard({ entry, meta, index }: { entry: DesignerScore; meta: typeof
 
       {/* ── Info area ── */}
       <div
-        className="flex flex-col gap-2 px-3 py-3"
+        className="flex flex-col gap-2"
+        style={{ padding: '1.75rem' }}
         style={{ background: 'rgba(0,0,0,1)' }}
       >
         <div>
           <div className="text-[9px] font-bold uppercase tracking-widest" style={{ color: meta.accentSolid }}>
             {entry.designer.team || 'Uncategorized'}
           </div>
-          <div className="font-display font-black text-white leading-tight truncate text-base">
+          <div className="font-display font-black text-white leading-tight truncate" style={{ fontSize: '1.5em' }}>
             {entry.designer.name}
           </div>
         </div>
