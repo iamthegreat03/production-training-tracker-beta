@@ -154,9 +154,9 @@ state.teams         // Team[]
 
 Two navigation sets in `AppShell.tsx`:
 
-**Staff tabs** (admin / trainer / staff): Dashboard, Designers, Trainings, Attendance, Teams, Skill Set, Hub, User Mgmt
+**Staff tabs** (admin / trainer / staff): Dashboard, Designers, Trainings, Attendance, Teams, Skill Set, Leaderboard, Hub, User Mgmt
 
-**Designer tabs**: Home, Roadmap, History, Badges, Hub
+**Designer tabs**: Home, Roadmap, History, Badges, Leaderboard, Hub
 
 Navigation on **desktop**: sidebar (left, always visible).
 Navigation on **mobile**: bottom tab bar only (sidebar removed). Top bar has logo, dark mode toggle, settings gear, and logout.

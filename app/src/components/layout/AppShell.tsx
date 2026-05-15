@@ -16,6 +16,7 @@ const STAFF_TABS = [
   { id: 'attendance', label: 'Attendance', icon: ClipboardCheck },
   { id: 'teams', label: 'Teams', icon: UserCog },
   { id: 'skillset', label: 'Skill Set', icon: Star },
+  { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
   { id: 'hub', label: 'Hub', icon: Library },
   { id: 'users', label: 'User Mgmt', icon: Shield },
 ]
@@ -24,7 +25,8 @@ const DESIGNER_TABS = [
   { id: 'home', label: 'Home', icon: LayoutDashboard },
   { id: 'roadmap', label: 'Roadmap', icon: Map },
   { id: 'history', label: 'History', icon: History },
-  { id: 'badges', label: 'Badges', icon: Trophy },
+  { id: 'badges', label: 'Badges', icon: Star },
+  { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
   { id: 'hub', label: 'Hub', icon: Library },
 ]
 

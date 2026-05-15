@@ -4,6 +4,20 @@ All notable changes to this project are documented here.
 
 ---
 
+## [v3.15] — 2026-05-16
+
+### Features
+- **Leaderboard tab** — new page accessible to all account types (staff, trainer, admin, designer). Esports-inspired design with:
+  - **Podium** — top 3 performers displayed on a hero podium with cover art background, avatar, rank crown/medal/award, score, and mini stat bars
+  - **Ranked list** — full designer ranking below the podium with avatar, name, team, score bar, and score value
+  - **Filter tabs** — Overall / Attendance / Skills / Trainings; switches the active ranking metric and accent colors
+  - **Score formula** — composite: attendance rate × 50% + skill coverage × 30% + trainings completed × 20%
+  - **Search** — filter the ranked list by designer name in real time
+  - **Score legend** — formula breakdown card at the bottom
+  - Static assets: `avatar.png` and `cover_background.png` used for all cards (dynamic per-designer images planned for a future release)
+
+---
+
 ## [v3.14] — 2026-05-16
 
 ### Features
