@@ -101,9 +101,14 @@ export default function AppShell({ children }: AppShellProps) {
             </div>
             <span className="font-display font-bold text-sm text-primary">PT Tracker</span>
           </div>
-          <button onClick={toggleDark} className="p-1.5 rounded-lg btn-ghost">
-            {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          </button>
+          <div className="flex items-center gap-1">
+            <button onClick={toggleDark} className="p-1.5 rounded-lg btn-ghost">
+              {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+            <button onClick={signOut} className="p-1.5 rounded-lg btn-ghost text-muted-c hover:text-red-400 transition-colors">
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
         </header>
 
         {/* Page content */}
