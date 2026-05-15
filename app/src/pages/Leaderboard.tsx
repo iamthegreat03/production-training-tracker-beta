@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Trophy, Medal, Award, Crown, Flame, TrendingUp, Users, Star, Zap } from 'lucide-react'
+import { Trophy, Medal, Award, Crown, Users, Star, Zap } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
 import { cn, normAtt, pct } from '@/lib/utils'
 import type { Designer } from '@/types/database'
@@ -256,9 +256,9 @@ export default function Leaderboard() {
               <p className="text-xs text-muted-c mt-0.5">{designers.length} designers ranked</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-[10px] text-muted-c bg-orange-500/5 border border-orange-500/20 rounded-xl px-3 py-1.5">
-            <Flame className="w-3 h-3 text-orange-400" />
-            <span className="font-semibold text-orange-400 uppercase tracking-widest">Live Rankings</span>
+          <div className="text-right">
+            <div className="text-[9px] font-bold uppercase tracking-widest text-orange-400">Top Performers</div>
+            <div className="font-display font-black text-sm text-primary leading-tight">Hall of Fame</div>
           </div>
         </div>
 
@@ -289,26 +289,6 @@ export default function Leaderboard() {
         {/* Podium */}
         {top3.length > 0 && (
           <div>
-            {/* Podium banner */}
-            <div className="relative rounded-2xl overflow-hidden mb-4">
-              <img
-                src="/cover_background.png"
-                alt=""
-                className="absolute inset-0 w-full h-full object-cover opacity-15"
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-orange-900/40 via-transparent to-purple-900/30" />
-              <div className="relative z-10 flex items-center justify-between px-5 py-4">
-                <div>
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-orange-400">Top Performers</div>
-                  <div className="font-display font-black text-lg text-primary leading-tight">Hall of Fame</div>
-                </div>
-                <div className="flex items-center gap-1">
-                  <TrendingUp className="w-4 h-4 text-orange-400" />
-                  <span className="text-xs font-bold text-muted-c capitalize">{filter}</span>
-                </div>
-              </div>
-            </div>
-
             {/* Podium layout: 2nd | 1st | 3rd */}
             <div className="flex items-stretch gap-2">
               {top3[1] && <PodiumCard entry={top3[1]} meta={RANK_META[1]} index={1} />}
