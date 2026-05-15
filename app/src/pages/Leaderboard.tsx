@@ -110,13 +110,6 @@ function PodiumCard({ entry, meta, index }: { entry: DesignerScore; meta: typeof
           <span className={cn('text-[9px] font-black uppercase tracking-widest', meta.color)}>{meta.label}</span>
         </div>
 
-        {/* Score — top right */}
-        <div className="absolute top-2 right-2 text-right">
-          <div className={cn('font-display font-black leading-none text-xl', meta.color)}>
-            {entry.overall}
-          </div>
-          <div className="text-[8px] text-white/50 uppercase tracking-widest">pts</div>
-        </div>
       </div>
 
       {/* ── Info area ── */}
@@ -133,8 +126,8 @@ function PodiumCard({ entry, meta, index }: { entry: DesignerScore; meta: typeof
           </div>
         </div>
 
-        {/* Stat pills */}
-        <div className="flex gap-1.5">
+        {/* Stat pills + pts */}
+        <div className="flex items-center gap-1.5">
           <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/20">
             <span className="text-[8px] font-bold uppercase tracking-widest text-emerald-400">ATT</span>
             <span className="text-[9px] font-black text-emerald-400">{entry.attendance}%</span>
@@ -142,6 +135,10 @@ function PodiumCard({ entry, meta, index }: { entry: DesignerScore; meta: typeof
           <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/15 border border-blue-500/20">
             <span className="text-[8px] font-bold uppercase tracking-widest text-blue-400">SKL</span>
             <span className="text-[9px] font-black text-blue-400">{entry.skills}%</span>
+          </div>
+          <div className="ml-auto text-right">
+            <div className={cn('font-display font-black leading-none text-xl', meta.color)}>{entry.overall}</div>
+            <div className="text-[8px] text-white/50 uppercase tracking-widest">pts</div>
           </div>
         </div>
       </div>
