@@ -85,16 +85,16 @@ function PodiumCard({ entry, meta, index }: { entry: DesignerScore; meta: typeof
           className="absolute inset-0 w-full h-full object-cover opacity-25"
         />
 
-        {/* Diagonal color split: dark-left / accent-right */}
+        {/* Diagonal color split: matte black left / accent right */}
         <div
           className="absolute inset-0"
           style={{
-            background: `linear-gradient(125deg, rgba(8,8,20,0.92) 42%, ${meta.accent} 42%)`,
+            background: `linear-gradient(125deg, rgba(0,0,0,0.95) 42%, ${meta.accent} 42%)`,
           }}
         />
 
-        {/* Subtle vignette at bottom to blend into info area */}
-        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/60 to-transparent" />
+        {/* Faded overlay: full black at bottom → transparent at top */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
 
         {/* Avatar — full height, bottom-anchored */}
         <img
@@ -122,7 +122,7 @@ function PodiumCard({ entry, meta, index }: { entry: DesignerScore; meta: typeof
       {/* ── Info area ── */}
       <div
         className="flex flex-col gap-2 px-3 py-3"
-        style={{ background: 'rgba(8,8,20,0.95)' }}
+        style={{ background: 'rgba(0,0,0,1)' }}
       >
         <div>
           <div className="text-[9px] font-bold uppercase tracking-widest" style={{ color: meta.accentSolid }}>
