@@ -70,11 +70,20 @@ function PodiumCard({ entry, meta, index }: { entry: DesignerScore; meta: typeof
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: isFirst ? 40 : 24, scale: 0.94 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ type: 'spring', damping: 22, stiffness: 280, delay: index * 0.1 }}
+      initial={{ opacity: 0, y: isFirst ? 40 : 24, scale: 0.94, boxShadow: meta.shadow }}
+      animate={{
+        opacity: 1, y: 0, scale: 1,
+        boxShadow: isFirst
+          ? ['0 0 20px rgba(234,179,8,0.3)', '0 0 55px rgba(234,179,8,0.75)', '0 0 20px rgba(234,179,8,0.3)']
+          : meta.shadow,
+      }}
+      transition={{
+        default: { type: 'spring', damping: 22, stiffness: 280, delay: index * 0.1 },
+        boxShadow: isFirst
+          ? { duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 0.8 }
+          : { duration: 0 },
+      }}
       className={cn('relative flex flex-col rounded-2xl border overflow-hidden flex-1', meta.border)}
-      style={{ boxShadow: meta.shadow }}
     >
       {/* ── Hero area ── */}
       <div className="relative overflow-hidden shrink-0" style={{ height: meta.heroH }}>
