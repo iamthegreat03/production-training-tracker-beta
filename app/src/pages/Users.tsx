@@ -102,7 +102,7 @@ export default function UserManagement() {
       <div className="card rounded-2xl overflow-hidden">
         <div className="p-4 border-b border-border bg-surface-2/50 flex items-center justify-between gap-3">
           <div className="relative w-full max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-c" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-c z-10" />
             <input
               className="input h-9 pl-9 text-xs"
               placeholder="Search users..."

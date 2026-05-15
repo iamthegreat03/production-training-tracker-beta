@@ -545,7 +545,7 @@ export default function AttendancePage() {
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-c" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-c z-10" />
                   <input className="input h-9 w-28 sm:w-36 pl-9 text-xs" placeholder="Search…"
                     value={search} onChange={e => setSearch(e.target.value)} />
                 </div>
@@ -693,8 +693,7 @@ export default function AttendancePage() {
                 </button>
               </div>
               <textarea
-                className="resize-none w-full rounded-xl px-3 py-2.5 text-sm text-primary placeholder:text-muted-c outline-none transition-colors"
-                style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.06)' }}
+                className="input resize-none w-full"
                 rows={4}
                 placeholder="What did this designer work on or produce this session?"
                 value={noteText} onChange={e => setNoteText(e.target.value)} />

@@ -501,7 +501,7 @@ export default function SkillSet() {
           <div className="p-4 border-b border-border bg-surface-2/50 flex flex-wrap items-center justify-between gap-4">
             <div className="flex flex-wrap items-center gap-4 flex-1 min-w-0">
               <div className="relative flex-1 max-w-sm">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-c" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-c z-10" />
                 <input
                   className="input h-9 pl-9 text-xs"
                   placeholder="Filter by name or team..."

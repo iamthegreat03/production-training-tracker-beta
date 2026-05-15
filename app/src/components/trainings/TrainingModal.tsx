@@ -473,7 +473,7 @@ export default function TrainingModal({ training, onClose, onSaved }: Props) {
                 {/* Enrollment Filter */}
                 <div className="flex gap-2">
                   <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-c" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-c z-10" />
                     <input className="input pl-9 h-9" placeholder="Search designers..." value={search} onChange={e => setSearch(e.target.value)} />
                   </div>
                   <select className="input h-9 w-32" value={teamFilter} onChange={e => setTeamFilter(e.target.value)}>
