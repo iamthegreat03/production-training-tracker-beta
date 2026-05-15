@@ -229,7 +229,7 @@ Used for all stat displays across Dashboard, Attendance, SkillSet, DesignerHome,
 - **Terse responses** — short updates at key moments; one sentence is enough
 - **No comments in code** — only add a comment when the WHY is non-obvious
 - **Commit style** — conventional commits (`feat:`, `fix:`, `docs:`), always include `Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>`
-- **Always update CHANGELOG.md** when shipping features — version as `v3.X`, grouped by feature area
+- **Always update CHANGELOG.md and CLAUDE.md automatically** after every task — never wait to be asked. Include in the same commit or an immediate follow-up.
 - **Push after every task** — commit and push when a logical unit of work is done
 - **Drag-to-pan over CSS scroll** — see pattern above; never fight the layout chain with overflow hacks
 
