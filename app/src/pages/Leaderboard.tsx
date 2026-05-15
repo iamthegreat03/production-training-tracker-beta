@@ -89,7 +89,9 @@ function PodiumCard({ entry, meta, index }: { entry: DesignerScore; meta: typeof
         <div
           className="absolute inset-0"
           style={{
-            background: `linear-gradient(125deg, rgba(0,0,0,0.95) 42%, ${meta.accent} 42%)`,
+            background: `linear-gradient(125deg, rgb(0 0 0 / 72%) 42%, ${meta.accent} 42%)`,
+            backdropFilter: 'blur(var(--glass-blur-strong-px))',
+            WebkitBackdropFilter: 'blur(var(--glass-blur-strong-px))',
           }}
         />
 
