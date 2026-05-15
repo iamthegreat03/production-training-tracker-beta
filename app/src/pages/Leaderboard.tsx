@@ -122,8 +122,7 @@ function PodiumCard({ entry, meta, index }: { entry: DesignerScore; meta: typeof
       {/* ── Info area ── */}
       <div
         className="flex flex-col gap-2"
-        style={{ background: 'rgba(0,0,0,1)', paddingTop: '1.75rem', paddingLeft: '1.75rem', paddingRight: '1.75rem', paddingBottom: '1.75rem' }}
-        style={{ background: 'rgba(0,0,0,1)' }}
+        style={{ background: 'rgba(0,0,0,1)', padding: '1.75rem' }}
       >
         <div>
           <div className="text-[9px] font-bold uppercase tracking-widest" style={{ color: meta.accentSolid }}>
