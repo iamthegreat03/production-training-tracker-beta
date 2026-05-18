@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Plus, BookOpen, Calendar, Clock, CheckCircle2,
@@ -94,17 +94,14 @@ export default function Trainings() {
     else { setSortCol(col); setSortDir('asc') }
   }
 
-  async function moveTraining(newStatus: TrainingStatus) {
-    if (!dragId) return
-    const t = trainings.find(t => t.id === dragId)
+  async function moveTraining(trainingId: string, newStatus: TrainingStatus) {
+    const t = trainings.find(t => t.id === trainingId)
     if (!t || t.status === newStatus) return
-    // Optimistic update — no reload flash
-    dispatch({ type: 'SET_DATA', payload: { trainings: trainings.map(tr => tr.id === dragId ? { ...tr, status: newStatus } : tr) } })
-    const { error } = await supabase.from('trainings').update({ status: newStatus }).eq('id', dragId)
+    dispatch({ type: 'SET_DATA', payload: { trainings: trainings.map(tr => tr.id === trainingId ? { ...tr, status: newStatus } : tr) } })
+    const { error } = await supabase.from('trainings').update({ status: newStatus }).eq('id', trainingId)
     if (error) {
       toast.error(error.message)
-      // Revert
-      dispatch({ type: 'SET_DATA', payload: { trainings: trainings.map(tr => tr.id === dragId ? { ...tr, status: t.status } : tr) } })
+      dispatch({ type: 'SET_DATA', payload: { trainings: trainings.map(tr => tr.id === trainingId ? { ...tr, status: t.status } : tr) } })
     }
   }
 
@@ -185,7 +182,7 @@ export default function Trainings() {
                   onDragLeave={e => {
                     if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverCol(null)
                   }}
-                  onDrop={async (e) => { e.preventDefault(); await moveTraining(status); setDragOverCol(null); setDragId(null) }}
+                  onDrop={async (e) => { e.preventDefault(); if (dragId) await moveTraining(dragId, status); setDragOverCol(null); setDragId(null) }}
                 >
                   <div className="flex items-center justify-between px-2">
                     <div className="flex items-center gap-2">
@@ -215,6 +212,7 @@ export default function Trainings() {
                           enrolledCount={enrolledCount(t.id)}
                           onClick={() => setDetailTarget(t)}
                           onEdit={() => setEditTarget(t)}
+                          onMove={(newStatus) => moveTraining(t.id, newStatus)}
                           canEdit={can('canAddEditTrainings') && t.status !== 'completed'}
                           index={i}
                           onDragStart={() => setDragId(t.id)}
@@ -388,11 +386,12 @@ export default function Trainings() {
   )
 }
 
-function TrainingCard({ training, enrolledCount, onClick, onEdit, canEdit, index, onDragStart, onDragEnd, isDragging }: {
+function TrainingCard({ training, enrolledCount, onClick, onEdit, onMove, canEdit, index, onDragStart, onDragEnd, isDragging }: {
   training: Training
   enrolledCount: number
   onClick: () => void
   onEdit: () => void
+  onMove: (status: TrainingStatus) => void
   canEdit: boolean
   index: number
   onDragStart: () => void
@@ -401,6 +400,20 @@ function TrainingCard({ training, enrolledCount, onClick, onEdit, canEdit, index
 }) {
   const isHandsOn = training.type === 'Hands-On'
   const wasDragged = useRef(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!menuOpen) return
+    function handle(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false)
+    }
+    document.addEventListener('mousedown', handle)
+    return () => document.removeEventListener('mousedown', handle)
+  }, [menuOpen])
+
+  const allStatuses: TrainingStatus[] = ['upcoming', 'active', 'on-hold', 'completed']
+  const otherStatuses = allStatuses.filter(s => s !== training.status)
 
   return (
     <motion.div
@@ -423,12 +436,41 @@ function TrainingCard({ training, enrolledCount, onClick, onEdit, canEdit, index
           {training.type}
         </div>
         {canEdit && (
-          <button
-            onClick={(e) => { e.stopPropagation(); onEdit() }}
-            className="p-1 rounded-md text-muted-c hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            <MoreVertical className="w-3.5 h-3.5" />
-          </button>
+          <div ref={menuRef} className="relative">
+            <button
+              onClick={(e) => { e.stopPropagation(); setMenuOpen(v => !v) }}
+              className="p-1 rounded-md text-muted-c hover:text-primary opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+            >
+              <MoreVertical className="w-3.5 h-3.5" />
+            </button>
+            {menuOpen && (
+              <div className="absolute right-0 top-full mt-1 z-30 min-w-[168px] rounded-xl border border-border bg-surface shadow-xl overflow-hidden">
+                <button
+                  onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onEdit() }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-medium text-primary hover:bg-surface-2 transition-colors"
+                >
+                  <Pencil className="w-3.5 h-3.5 text-muted-c" />
+                  Edit
+                </button>
+                <div className="border-t border-border-subtle">
+                  {otherStatuses.map(s => {
+                    const cfg = STATUS_CONFIG[s]
+                    const Icon = cfg.icon
+                    return (
+                      <button
+                        key={s}
+                        onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onMove(s) }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-medium text-primary hover:bg-surface-2 transition-colors"
+                      >
+                        <Icon className={cn('w-3.5 h-3.5', cfg.color)} />
+                        Move to {cfg.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </div>
 

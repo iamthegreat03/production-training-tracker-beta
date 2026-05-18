@@ -4,6 +4,14 @@ All notable changes to this project are documented here.
 
 ---
 
+## [v3.20] — 2026-05-18
+
+### Fixes
+- **Attendance stats grid (mobile)** — `Attendance.tsx` stats bar (Present/Late/Absent/Unmarked) is now always 4 columns on all screen sizes, eliminating the 2-row layout that ate vertical space on mobile.
+- **Trainings mobile move** — `Trainings.tsx` kanban cards now have a three-dot menu with "Move to →" options for all other statuses, replacing the desktop-only HTML5 drag-and-drop for mobile users.
+
+---
+
 ## [v3.19] — 2026-05-18
 
 ### Fixes

@@ -510,7 +510,7 @@ export default function AttendancePage() {
           {showSessionSelector && selSId && sessionStats && (
             <motion.div
               initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
-              className="grid grid-cols-2 sm:grid-cols-4 gap-2 shrink-0"
+              className="grid grid-cols-4 gap-2 shrink-0"
             >
               {[
                 { label: 'Present',  value: sessionStats.present,  color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
@@ -518,9 +518,9 @@ export default function AttendancePage() {
                 { label: 'Absent',   value: sessionStats.absent,   color: 'text-red-400',     bg: 'bg-red-500/10 border-red-500/20' },
                 { label: 'Unmarked', value: sessionStats.unmarked, color: 'text-muted-c',     bg: 'bg-surface-2 border-border' },
               ].map(s => (
-                <div key={s.label} className={cn('rounded-xl border p-3 text-center backdrop-blur-[2px]', s.bg)}>
-                  <div className={cn('text-lg font-bold font-display leading-none', s.color)}><AnimatedNumber value={s.value} /></div>
-                  <div className="text-[9px] font-bold uppercase tracking-widest text-muted-c mt-1">{s.label}</div>
+                <div key={s.label} className={cn('rounded-xl border p-2 sm:p-3 text-center backdrop-blur-[2px]', s.bg)}>
+                  <div className={cn('text-base sm:text-lg font-bold font-display leading-none', s.color)}><AnimatedNumber value={s.value} /></div>
+                  <div className="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest text-muted-c mt-1">{s.label}</div>
                 </div>
               ))}
             </motion.div>
