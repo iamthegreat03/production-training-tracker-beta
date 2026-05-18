@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Users, BookOpen, ClipboardCheck,
-  UserCog, Shield, Star, Map, History, Trophy, Library,
+  UserCog, Shield, Star, Map, History, Trophy, Library, Building2,
   X, LogOut, Sun, Moon, Zap, ChevronRight, Settings,
 } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
@@ -18,6 +18,7 @@ const STAFF_TABS = [
   { id: 'skillset', label: 'Skill Set', icon: Star },
   { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
   { id: 'hub', label: 'Hub', icon: Library },
+  { id: 'crossdept', label: 'Cross-Dept', icon: Building2 },
   { id: 'users', label: 'User Mgmt', icon: Shield },
 ]
 

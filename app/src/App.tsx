@@ -14,6 +14,7 @@ import DesignerHistory from '@/pages/DesignerHistory'
 import DesignerBadges from '@/pages/DesignerBadges'
 import DesignerHub from '@/pages/DesignerHub'
 import Leaderboard from '@/pages/Leaderboard'
+import CrossDept from '@/pages/CrossDept'
 
 function PageRouter() {
   const { state } = useApp()
@@ -41,6 +42,7 @@ function PageRouter() {
     case 'leaderboard': return <Leaderboard />
     case 'hub': return <DesignerHub />
     case 'users': return <Users />
+    case 'crossdept': return <CrossDept />
     default: return <Dashboard />
   }
 }

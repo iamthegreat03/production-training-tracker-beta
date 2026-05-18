@@ -147,6 +147,30 @@ export interface HubResource {
   created_at: string | null
 }
 
+export type ExtTrainingStatus = 'requested' | 'scheduled' | 'completed' | 'cancelled'
+
+export interface ExtTraining {
+  id: string
+  title: string
+  department: string
+  topic: string | null
+  requested_by: string | null
+  facilitator: string | null
+  status: ExtTrainingStatus
+  notes: string | null
+  created_at: string | null
+}
+
+export interface ExtSession {
+  id: string
+  training_id: string
+  session_date: string
+  attendee_count: number
+  notes: string | null
+  proof_url: string | null
+  created_at: string | null
+}
+
 export interface AppState {
   user: import('@supabase/supabase-js').User | null
   role: UserRole | null
@@ -163,6 +187,8 @@ export interface AppState {
   makeupRequests: MakeupRequest[]
   users: UserRoleRecord[]
   hubResources: HubResource[]
+  extTrainings: ExtTraining[]
+  extSessions: ExtSession[]
   page: string
   loading: boolean
 }

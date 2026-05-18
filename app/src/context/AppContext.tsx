@@ -5,7 +5,7 @@ import { normAtt } from '@/lib/utils'
 import type {
   AppState, Designer, Team, Training, TrainingEnrollment,
   TrainingSession, Attendance, DesignerSkill, MakeupSession,
-  MakeupRequest, UserRoleRecord, HubResource,
+  MakeupRequest, UserRoleRecord, HubResource, ExtTraining, ExtSession,
 } from '@/types/database'
 
 const DEFAULT_PERMS: Record<string, boolean> = {
@@ -22,6 +22,7 @@ const initial: AppState = {
   designers: [], teams: [], trainings: [], enrollments: [],
   sessions: [], attendance: [], designerSkills: [],
   makeups: [], makeupRequests: [], users: [], hubResources: [],
+  extTrainings: [], extSessions: [],
   page: 'dashboard', loading: true,
 }
 
@@ -66,6 +67,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         { data: enrollments }, { data: sessions }, { data: attendance },
         { data: designerSkills }, { data: makeups }, { data: makeupRequests },
         { data: users }, { data: hubResources },
+        { data: extTrainings }, { data: extSessions },
       ] = await Promise.all([
         supabase.from('designers').select('*').order('name'),
         supabase.from('teams').select('*').order('name'),
@@ -78,6 +80,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         supabase.from('makeup_requests').select('*'),
         supabase.from('user_roles').select('*'),
         supabase.from('hub_resources').select('*').order('created_at', { ascending: true }),
+        supabase.from('ext_trainings').select('*').order('created_at', { ascending: false }),
+        supabase.from('ext_sessions').select('*').order('session_date', { ascending: false }),
       ])
 
       const normAttendance = (attendance ?? []).map((a: Attendance) => ({
@@ -98,6 +102,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           makeupRequests: (makeupRequests ?? []) as MakeupRequest[],
           users: (users ?? []) as UserRoleRecord[],
           hubResources: (hubResources ?? []) as HubResource[],
+          extTrainings: (extTrainings ?? []) as ExtTraining[],
+          extSessions: (extSessions ?? []) as ExtSession[],
         },
       })
     } catch (err) {

@@ -4,6 +4,21 @@ All notable changes to this project are documented here.
 
 ---
 
+## [v3.17] — 2026-05-18
+
+### Features
+- **Cross-Dept Training page** — new "Cross-Dept" tab (staff/trainer/admin only) for tracking product knowledge sessions delivered to other departments (Sales, Marketing, Compliance, etc.). Full CRUD for training programs and individual session logs.
+  - **Training programs** — title, department, topic, requested by, facilitator, status (Requested / Scheduled / Completed / Cancelled), notes
+  - **Session history** — per-program log of sessions: date, what was discussed, attendee headcount, optional proof/recording URL. Expandable accordion reveals full history inline.
+  - **Stats strip** — Programs / Departments served / Sessions held / Total trained
+  - **Status filter chips** with counts, full-text search across title/department/topic
+  - **Department color coding** — deterministic palette per department name, consistent across cards
+  - **Delete cascade** — deleting a program removes all its sessions (via DB ON DELETE CASCADE)
+- **Dashboard cross-dept snapshot** — new compact card on the Dashboard showing cross-dept Programs / Sessions / Total Trained counts with a "View All" link.
+- **DB migration** — `ext_trainings` and `ext_sessions` tables (see `ext_training_migration.sql`).
+
+---
+
 ## [v3.16] — 2026-05-18
 
 ### Features

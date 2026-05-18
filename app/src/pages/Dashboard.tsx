@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   Users, BookOpen, CalendarCheck, TrendingUp,
-  AlertTriangle, Clock, Zap, ChevronRight, Activity, StickyNote, ChevronLeft,
+  AlertTriangle, Clock, Zap, ChevronRight, Activity, StickyNote, ChevronLeft, Building2,
 } from 'lucide-react'
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -18,8 +18,10 @@ const fadeUp = {
 }
 
 export default function Dashboard() {
-  const { state } = useApp()
-  const { designers, trainings, sessions, attendance, makeups, designerSkills, teams } = state
+  const { state, dispatch } = useApp()
+  const { designers, trainings, sessions, attendance, makeups, designerSkills, teams, extTrainings, extSessions } = state
+
+  const totalExtAttendees = useMemo(() => extSessions.reduce((s, e) => s + e.attendee_count, 0), [extSessions])
 
   const today = new Date().toISOString().split('T')[0]
 
@@ -206,6 +208,39 @@ export default function Dashboard() {
           )
         })}
       </div>
+
+      {/* Cross-Dept Training snapshot */}
+      <motion.div variants={fadeUp} custom={6} initial="hidden" animate="show"
+        className="card rounded-xl p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-lg bg-blue-500/10">
+              <Building2 className="w-4 h-4 text-blue-400" />
+            </div>
+            <span className="text-xs font-bold text-primary uppercase tracking-widest">Cross-Dept Training</span>
+          </div>
+          <button
+            onClick={() => dispatch({ type: 'SET_PAGE', payload: 'crossdept' })}
+            className="text-[10px] font-bold text-orange-500 uppercase hover:underline flex items-center gap-1"
+          >
+            View All <ChevronRight className="w-3 h-3" />
+          </button>
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="text-center">
+            <div className="text-xl font-bold text-primary">{extTrainings.length}</div>
+            <div className="text-[10px] text-muted-c uppercase tracking-widest mt-0.5">Programs</div>
+          </div>
+          <div className="text-center">
+            <div className="text-xl font-bold text-primary">{extSessions.length}</div>
+            <div className="text-[10px] text-muted-c uppercase tracking-widest mt-0.5">Sessions</div>
+          </div>
+          <div className="text-center">
+            <div className="text-xl font-bold text-emerald-400">{totalExtAttendees}</div>
+            <div className="text-[10px] text-muted-c uppercase tracking-widest mt-0.5">Trained</div>
+          </div>
+        </div>
+      </motion.div>
 
       {/* Two-col grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
