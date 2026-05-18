@@ -6,6 +6,7 @@ import type {
   AppState, Designer, Team, Training, TrainingEnrollment,
   TrainingSession, Attendance, DesignerSkill, MakeupSession,
   MakeupRequest, UserRoleRecord, HubResource, ExtTraining, ExtSession,
+  AccessRequest,
 } from '@/types/database'
 
 const DEFAULT_PERMS: Record<string, boolean> = {
@@ -22,7 +23,7 @@ const initial: AppState = {
   designers: [], teams: [], trainings: [], enrollments: [],
   sessions: [], attendance: [], designerSkills: [],
   makeups: [], makeupRequests: [], users: [], hubResources: [],
-  extTrainings: [], extSessions: [],
+  extTrainings: [], extSessions: [], accessRequests: [],
   page: 'dashboard', loading: true,
 }
 
@@ -68,6 +69,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         { data: designerSkills }, { data: makeups }, { data: makeupRequests },
         { data: users }, { data: hubResources },
         { data: extTrainings }, { data: extSessions },
+        { data: accessRequests },
       ] = await Promise.all([
         supabase.from('designers').select('*').order('name'),
         supabase.from('teams').select('*').order('name'),
@@ -82,6 +84,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         supabase.from('hub_resources').select('*').order('created_at', { ascending: true }),
         supabase.from('ext_trainings').select('*').order('created_at', { ascending: false }),
         supabase.from('ext_sessions').select('*').order('session_date', { ascending: false }),
+        supabase.from('access_requests').select('*').order('created_at', { ascending: false }),
       ])
 
       const normAttendance = (attendance ?? []).map((a: Attendance) => ({
@@ -104,6 +107,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           hubResources: (hubResources ?? []) as HubResource[],
           extTrainings: (extTrainings ?? []) as ExtTraining[],
           extSessions: (extSessions ?? []) as ExtSession[],
+          accessRequests: (accessRequests ?? []) as AccessRequest[],
         },
       })
     } catch (err) {

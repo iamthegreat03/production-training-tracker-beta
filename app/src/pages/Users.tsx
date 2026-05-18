@@ -2,14 +2,15 @@ import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Shield, UserPlus, Trash2, Pencil,
-  Search, ShieldCheck,
+  Search, ShieldCheck, UserCheck, Clock, ChevronDown,
 } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
 import { supabase } from '@/lib/supabase'
-import { cn, initials } from '@/lib/utils'
+import { cn, initials, fmtD } from '@/lib/utils'
 import { toast } from 'sonner'
-import type { UserRoleRecord, UserRole } from '@/types/database'
+import type { UserRoleRecord, UserRole, AccessRequest } from '@/types/database'
 import UserModal from '@/components/users/UserModal'
+import ApproveRequestModal from '@/components/users/ApproveRequestModal'
 import ConfirmModal from '@/components/shared/ConfirmModal'
 
 type RoleFilter = 'ALL' | UserRole
@@ -30,13 +31,19 @@ const ROLE_AVATAR: Record<UserRole, string> = {
 
 export default function UserManagement() {
   const { state, loadAll, can } = useApp()
-  const { users, designers } = state
+  const { users, designers, accessRequests } = state
 
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('ALL')
   const [editTarget, setEditTarget] = useState<UserRoleRecord | null | 'new'>(null)
   const [deleteTarget, setDeleteTarget] = useState<typeof enriched[0] | null>(null)
+  const [approveTarget, setApproveTarget] = useState<AccessRequest | null>(null)
+  const [requestsOpen, setRequestsOpen] = useState(true)
   const [saving, setSaving] = useState(false)
+
+  const pendingRequests = useMemo(() =>
+    accessRequests.filter(r => r.status === 'pending'),
+  [accessRequests])
 
   // Enrich each user record with designer name/email if linked
   const enriched = useMemo(() => users.map(u => {
@@ -99,6 +106,72 @@ export default function UserManagement() {
           </button>
         )}
       </div>
+
+      {/* Pending Access Requests */}
+      {pendingRequests.length > 0 && (
+        <div className="card rounded-2xl overflow-hidden border-orange-500/20">
+          <button
+            onClick={() => setRequestsOpen(v => !v)}
+            className="w-full flex items-center justify-between p-4 hover:bg-surface-2/50 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-orange-500/10 flex items-center justify-center">
+                <UserCheck className="w-4 h-4 text-orange-500" />
+              </div>
+              <div className="text-left">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-primary">Access Requests</span>
+                  <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-500 text-white text-[10px] font-bold">
+                    <Clock className="w-2.5 h-2.5" />
+                    {pendingRequests.length} pending
+                  </span>
+                </div>
+                <p className="text-[10px] text-muted-c mt-0.5">Review and approve to create accounts and send credentials</p>
+              </div>
+            </div>
+            <ChevronDown className={cn('w-4 h-4 text-muted-c transition-transform duration-200', requestsOpen && 'rotate-180')} />
+          </button>
+
+          <AnimatePresence>
+            {requestsOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ type: 'spring', damping: 30, stiffness: 320 }}
+                className="overflow-hidden"
+              >
+                <div className="border-t border-border">
+                  {pendingRequests.map(req => (
+                    <div key={req.id} className="flex items-center gap-3 px-4 py-3 border-b border-border/50 last:border-0 hover:bg-surface-2/40 transition-colors group">
+                      <div className="w-9 h-9 rounded-full bg-orange-gradient flex items-center justify-center text-white text-[10px] font-bold shrink-0">
+                        {initials(req.name)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-bold text-primary">{req.name}</span>
+                          <span className="badge badge-orange text-[9px] uppercase">{req.requested_role}</span>
+                        </div>
+                        <div className="text-[10px] text-muted-c">{req.email}</div>
+                        {req.message && (
+                          <div className="text-[10px] text-secondary italic mt-0.5 truncate max-w-sm">"{req.message}"</div>
+                        )}
+                      </div>
+                      <div className="hidden sm:block text-[10px] text-muted-c shrink-0">{fmtD(req.created_at)}</div>
+                      <button
+                        onClick={() => setApproveTarget(req)}
+                        className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-500 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-orange-400 transition-colors"
+                      >
+                        <UserCheck className="w-3.5 h-3.5" /> Review
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex flex-wrap gap-2">
@@ -250,6 +323,16 @@ export default function UserManagement() {
             loading={saving}
             onConfirm={handleDelete}
             onCancel={() => setDeleteTarget(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {approveTarget && (
+          <ApproveRequestModal
+            request={approveTarget}
+            onClose={() => setApproveTarget(null)}
+            onDone={loadAll}
           />
         )}
       </AnimatePresence>

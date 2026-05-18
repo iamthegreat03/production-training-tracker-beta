@@ -147,6 +147,19 @@ export interface HubResource {
   created_at: string | null
 }
 
+export type AccessRequestStatus = 'pending' | 'approved' | 'rejected'
+
+export interface AccessRequest {
+  id: string
+  name: string
+  email: string
+  requested_role: string
+  message: string | null
+  status: AccessRequestStatus
+  reviewed_at: string | null
+  created_at: string | null
+}
+
 export type ExtTrainingStatus = 'requested' | 'scheduled' | 'completed' | 'cancelled'
 
 export interface ExtTraining {
@@ -189,6 +202,7 @@ export interface AppState {
   hubResources: HubResource[]
   extTrainings: ExtTraining[]
   extSessions: ExtSession[]
+  accessRequests: AccessRequest[]
   page: string
   loading: boolean
 }

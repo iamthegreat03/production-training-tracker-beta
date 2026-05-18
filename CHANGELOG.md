@@ -4,6 +4,18 @@ All notable changes to this project are documented here.
 
 ---
 
+## [v3.18] — 2026-05-18
+
+### Features
+- **Account request flow** — designers and staff can request access directly from the login page without needing an admin to manually copy UUIDs from Supabase.
+  - **Login page** — "Request Access" link opens an inline form: full name, email, role preference (designer/staff/trainer), optional message. On submit shows a confirmation screen.
+  - **User Management — Requests section** — collapsible banner at the top shows all pending requests with name, email, requested role, message, and date. Orange "Review" button per request.
+  - **Review modal** — admin confirms the role (pre-filled from request), optionally links to a designer profile, then clicks "Approve & Send Email" or "Reject".
+  - **Edge Function (`approve-access`)** — server-side Deno function: verifies caller is admin/trainer, creates the Supabase auth account, generates a random 12-char password, sends a styled HTML welcome email via Gmail SMTP with login credentials, creates the `user_roles` record, and marks the request as approved.
+- **DB migration** — `access_requests` table with public INSERT (for unauthenticated requesters) and authenticated SELECT/UPDATE (see `access_request_migration.sql`).
+
+---
+
 ## [v3.17] — 2026-05-18
 
 ### Features
