@@ -4,6 +4,29 @@ All notable changes to this project are documented here.
 
 ---
 
+## [v3.19] — 2026-05-18
+
+### Fixes
+- **`today()` UTC bug** — `utils.ts` now uses local date components instead of `toISOString().split('T')[0]`, fixing off-by-one errors for users ahead of UTC. All pages (`Dashboard`, `DesignerHome`, `SkillSet`) updated to use the corrected utility.
+- **Password security** — `approve-access` Edge Function `generatePassword()` now uses `crypto.getRandomValues()` with rejection sampling (modulo-bias-free) and a Fisher-Yates shuffle instead of `Math.random()`.
+- **User deletion** — `Users.tsx` `handleDelete` now calls the Edge Function `delete` action, which removes both the `user_roles` row and the Supabase Auth account. Previously only the DB row was deleted, leaving the auth account active.
+- **Edge Function delete action** — new `action: 'delete'` path in `approve-access` accepts `{ userId }` and performs a full auth + role cleanup.
+- **Mobile nav** — `AppShell.tsx` bottom nav no longer truncates to 5 tabs with `.slice(0,5)`; all visible tabs are now accessible via horizontal scroll.
+- **Attendance rate denominator** — `DesignerHome.tsx` Quick Stats now divides by marked-only sessions (excluding `null`/unmarked), matching the true attendance rate.
+- **Leaderboard team groups** — team averages are now computed from the full sorted list (`sortedAll`), not the search-filtered subset. Searching no longer corrupts team rankings.
+- **Dashboard animation indices** — duplicate `custom={6}` stagger index on Alerts card fixed (renumbered 7–9); dead `upcoming` variable removed.
+- **`AppContext` loadAll errors** — each table query error is now surfaced via `toast.error` instead of being silently swallowed by `data ?? []`.
+- **`Attendance.tsx` sessionStats** — session stats and overdue count now use schedule-filtered designers (respecting `designer_schedule`), not all enrolled designers.
+- **CSV export** — `SkillSet.tsx` values are now properly quoted and escaped; `URL.revokeObjectURL` called after download to prevent memory leak.
+- **Teams mutations** — `handleAddTeam` and `confirmDeleteTeam` now show `toast.error` on Supabase failures instead of silently ignoring them.
+- **Reshuffle pending state** — `TeamCard` select now reflects pending `reshuffleChanges` values before they are saved.
+- **Dead code removed** — `startReshuffle()` no-op function removed from `Teams.tsx`.
+- **`ApproveRequestModal`** — avatar initials now use the shared `initials()` utility.
+- **`CrossDept.tsx`** — removed always-true ternary in `ExtSessionModal` `trainingId` prop.
+- **`ExtSessionModal`** — added `maxHeight: '90vh'` to prevent overflow on short screens.
+
+---
+
 ## [v3.18] — 2026-05-18
 
 ### Features

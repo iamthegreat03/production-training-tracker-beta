@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { X, UserCheck, Mail, MessageSquare } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useApp } from '@/context/AppContext'
-import { cn } from '@/lib/utils'
+import { cn, initials } from '@/lib/utils'
 import type { AccessRequest, UserRole } from '@/types/database'
 
 const ROLES: UserRole[] = ['designer', 'staff', 'trainer', 'admin']
@@ -105,7 +105,7 @@ export default function ApproveRequestModal({ request, onClose, onDone }: Props)
               <p className="text-[10px] font-bold text-muted-c uppercase tracking-widest">Requester</p>
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-orange-gradient flex items-center justify-center text-white text-[10px] font-bold shrink-0">
-                  {request.name.split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase()}
+                  {initials(request.name)}
                 </div>
                 <div>
                   <div className="text-sm font-bold text-primary">{request.name}</div>

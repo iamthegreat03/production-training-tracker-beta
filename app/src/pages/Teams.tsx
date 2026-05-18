@@ -55,11 +55,6 @@ export default function Teams() {
   }, [designers, reshuffleChanges])
 
   // --- Actions ---
-  function startReshuffle(did: string, currentTeam: string | null) {
-     if (!reshuffleMode) return
-     // This would normally open a small popover to pick a new team
-  }
-
   async function saveReshuffle() {
      setSaving(true)
      const updates = Object.entries(reshuffleChanges).map(([id, team]) => 
@@ -75,22 +70,26 @@ export default function Teams() {
   async function handleAddTeam() {
      if (!newTeamName.trim()) return
      setSaving(true)
-     await supabase.from('teams').insert({ name: newTeamName.trim() })
+     const { error } = await supabase.from('teams').insert({ name: newTeamName.trim() })
+     setSaving(false)
+     if (error) { toast.error(error.message); return }
      await loadAll()
      setNewTeamName('')
      setShowAddModal(false)
-     setSaving(false)
   }
 
   async function confirmDeleteTeam() {
      if (!teamToDelete) return
+     const { id, name } = teamToDelete
      setSaving(true)
      setTeamToDelete(null)
-     await supabase.from('designers').update({ team: null }).eq('team', teamToDelete.name)
-     await supabase.from('teams').delete().eq('id', teamToDelete.id)
+     const { error: e1 } = await supabase.from('designers').update({ team: null }).eq('team', name)
+     if (e1) { toast.error(e1.message); setSaving(false); return }
+     const { error: e2 } = await supabase.from('teams').delete().eq('id', id)
+     if (e2) { toast.error(e2.message); setSaving(false); return }
      await loadAll()
      setSaving(false)
-     toast.success(`Team "${teamToDelete.name}" deleted`)
+     toast.success(`Team "${name}" deleted`)
   }
 
   return (
@@ -143,6 +142,7 @@ export default function Teams() {
             key={team.id}
             team={team}
             reshuffleMode={reshuffleMode}
+            reshuffleChanges={reshuffleChanges}
             allTeams={teams}
             onMove={(did, t) => setReshuffleChanges(prev => ({ ...prev, [did]: t }))}
             onDelete={() => setTeamToDelete(team)}
@@ -155,6 +155,7 @@ export default function Teams() {
           <TeamCard
              team={{ id: 'uncategorized', name: 'Uncategorized', members: uncategorizedMembers, rate: 0 } as any}
              reshuffleMode={reshuffleMode}
+             reshuffleChanges={reshuffleChanges}
              allTeams={teams}
              onMove={(did, t) => setReshuffleChanges(prev => ({ ...prev, [did]: t }))}
              onDelete={() => {}}
@@ -212,9 +213,10 @@ export default function Teams() {
   )
 }
 
-function TeamCard({ team, reshuffleMode, allTeams, onMove, onDelete, canManage, index }: {
+function TeamCard({ team, reshuffleMode, reshuffleChanges, allTeams, onMove, onDelete, canManage, index }: {
   team: Team & { members: any[], rate: number }
   reshuffleMode: boolean
+  reshuffleChanges: Record<string, string | null>
   allTeams: Team[]
   onMove: (did: string, t: string | null) => void
   onDelete: () => void
@@ -265,7 +267,7 @@ function TeamCard({ team, reshuffleMode, allTeams, onMove, onDelete, canManage, 
                 {reshuffleMode ? (
                   <select
                     className="text-[9px] bg-orange-500/10 text-orange-500 border-none rounded px-1.5 py-0.5 font-bold uppercase cursor-pointer"
-                    value={team.name}
+                    value={Object.prototype.hasOwnProperty.call(reshuffleChanges, m.id) ? (reshuffleChanges[m.id] ?? '') : team.name}
                     onChange={(e) => onMove(m.id, e.target.value || null)}
                   >
                     <option value={team.name}>{team.name.slice(0, 3)}</option>

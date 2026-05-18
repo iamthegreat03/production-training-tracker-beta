@@ -168,19 +168,35 @@ export default function AttendancePage() {
     return list
   }, [designers, enrollments, selTId, selSId, selS, attFilter, search, selT, attendance, optimistic])
 
+  // Schedule-filtered designers for the selected session (no attFilter/search applied)
+  const sessionDesigners = useMemo(() => {
+    if (!selTId || !selSId || !selS) return []
+    const enrolledIds = new Set(enrollments.filter(e => e.training_id === selTId).map(e => e.designer_id))
+    return designers.filter(d => {
+      if (!enrolledIds.has(d.id)) return false
+      const enrollment = enrollments.find(e => e.training_id === selTId && e.designer_id === d.id)
+      if (!enrollment) return false
+      const sched = enrollment.designer_schedule ?? []
+      if (sched.length === 0) return true
+      return selT?.type === 'Hands-On'
+        ? sched.includes(selS.day_of_week ?? '')
+        : sched.includes(selS.session_date)
+    })
+  }, [designers, enrollments, selTId, selSId, selS, selT])
+
   const sessionStats = useMemo(() => {
     if (!selSId) return null
-    const enrolledIds = enrollments.filter(e => e.training_id === selTId).map(e => e.designer_id).filter(Boolean) as string[]
+    const designerIds = sessionDesigners.map(d => d.id)
     let present = 0, late = 0, absent = 0, unmarked = 0
-    enrolledIds.forEach(did => {
+    designerIds.forEach(did => {
       const val = getVal(selSId, did)
       if (val === 'true') present++
       else if (val === 'late') late++
       else if (val === 'false') absent++
       else unmarked++
     })
-    return { present, late, absent, unmarked, total: enrolledIds.length, rate: pct(present + late, present + late + absent) }
-  }, [attendance, optimistic, selSId, selTId, enrollments])
+    return { present, late, absent, unmarked, total: designerIds.length, rate: pct(present + late, present + late + absent) }
+  }, [attendance, optimistic, selSId, sessionDesigners])
 
   // Week-based reschedule flags for the selected session
   const selSFuture = selS ? isSessionFuture(selS.session_date) : false
@@ -189,9 +205,8 @@ export default function AttendancePage() {
 
   const overdueCount = useMemo(() => {
     if (!selSId || !selS || !sessionIsOverdue) return 0
-    const enrolledIds = new Set(enrollments.filter(e => e.training_id === selTId).map(e => e.designer_id))
-    return designers.filter(d => enrolledIds.has(d.id) && getVal(selSId, d.id) === null).length
-  }, [selSId, selS, sessionIsOverdue, designers, enrollments, selTId, attendance, optimistic])
+    return sessionDesigners.filter(d => getVal(selSId, d.id) === null).length
+  }, [selSId, selS, sessionIsOverdue, sessionDesigners, attendance, optimistic])
 
   function openRescheduleModal(d: Designer) {
     if (!selS) return
@@ -222,8 +237,7 @@ export default function AttendancePage() {
 
   function markOverdueAbsent() {
     if (!selSId || !sessionIsOverdue) return
-    const enrolledIds = new Set(enrollments.filter(e => e.training_id === selTId).map(e => e.designer_id))
-    const overdueDes = designers.filter(d => enrolledIds.has(d.id) && getVal(selSId, d.id) === null)
+    const overdueDes = sessionDesigners.filter(d => getVal(selSId, d.id) === null)
     if (overdueDes.length === 0) return
     setPendingOverdueDes(overdueDes)
   }

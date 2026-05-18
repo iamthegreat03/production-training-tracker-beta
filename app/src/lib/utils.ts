@@ -22,9 +22,10 @@ export function fmtDs(d: string | null | undefined): string {
   })
 }
 
-/** Get today as YYYY-MM-DD */
+/** Get today as YYYY-MM-DD (local date, not UTC) */
 export function today(): string {
-  return new Date().toISOString().split('T')[0]
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
 /** 2-char initials from full name */

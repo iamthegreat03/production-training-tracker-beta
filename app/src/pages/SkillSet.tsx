@@ -6,7 +6,7 @@ import {
 } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
 import { supabase } from '@/lib/supabase'
-import { cn, initials, pct } from '@/lib/utils'
+import { cn, initials, pct, today } from '@/lib/utils'
 import { toast } from 'sonner'
 import type { Designer } from '@/types/database'
 import SkillEditModal from '@/components/skillset/SkillEditModal'
@@ -148,12 +148,13 @@ export default function SkillSet() {
   }
 
   function exportCSV() {
-    let csv = 'Designer,Team,Rank,' + allPlatforms.join(',') + '\n'
+    const esc = (v: string) => `"${v.replace(/"/g, '""')}"`
+    let csv = ['Designer', 'Team', 'Rank', ...allPlatforms].map(esc).join(',') + '\n'
     designers.forEach(d => {
-      const row = [d.name, d.team || 'None', d.rank]
+      const row = [esc(d.name), esc(d.team || 'None'), esc(d.rank)]
       allPlatforms.forEach(p => {
         const s = designerSkills.find(sk => sk.designer_id === d.id && sk.platform === p)
-        row.push(s ? s.level : '')
+        row.push(esc(s ? s.level : ''))
       })
       csv += row.join(',') + '\n'
     })
@@ -161,8 +162,9 @@ export default function SkillSet() {
     const url  = URL.createObjectURL(blob)
     const a    = document.createElement('a')
     a.href = url
-    a.download = `skill-matrix-${new Date().toISOString().split('T')[0]}.csv`
+    a.download = `skill-matrix-${today()}.csv`
     a.click()
+    URL.revokeObjectURL(url)
   }
 
   // ── Render ────────────────────────────────────────────────────────────────

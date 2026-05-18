@@ -143,9 +143,9 @@ export default function AppShell({ children }: AppShellProps) {
         </main>
 
         {/* Bottom nav (mobile) */}
-        <nav className="md:hidden flex border-t shrink-0"
+        <nav className="md:hidden flex border-t shrink-0 overflow-x-auto no-scrollbar"
           style={{ borderColor: 'rgb(var(--border))', background: 'rgb(var(--surface))' }}>
-          {visibleTabs.slice(0, 5).map(tab => {
+          {visibleTabs.map(tab => {
             const Icon = tab.icon
             const active = state.page === tab.id
             return (
@@ -153,7 +153,7 @@ export default function AppShell({ children }: AppShellProps) {
                 key={tab.id}
                 onClick={() => navigate(tab.id)}
                 className={cn(
-                  'flex-1 flex flex-col items-center gap-0.5 py-2.5 text-xs font-medium transition-colors',
+                  'min-w-[60px] shrink-0 flex flex-col items-center gap-0.5 py-2.5 px-2 text-xs font-medium transition-colors',
                   active ? 'text-orange-500' : 'text-muted-c',
                 )}
               >

@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useReducer, useRef, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
+import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { normAtt } from '@/lib/utils'
 import type {
@@ -64,12 +65,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_LOADING', payload: true })
     try {
       const [
-        { data: designers }, { data: teams }, { data: trainings },
-        { data: enrollments }, { data: sessions }, { data: attendance },
-        { data: designerSkills }, { data: makeups }, { data: makeupRequests },
-        { data: users }, { data: hubResources },
-        { data: extTrainings }, { data: extSessions },
-        { data: accessRequests },
+        { data: designers, error: e0 }, { data: teams, error: e1 }, { data: trainings, error: e2 },
+        { data: enrollments, error: e3 }, { data: sessions, error: e4 }, { data: attendance, error: e5 },
+        { data: designerSkills, error: e6 }, { data: makeups, error: e7 }, { data: makeupRequests, error: e8 },
+        { data: users, error: e9 }, { data: hubResources, error: e10 },
+        { data: extTrainings, error: e11 }, { data: extSessions, error: e12 },
+        { data: accessRequests, error: e13 },
       ] = await Promise.all([
         supabase.from('designers').select('*').order('name'),
         supabase.from('teams').select('*').order('name'),
@@ -86,6 +87,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
         supabase.from('ext_sessions').select('*').order('session_date', { ascending: false }),
         supabase.from('access_requests').select('*').order('created_at', { ascending: false }),
       ])
+
+      const failedTables = [
+        e0 && 'designers', e1 && 'teams', e2 && 'trainings',
+        e3 && 'enrollments', e4 && 'sessions', e5 && 'attendance',
+        e6 && 'skills', e7 && 'makeups', e8 && 'makeup_requests',
+        e9 && 'users', e10 && 'hub', e11 && 'ext_trainings',
+        e12 && 'ext_sessions', e13 && 'access_requests',
+      ].filter(Boolean) as string[]
+      if (failedTables.length) toast.error(`Data load issue: ${failedTables.join(', ')}`)
 
       const normAttendance = (attendance ?? []).map((a: Attendance) => ({
         ...a, is_present: normAtt(a.is_present),

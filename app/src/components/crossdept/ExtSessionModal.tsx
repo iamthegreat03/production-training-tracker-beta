@@ -50,6 +50,7 @@ export default function ExtSessionModal({ session, trainingId, onClose, onSaved 
         transition={{ type: 'spring', damping: 22, stiffness: 280, mass: 0.8 }}
         onClick={e => e.stopPropagation()}
         className="modal-glass rounded-2xl w-full max-w-sm flex flex-col"
+        style={{ maxHeight: '90vh' }}
       >
         <div className="p-5 border-b border-border flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">

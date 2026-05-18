@@ -8,7 +8,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
 import { useApp } from '@/context/AppContext'
-import { pct, fmtDs, initials } from '@/lib/utils'
+import { pct, fmtDs, initials, today } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import AnimatedNumber from '@/components/shared/AnimatedNumber'
 
@@ -23,7 +23,7 @@ export default function Dashboard() {
 
   const totalExtAttendees = useMemo(() => extSessions.reduce((s, e) => s + e.attendee_count, 0), [extSessions])
 
-  const today = new Date().toISOString().split('T')[0]
+  const todayStr = today()
 
   // Overall attendance rate
   const marked = attendance.filter(a => a.is_present !== null)
@@ -33,15 +33,9 @@ export default function Dashboard() {
   // Active trainings
   const active = trainings.filter(t => t.status === 'active')
 
-  // Upcoming sessions (next 7 days) — kept for reference
-  const next7 = new Date(); next7.setDate(next7.getDate() + 7)
-  const upcoming = sessions
-    .filter(s => s.session_date >= today && s.session_date <= next7.toISOString().split('T')[0])
-    .slice(0, 5)
-
   // Calendar state
   const [calDate, setCalDate] = useState(() => new Date())
-  const [selectedDay, setSelectedDay] = useState<string | null>(today)
+  const [selectedDay, setSelectedDay] = useState<string | null>(todayStr)
 
   const calYear = calDate.getFullYear()
   const calMonth = calDate.getMonth()
@@ -82,7 +76,7 @@ export default function Dashboard() {
   })
 
   // Overdue makeups
-  const overdueMakeups = makeups.filter(m => m.makeup_date < today && m.is_attended === null)
+  const overdueMakeups = makeups.filter(m => m.makeup_date < todayStr && m.is_attended === null)
 
   // Team breakdown
   const teamStats = teams.map(team => {
@@ -98,7 +92,7 @@ export default function Dashboard() {
     const d = new Date(); d.setDate(d.getDate() - 30)
     return d.toISOString().split('T')[0]
   })
-  const [rangeTo, setRangeTo] = useState(today)
+  const [rangeTo, setRangeTo] = useState(todayStr)
 
   const rangedStats = useMemo(() => {
     if (!rangeFrom || !rangeTo || rangeFrom > rangeTo) return null
@@ -245,7 +239,7 @@ export default function Dashboard() {
       {/* Two-col grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Alerts */}
-        <motion.div variants={fadeUp} custom={6} initial="hidden" animate="show"
+        <motion.div variants={fadeUp} custom={7} initial="hidden" animate="show"
           className="card rounded-xl p-4">
           <div className="flex items-center gap-2 mb-4">
             <AlertTriangle className="w-4 h-4 text-red-400" />
@@ -282,7 +276,7 @@ export default function Dashboard() {
         </motion.div>
 
         {/* Upcoming sessions — calendar */}
-        <motion.div variants={fadeUp} custom={7} initial="hidden" animate="show"
+        <motion.div variants={fadeUp} custom={8} initial="hidden" animate="show"
           className="card rounded-xl p-4 flex flex-col gap-3">
 
           {/* Header */}
@@ -320,7 +314,7 @@ export default function Dashboard() {
               const day = i + 1
               const dateStr = `${calMonthStr}-${String(day).padStart(2, '0')}`
               const hasSessions = !!sessionsByDate[dateStr]
-              const isToday = dateStr === today
+              const isToday = dateStr === todayStr
               const isSelected = dateStr === selectedDay
               const isPast = dateStr < today
 
@@ -375,7 +369,7 @@ export default function Dashboard() {
       </div>
 
       {/* Attendance Summary */}
-      <motion.div variants={fadeUp} custom={8} initial="hidden" animate="show"
+      <motion.div variants={fadeUp} custom={9} initial="hidden" animate="show"
         className="card rounded-xl overflow-hidden">
         <div className="p-4 space-y-4">
           {/* Header */}
@@ -385,7 +379,7 @@ export default function Dashboard() {
             <div className="flex items-center gap-1.5 ml-auto">
               <input type="date" value={rangeFrom} max={rangeTo} onChange={e => setRangeFrom(e.target.value)} className="input h-7 px-2 text-[11px] w-32 tabular-nums" />
               <span className="text-[10px] text-muted-c font-bold">→</span>
-              <input type="date" value={rangeTo} min={rangeFrom} max={today} onChange={e => setRangeTo(e.target.value)} className="input h-7 px-2 text-[11px] w-32 tabular-nums" />
+              <input type="date" value={rangeTo} min={rangeFrom} max={todayStr} onChange={e => setRangeTo(e.target.value)} className="input h-7 px-2 text-[11px] w-32 tabular-nums" />
             </div>
           </div>
 
@@ -490,9 +484,14 @@ export default function Dashboard() {
       {/* Trainings ending soon */}
       {(() => {
         const soon14 = new Date(); soon14.setDate(soon14.getDate() + 14)
+        const soon14Str = [
+          soon14.getFullYear(),
+          String(soon14.getMonth() + 1).padStart(2, '0'),
+          String(soon14.getDate()).padStart(2, '0'),
+        ].join('-')
         const ending = trainings.filter(t =>
           t.status === 'active' && t.target_date &&
-          t.target_date >= today && t.target_date <= soon14.toISOString().split('T')[0]
+          t.target_date >= todayStr && t.target_date <= soon14Str
         )
         if (ending.length === 0) return null
         return (

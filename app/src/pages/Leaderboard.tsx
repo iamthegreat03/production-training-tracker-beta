@@ -212,17 +212,19 @@ export default function Leaderboard() {
     })
   }, [designers, sessions, attendance, designerSkills, enrollments, trainings])
 
-  const sorted = useMemo(() => {
+  const sortedAll = useMemo(() => {
     const key: keyof DesignerScore = filter === 'overall' ? 'overall'
       : filter === 'attendance' ? 'attendance'
       : filter === 'skills' ? 'skills'
       : 'trainings'
-
     return [...scores]
       .sort((a, b) => (b[key] as number) - (a[key] as number))
       .map((s, i) => ({ ...s, rank: i + 1 }))
-      .filter(s => s.designer.name.toLowerCase().includes(search.toLowerCase()))
-  }, [scores, filter, search])
+  }, [scores, filter])
+
+  const sorted = useMemo(() =>
+    sortedAll.filter(s => s.designer.name.toLowerCase().includes(search.toLowerCase())),
+  [sortedAll, search])
 
   const top3 = sorted.slice(0, 3)
 
@@ -243,7 +245,7 @@ export default function Leaderboard() {
 
   const teamGroups = useMemo(() => {
     const grouped = new Map<string, DesignerScore[]>()
-    for (const s of sorted) {
+    for (const s of sortedAll) {
       const team = s.designer.team || 'Uncategorized'
       if (!grouped.has(team)) grouped.set(team, [])
       grouped.get(team)!.push(s)
@@ -255,7 +257,7 @@ export default function Leaderboard() {
         avg: Math.round(members.reduce((sum, m) => sum + (m[scoreKey] as number), 0) / members.length),
       }))
       .sort((a, b) => b.avg - a.avg)
-  }, [sorted, scoreKey])
+  }, [sortedAll, scoreKey])
 
   return (
     <div className="flex flex-col h-full">

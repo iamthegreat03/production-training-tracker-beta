@@ -418,7 +418,7 @@ export default function CrossDept() {
         {sessionModal.open && (
           <ExtSessionModal
             session={sessionModal.session}
-            trainingId={sessionModal.open ? sessionModal.trainingId : ''}
+            trainingId={sessionModal.trainingId}
             onClose={() => setSessionModal({ open: false })}
             onSaved={loadAll}
           />

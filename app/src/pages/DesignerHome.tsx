@@ -5,7 +5,7 @@ import {
   ArrowRight, Flame, Target, MessageSquare
 } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
-import { cn, fmtD, pct, initials } from '@/lib/utils'
+import { cn, fmtD, pct, initials, today } from '@/lib/utils'
 import AnimatedNumber from '@/components/shared/AnimatedNumber'
 
 export default function DesignerHome() {
@@ -54,10 +54,9 @@ export default function DesignerHome() {
 
   // Real upcoming sessions from enrolled trainings
   const upcomingSessions = useMemo(() => {
-    const today = new Date().toISOString().split('T')[0]
     const enrolledIds = new Set(myEnrollments.map(e => e.training_id))
     return sessions
-      .filter(s => enrolledIds.has(s.training_id ?? '') && s.session_date >= today)
+      .filter(s => enrolledIds.has(s.training_id ?? '') && s.session_date >= today())
       .sort((a, b) => a.session_date.localeCompare(b.session_date))
       .slice(0, 3)
       .map(s => ({ ...s, training: trainings.find(t => t.id === s.training_id) }))
@@ -244,11 +243,11 @@ export default function DesignerHome() {
                 <div className="flex items-center justify-between text-[10px] font-bold text-muted-c uppercase mb-1">
                   <span>Attendance Rate</span>
                   <span className="text-primary">
-                    {pct(myAtt.filter(a => a.is_present === 'true' || a.is_present === 'late').length, myAtt.length)}%
+                    {pct(myAtt.filter(a => a.is_present === 'true' || a.is_present === 'late').length, myAtt.filter(a => a.is_present !== null).length)}%
                   </span>
                 </div>
                 <div className="progress-track h-1">
-                  <div className="progress-fill" style={{ width: `${pct(myAtt.filter(a => a.is_present === 'true' || a.is_present === 'late').length, myAtt.length)}%` }} />
+                  <div className="progress-fill" style={{ width: `${pct(myAtt.filter(a => a.is_present === 'true' || a.is_present === 'late').length, myAtt.filter(a => a.is_present !== null).length)}%` }} />
                 </div>
               </div>
               <div className="flex items-center justify-between pt-2">

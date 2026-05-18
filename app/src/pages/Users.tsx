@@ -79,9 +79,11 @@ export default function UserManagement() {
     if (!deleteTarget) return
     setSaving(true)
     try {
-      const { error } = await supabase.from('user_roles').delete().eq('id', deleteTarget.id)
-      if (error) {
-        toast.error(error.message)
+      const { data, error: fnError } = await supabase.functions.invoke('approve-access', {
+        body: { action: 'delete', userId: deleteTarget.auth_user_id },
+      })
+      if (fnError || data?.error) {
+        toast.error(fnError?.message ?? data?.error ?? 'Failed to remove user')
       } else {
         toast.success('User access removed')
         setDeleteTarget(null)
