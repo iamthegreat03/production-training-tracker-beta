@@ -99,8 +99,8 @@ function PodiumCard({ entry, meta, index }: { entry: DesignerScore; meta: typeof
           className="absolute inset-0"
           style={{
             background: `linear-gradient(125deg, rgb(0 0 0 / 72%) 42%, ${meta.accent} 42%)`,
-            backdropFilter: 'blur(var(--glass-blur-strong-px))',
-            WebkitBackdropFilter: 'blur(var(--glass-blur-strong-px))',
+            backdropFilter: 'blur(var(--glass-blur-px))',
+            WebkitBackdropFilter: 'blur(var(--glass-blur-px))',
           }}
         />
 
@@ -225,7 +225,22 @@ export default function Leaderboard() {
   }, [scores, filter, search])
 
   const top3 = sorted.slice(0, 3)
-  const rest = sorted.slice(3)
+
+  const teamGroups = useMemo(() => {
+    const grouped = new Map<string, DesignerScore[]>()
+    for (const s of sorted) {
+      const team = s.designer.team || 'Uncategorized'
+      if (!grouped.has(team)) grouped.set(team, [])
+      grouped.get(team)!.push(s)
+    }
+    return Array.from(grouped.entries())
+      .map(([name, members]) => ({
+        name,
+        members,
+        avg: Math.round(members.reduce((sum, m) => sum + (m[scoreKey] as number), 0) / members.length),
+      }))
+      .sort((a, b) => b.avg - a.avg)
+  }, [sorted, scoreKey])
 
   const scoreKey: keyof DesignerScore = filter === 'overall' ? 'overall'
     : filter === 'attendance' ? 'attendance'
@@ -310,84 +325,94 @@ export default function Leaderboard() {
           <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-c z-10" />
         </div>
 
-        {/* Ranked list */}
-        <div className="card rounded-2xl overflow-hidden">
-          <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-            <span className="text-xs font-bold text-muted-c uppercase tracking-widest">Full Rankings</span>
-            <span className="text-[10px] text-muted-c">{sorted.length} designers</span>
-          </div>
-          <div className="divide-y divide-border">
-            {sorted.map((entry, i) => {
-              const score = entry[scoreKey] as number
-              const isTop = entry.rank <= 3
-              return (
-                <motion.div
-                  key={entry.designer.id}
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ type: 'spring', damping: 28, stiffness: 360, delay: Math.min(i * 0.025, 0.3) }}
-                  className={cn(
-                    'flex items-center gap-3 px-4 py-3 transition-colors hover:bg-white/[0.02]',
-                    entry.rank === 1 && 'bg-yellow-500/[0.03]',
-                    entry.rank === 2 && 'bg-slate-400/[0.02]',
-                    entry.rank === 3 && 'bg-amber-700/[0.02]',
-                  )}
-                >
-                  {/* Rank number */}
-                  <div className={cn(
-                    'w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-xs font-black',
-                    entry.rank === 1 ? 'bg-yellow-500/20 text-yellow-400 ring-1 ring-yellow-500/40'
-                    : entry.rank === 2 ? 'bg-slate-400/15 text-slate-300 ring-1 ring-slate-400/30'
-                    : entry.rank === 3 ? 'bg-amber-700/15 text-amber-600 ring-1 ring-amber-700/30'
-                    : 'bg-white/5 text-muted-c',
-                  )}>
-                    {isTop
-                      ? [<Crown className="w-3.5 h-3.5 text-yellow-400" />, <Medal className="w-3.5 h-3.5 text-slate-300" />, <Award className="w-3.5 h-3.5 text-amber-600" />][entry.rank - 1]
-                      : entry.rank}
-                  </div>
+        {/* Team Rankings */}
+        <div className="space-y-4">
+          {teamGroups.map((team, teamIdx) => (
+            <div key={team.name} className="card rounded-2xl overflow-hidden">
+              {/* Team header */}
+              <div className="px-4 py-3 border-b border-border flex items-center gap-3">
+                <div className={cn(
+                  'w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-xs font-black',
+                  teamIdx === 0 ? 'bg-yellow-500/20 text-yellow-400 ring-1 ring-yellow-500/40'
+                  : teamIdx === 1 ? 'bg-slate-400/15 text-slate-300 ring-1 ring-slate-400/30'
+                  : teamIdx === 2 ? 'bg-amber-700/15 text-amber-600 ring-1 ring-amber-700/30'
+                  : 'bg-white/5 text-muted-c',
+                )}>
+                  {teamIdx < 3
+                    ? [<Crown key="c" className="w-3.5 h-3.5 text-yellow-400" />, <Medal key="m" className="w-3.5 h-3.5 text-slate-300" />, <Award key="a" className="w-3.5 h-3.5 text-amber-600" />][teamIdx]
+                    : teamIdx + 1}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-black text-primary uppercase tracking-widest">{team.name}</div>
+                  <div className="text-[10px] text-muted-c">{team.members.length} designer{team.members.length !== 1 ? 's' : ''}</div>
+                </div>
+                <div className="text-right">
+                  <div className={cn('text-sm font-black', scoreColor)}>{team.avg}</div>
+                  <div className="text-[9px] text-muted-c uppercase tracking-widest">{filter === 'overall' ? 'pts avg' : '% avg'}</div>
+                </div>
+              </div>
 
-                  {/* Avatar */}
-                  <div className={cn(
-                    'w-8 h-8 rounded-full overflow-hidden ring-2 shrink-0',
-                    entry.rank === 1 ? 'ring-yellow-500/50'
-                    : entry.rank === 2 ? 'ring-slate-400/40'
-                    : entry.rank === 3 ? 'ring-amber-700/40'
-                    : 'ring-white/10',
-                  )}>
-                    <img src="/avatar.png" alt={entry.designer.name} className="w-full h-full object-cover" />
-                  </div>
-
-                  {/* Name + team */}
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-semibold text-primary truncate">{entry.designer.name}</div>
-                    <div className="text-[10px] text-muted-c truncate">{entry.designer.team || 'Uncategorized'}</div>
-                  </div>
-
-                  {/* Score bar */}
-                  <div className="w-20 sm:w-32 hidden sm:block">
-                    <ScoreBar value={score} color={barColor} />
-                  </div>
-
-                  {/* Score value */}
-                  <div className="text-right shrink-0">
-                    <div className={cn('text-sm font-black', isTop ? scoreColor : 'text-muted-c')}>
-                      {score}
-                      <span className="text-[9px] font-medium opacity-60 ml-0.5">
-                        {filter === 'overall' ? 'pts' : '%'}
-                      </span>
-                    </div>
-                    {filter !== 'overall' && (
-                      <div className="text-[9px] text-muted-c">Overall: {entry.overall}pts</div>
-                    )}
-                  </div>
-                </motion.div>
-              )
-            })}
-
-            {sorted.length === 0 && (
-              <div className="py-12 text-center text-muted-c text-sm">No designers found.</div>
-            )}
-          </div>
+              {/* Team members */}
+              <div className="divide-y divide-border">
+                {team.members.map((entry, i) => {
+                  const score = entry[scoreKey] as number
+                  const isTopInTeam = i < 3
+                  return (
+                    <motion.div
+                      key={entry.designer.id}
+                      initial={{ opacity: 0, x: -8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ type: 'spring', damping: 28, stiffness: 360, delay: Math.min(i * 0.03, 0.2) }}
+                      className={cn(
+                        'flex items-center gap-3 px-4 py-3 transition-colors hover:bg-white/[0.02]',
+                        i === 0 && 'bg-yellow-500/[0.03]',
+                        i === 1 && 'bg-slate-400/[0.02]',
+                        i === 2 && 'bg-amber-700/[0.02]',
+                      )}
+                    >
+                      <div className={cn(
+                        'w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-xs font-black',
+                        i === 0 ? 'bg-yellow-500/20 text-yellow-400 ring-1 ring-yellow-500/40'
+                        : i === 1 ? 'bg-slate-400/15 text-slate-300 ring-1 ring-slate-400/30'
+                        : i === 2 ? 'bg-amber-700/15 text-amber-600 ring-1 ring-amber-700/30'
+                        : 'bg-white/5 text-muted-c',
+                      )}>
+                        {isTopInTeam
+                          ? [<Crown key="c" className="w-3.5 h-3.5 text-yellow-400" />, <Medal key="m" className="w-3.5 h-3.5 text-slate-300" />, <Award key="a" className="w-3.5 h-3.5 text-amber-600" />][i]
+                          : i + 1}
+                      </div>
+                      <div className={cn(
+                        'w-8 h-8 rounded-full overflow-hidden ring-2 shrink-0',
+                        i === 0 ? 'ring-yellow-500/50' : i === 1 ? 'ring-slate-400/40' : i === 2 ? 'ring-amber-700/40' : 'ring-white/10',
+                      )}>
+                        <img src="/avatar.png" alt={entry.designer.name} className="w-full h-full object-cover" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold text-primary truncate">{entry.designer.name}</div>
+                      </div>
+                      <div className="w-20 sm:w-32 hidden sm:block">
+                        <ScoreBar value={score} color={barColor} />
+                      </div>
+                      <div className="text-right shrink-0">
+                        <div className={cn('text-sm font-black', isTopInTeam ? scoreColor : 'text-muted-c')}>
+                          {score}
+                          <span className="text-[9px] font-medium opacity-60 ml-0.5">
+                            {filter === 'overall' ? 'pts' : '%'}
+                          </span>
+                        </div>
+                        {filter !== 'overall' && (
+                          <div className="text-[9px] text-muted-c">Overall: {entry.overall}pts</div>
+                        )}
+                      </div>
+                    </motion.div>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
+          {teamGroups.length === 0 && (
+            <div className="card rounded-2xl py-12 text-center text-muted-c text-sm">No designers found.</div>
+          )}
         </div>
 
         {/* Score legend */}
