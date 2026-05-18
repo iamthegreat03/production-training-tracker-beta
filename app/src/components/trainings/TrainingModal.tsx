@@ -376,11 +376,11 @@ export default function TrainingModal({ training, onClose, onSaved }: Props) {
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   <div className="space-y-1.5 min-w-0">
                     <label className="text-xs font-semibold uppercase tracking-wider text-muted-c">Start Date</label>
-                    <input type="date" className="input w-full max-w-full min-w-0 appearance-none" value={startDate} onChange={e => setStartDate(e.target.value)} />
+                    <input type="date" className="input w-full max-w-full min-w-0 appearance-none h-10" value={startDate} onChange={e => setStartDate(e.target.value)} />
                   </div>
                   <div className="space-y-1.5 min-w-0">
                     <label className="text-xs font-semibold uppercase tracking-wider text-muted-c">Target Date</label>
-                    <input type="date" className="input w-full max-w-full min-w-0 appearance-none" value={targetDate} onChange={e => setTargetDate(e.target.value)} />
+                    <input type="date" className="input w-full max-w-full min-w-0 appearance-none h-10" value={targetDate} onChange={e => setTargetDate(e.target.value)} />
                   </div>
                   <div className="space-y-1.5 min-w-0 col-span-2 sm:col-span-1">
                     <label className="text-xs font-semibold uppercase tracking-wider text-muted-c">Status</label>
