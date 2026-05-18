@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Mail, Lock, Zap, Eye, EyeOff, UserPlus, ArrowLeft, CheckCircle } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, UserPlus, ArrowLeft, CheckCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 
@@ -79,12 +79,10 @@ export default function Login() {
       >
         {/* Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-orange-gradient glow-orange-md mb-4 shadow-orange-lg">
-            <Zap className="w-7 h-7 text-white fill-white" />
-          </div>
-          <h1 className="font-display font-bold text-2xl text-primary">PT Tracker</h1>
+          <img src="/rs-logo.png" alt="Rockstar" className="w-16 h-16 rounded-full mx-auto mb-4 shadow-orange-lg" />
+          <h1 className="font-display font-bold text-2xl text-primary">Rockstar Training Tracker</h1>
           <p className="text-sm mt-1" style={{ color: 'rgb(var(--text-secondary))' }}>
-            Production Training Command Center
+            RWDS Design Team Command Center
           </p>
         </div>
 

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Users, BookOpen, ClipboardCheck,
   UserCog, Shield, Star, Map, History, Trophy, Library, Building2,
-  X, LogOut, Sun, Moon, Zap, ChevronRight, Settings, MoreHorizontal,
+  X, LogOut, Sun, Moon, ChevronRight, Settings, MoreHorizontal,
 } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
 import { cn, initials } from '@/lib/utils'
@@ -117,10 +117,8 @@ export default function AppShell({ children }: AppShellProps) {
         <header className="md:hidden flex items-center justify-between px-4 py-3 border-b shrink-0 mobile-bar"
           style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
           <div className="flex items-center gap-1.5">
-            <div className="w-6 h-6 rounded-lg bg-orange-gradient flex items-center justify-center">
-              <Zap className="w-3.5 h-3.5 text-white fill-white" />
-            </div>
-            <span className="font-display font-bold text-sm text-primary">PT Tracker</span>
+            <img src="/rs-logo.png" alt="RS" className="w-7 h-7 rounded-full shrink-0" />
+            <span className="font-display font-bold text-sm text-primary">Rockstar Tracker</span>
           </div>
           <div className="flex items-center gap-1">
             <button onClick={toggleDark} className="p-1.5 rounded-lg btn-ghost">
@@ -152,7 +150,7 @@ export default function AppShell({ children }: AppShellProps) {
         </main>
 
         {/* Bottom nav (mobile) */}
-        <nav className="md:hidden flex border-t shrink-0 mobile-bar"
+        <nav className="md:hidden flex border-t shrink-0 mobile-bar px-2"
           style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
           {displayedNavTabs.map(tab => {
             const Icon = tab.icon
@@ -267,12 +265,10 @@ function SidebarContent({
       <div className="flex items-center justify-between px-4 py-4 border-b"
         style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-orange-gradient flex items-center justify-center glow-orange-sm">
-            <Zap className="w-4 h-4 text-white fill-white" />
-          </div>
+          <img src="/rs-logo.png" alt="RS" className="w-8 h-8 rounded-full shrink-0" />
           <div>
-            <div className="font-display font-bold text-sm text-primary leading-none">PT Tracker</div>
-            <div className="text-[10px] text-muted-c mt-0.5">Command Center</div>
+            <div className="font-display font-bold text-sm text-primary leading-none">Rockstar</div>
+            <div className="text-[10px] text-muted-c mt-0.5">Training Tracker</div>
           </div>
         </div>
         {onClose && (

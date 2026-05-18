@@ -4,6 +4,14 @@ All notable changes to this project are documented here.
 
 ---
 
+## [v3.23] — 2026-05-18
+
+### Features
+- **Rebranded to Rockstar Training Tracker** — replaced "PT Tracker" name and Zap icon with the official RS circular logo (`rs-logo.png`) throughout: Login screen, mobile top bar, sidebar, browser tab title, PWA manifest name/short_name, and apple-mobile-web-app-title.
+- **Bottom nav edge padding** — added `px-2` to the nav container so the first and last tab labels no longer touch the screen edges.
+
+---
+
 ## [v3.22] — 2026-05-18
 
 ### Features

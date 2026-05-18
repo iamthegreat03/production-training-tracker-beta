@@ -10,9 +10,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
       manifest: {
-        name: 'PT Training Tracker',
-        short_name: 'PT Tracker',
-        description: 'Production Training Tracker for RWDS Design Team',
+        name: 'Rockstar Training Tracker',
+        short_name: 'RS Tracker',
+        description: 'Rockstar Training Tracker — RWDS Design Team',
         theme_color: '#f97316',
         background_color: '#060612',
         display: 'standalone',
