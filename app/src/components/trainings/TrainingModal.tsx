@@ -373,16 +373,16 @@ export default function TrainingModal({ training, onClose, onSaved }: Props) {
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="space-y-1.5">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  <div className="space-y-1.5 min-w-0">
                     <label className="text-xs font-semibold uppercase tracking-wider text-muted-c">Start Date</label>
-                    <input type="date" className="input" value={startDate} onChange={e => setStartDate(e.target.value)} />
+                    <input type="date" className="input w-full" value={startDate} onChange={e => setStartDate(e.target.value)} />
                   </div>
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 min-w-0">
                     <label className="text-xs font-semibold uppercase tracking-wider text-muted-c">Target Date</label>
-                    <input type="date" className="input" value={targetDate} onChange={e => setTargetDate(e.target.value)} />
+                    <input type="date" className="input w-full" value={targetDate} onChange={e => setTargetDate(e.target.value)} />
                   </div>
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 min-w-0 col-span-2 sm:col-span-1">
                     <label className="text-xs font-semibold uppercase tracking-wider text-muted-c">Status</label>
                     <select className="input" value={status} onChange={e => setStatus(e.target.value as TrainingStatus)}>
                       {STATUSES.map(s => <option key={s} value={s}>{s.toUpperCase()}</option>)}
