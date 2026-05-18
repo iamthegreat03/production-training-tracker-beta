@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Users, BookOpen, ClipboardCheck,
   UserCog, Shield, Star, Map, History, Trophy, Library, Building2,
-  X, LogOut, Sun, Moon, Zap, ChevronRight, Settings,
+  X, LogOut, Sun, Moon, Zap, ChevronRight, Settings, MoreHorizontal,
 } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
 import { cn, initials } from '@/lib/utils'
@@ -54,11 +54,20 @@ export default function AppShell({ children }: AppShellProps) {
   const [blur, setBlur] = useGlassBlur()
   const [bgOpacity, setBgOpacity] = useBgOpacity()
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [moreOpen, setMoreOpen] = useState(false)
 
   useEffect(() => { applyStoredGlassBlur(); applyStoredBgOpacity() }, [])
 
   const tabs = state.role === 'designer' ? DESIGNER_TABS : STAFF_TABS
   const visibleTabs = tabs.filter(t => !tabHidden(t.id))
+
+  const PRIMARY_COUNT = 4
+  const hasNavOverflow = visibleTabs.length > PRIMARY_COUNT
+  const overflowNavTabs = hasNavOverflow ? visibleTabs.slice(PRIMARY_COUNT) : []
+  const activeInOverflow = hasNavOverflow && overflowNavTabs.some(t => t.id === state.page)
+  const displayedNavTabs = activeInOverflow
+    ? [...visibleTabs.slice(0, PRIMARY_COUNT - 1), visibleTabs.find(t => t.id === state.page)!]
+    : visibleTabs.slice(0, PRIMARY_COUNT)
 
   function navigate(page: string) {
     dispatch({ type: 'SET_PAGE', payload: page })
@@ -105,8 +114,8 @@ export default function AppShell({ children }: AppShellProps) {
       {/* ── Main content ── */}
       <div className="flex flex-col flex-1 min-w-0">
         {/* Top bar (mobile) */}
-        <header className="md:hidden flex items-center justify-between px-4 py-3 border-b shrink-0"
-          style={{ borderColor: 'rgb(var(--border))', background: 'rgb(var(--surface))' }}>
+        <header className="md:hidden flex items-center justify-between px-4 py-3 border-b shrink-0 mobile-bar"
+          style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
           <div className="flex items-center gap-1.5">
             <div className="w-6 h-6 rounded-lg bg-orange-gradient flex items-center justify-center">
               <Zap className="w-3.5 h-3.5 text-white fill-white" />
@@ -143,25 +152,37 @@ export default function AppShell({ children }: AppShellProps) {
         </main>
 
         {/* Bottom nav (mobile) */}
-        <nav className="md:hidden flex border-t shrink-0 overflow-x-auto no-scrollbar"
-          style={{ borderColor: 'rgb(var(--border))', background: 'rgb(var(--surface))' }}>
-          {visibleTabs.map(tab => {
+        <nav className="md:hidden flex border-t shrink-0 mobile-bar"
+          style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+          {displayedNavTabs.map(tab => {
             const Icon = tab.icon
             const active = state.page === tab.id
             return (
               <button
                 key={tab.id}
-                onClick={() => navigate(tab.id)}
+                onClick={() => { navigate(tab.id); setMoreOpen(false) }}
                 className={cn(
-                  'min-w-[60px] shrink-0 flex flex-col items-center gap-0.5 py-2.5 px-2 text-xs font-medium transition-colors',
+                  'flex-1 flex flex-col items-center gap-0.5 py-2.5 px-1 transition-colors',
                   active ? 'text-orange-500' : 'text-muted-c',
                 )}
               >
-                <Icon className={cn('w-5 h-5', active && 'text-orange-500')} />
-                <span className="text-[10px]">{tab.label}</span>
+                <Icon className="w-5 h-5" />
+                <span className="text-[8px] font-medium whitespace-nowrap">{tab.label}</span>
               </button>
             )
           })}
+          {hasNavOverflow && (
+            <button
+              onClick={() => setMoreOpen(v => !v)}
+              className={cn(
+                'flex-1 flex flex-col items-center gap-0.5 py-2.5 px-1 transition-colors',
+                (moreOpen || activeInOverflow) ? 'text-orange-500' : 'text-muted-c',
+              )}
+            >
+              <MoreHorizontal className="w-5 h-5" />
+              <span className="text-[8px] font-medium">More</span>
+            </button>
+          )}
         </nav>
       </div>
 
@@ -173,6 +194,53 @@ export default function AppShell({ children }: AppShellProps) {
         bgOpacity={bgOpacity}
         setBgOpacity={setBgOpacity}
       />
+
+      {/* More drawer (mobile) */}
+      <AnimatePresence>
+        {moreOpen && (
+          <>
+            <motion.div
+              key="more-bd"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              transition={{ duration: 0.18 }}
+              className="md:hidden fixed inset-0 z-40 bg-black/50"
+              onClick={() => setMoreOpen(false)}
+            />
+            <motion.div
+              key="more-sheet"
+              initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 320, mass: 0.8 }}
+              className="md:hidden fixed bottom-0 left-0 right-0 z-50 mobile-bar rounded-t-2xl border-t"
+              style={{ borderColor: 'rgba(255,255,255,0.06)' }}
+            >
+              <div className="px-4 pt-3 pb-8">
+                <div className="w-8 h-1 rounded-full bg-border mx-auto mb-4" />
+                <div className="grid grid-cols-4 gap-2">
+                  {visibleTabs.map(tab => {
+                    const Icon = tab.icon
+                    const active = state.page === tab.id
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => { navigate(tab.id); setMoreOpen(false) }}
+                        className={cn(
+                          'flex flex-col items-center gap-1.5 py-3 rounded-xl border transition-all',
+                          active
+                            ? 'border-orange-500/30 bg-orange-500/10 text-orange-500'
+                            : 'border-border bg-surface-2 text-muted-c',
+                        )}
+                      >
+                        <Icon className="w-5 h-5" />
+                        <span className="text-[9px] font-semibold leading-tight text-center">{tab.label}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

@@ -244,4 +244,4 @@ Used for all stat displays across Dashboard, Attendance, SkillSet, DesignerHome,
 
 ## Current Version
 
-**v3.21** — see `CHANGELOG.md` for full history.
+**v3.22** — see `CHANGELOG.md` for full history.

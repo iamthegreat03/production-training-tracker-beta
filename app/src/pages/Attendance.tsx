@@ -378,15 +378,15 @@ export default function AttendancePage() {
   const showSessionSelector = layout === 'cards' || layout === 'roster'
 
   return (
-    <div className="p-4 md:p-6 space-y-4 max-w-7xl mx-auto h-full flex flex-col">
-      {/* Header */}
-      <div className="page-header shrink-0">
+    <div className="p-2 md:p-6 space-y-2 md:space-y-4 max-w-7xl mx-auto h-full flex flex-col">
+      {/* Header — hidden on mobile to save vertical space */}
+      <div className="page-header shrink-0 hidden md:block">
         <h1 className="page-title font-display">Attendance</h1>
         <p className="page-subtitle">Track participation for active programs</p>
       </div>
 
       {/* Training chips + layout toggle */}
-      <div className="flex items-center gap-3 shrink-0">
+      <div className="flex items-center gap-2 shrink-0">
         <div className="flex-1 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
           {activeTrainings.length === 0 && <p className="text-sm text-muted-c">No active trainings.</p>}
           {activeTrainings.map(t => (
@@ -394,7 +394,7 @@ export default function AttendancePage() {
               key={t.id}
               onClick={() => { setSelTId(t.id); setSelSId(null) }}
               className={cn(
-                'chip h-10 px-4 whitespace-nowrap gap-2 flex-shrink-0',
+                'chip h-8 md:h-10 px-3 md:px-4 whitespace-nowrap gap-2 flex-shrink-0',
                 selTId === t.id && 'active border-orange-500/50 bg-orange-500/10'
               )}
             >
@@ -425,7 +425,7 @@ export default function AttendancePage() {
       </div>
 
       {selTId ? (
-        <div className="flex-1 flex flex-col min-h-0 space-y-4">
+        <div className="flex-1 flex flex-col min-h-0 space-y-2 md:space-y-4">
 
           {/* Session selector (cards + roster only) */}
           {showSessionSelector && (
@@ -446,7 +446,7 @@ export default function AttendancePage() {
                       key={s.id}
                       onClick={() => { if (dragState.current.dragged) return; setSelSId(s.id) }}
                       className={cn(
-                        'flex flex-col items-center justify-center min-w-[60px] h-14 rounded-xl border transition-all',
+                        'flex flex-col items-center justify-center min-w-[44px] md:min-w-[60px] h-10 md:h-14 rounded-xl border transition-all',
                         selSId === s.id
                           ? 'bg-orange-gradient text-white border-orange-500 shadow-orange-sm'
                           : future
@@ -456,17 +456,17 @@ export default function AttendancePage() {
                     >
                       {future
                         ? <Lock className="w-2.5 h-2.5 opacity-60 mb-0.5" />
-                        : <span className="text-[9px] font-bold uppercase tracking-tighter opacity-80">{s.day_of_week?.slice(0, 3)}</span>
+                        : <span className="text-[8px] md:text-[9px] font-bold uppercase tracking-tighter opacity-80">{s.day_of_week?.slice(0, 3)}</span>
                       }
-                      <span className="text-sm font-bold leading-tight">{fmtDs(s.session_date).split(' ')[1]}</span>
-                      <span className="text-[8px] opacity-60">{fmtDs(s.session_date).split(' ')[0]}</span>
+                      <span className="text-xs md:text-sm font-bold leading-tight">{fmtDs(s.session_date).split(' ')[1]}</span>
+                      <span className="text-[7px] md:text-[8px] opacity-60">{fmtDs(s.session_date).split(' ')[0]}</span>
                     </button>
                   )
                 })}
               </div>
               <button
                 onClick={() => setShowAddSession(true)}
-                className="w-14 h-14 rounded-xl border border-dashed border-border flex items-center justify-center text-muted-c hover:text-orange-500 hover:border-orange-500/40 transition-all shrink-0"
+                className="w-10 h-10 md:w-14 md:h-14 rounded-xl border border-dashed border-border flex items-center justify-center text-muted-c hover:text-orange-500 hover:border-orange-500/40 transition-all shrink-0"
                 title="Add session"
               >
                 <Plus className="w-5 h-5" />
@@ -574,12 +574,14 @@ export default function AttendancePage() {
                 </div>
                 <div className="hidden sm:block h-8 w-px bg-border" />
                 <button onClick={() => markAll('true')}
-                  className="btn-outline h-9 px-3 text-[10px] uppercase tracking-widest font-bold text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/5">
-                  All Present
+                  className="btn-outline h-8 md:h-9 px-2 md:px-3 text-[10px] uppercase tracking-widest font-bold text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/5 flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                  <span className="hidden sm:inline">All Present</span>
                 </button>
                 <button onClick={() => markAll('false')}
-                  className="btn-outline h-9 px-3 text-[10px] uppercase tracking-widest font-bold text-red-400 border-red-500/20 hover:bg-red-500/5">
-                  All Absent
+                  className="btn-outline h-8 md:h-9 px-2 md:px-3 text-[10px] uppercase tracking-widest font-bold text-red-400 border-red-500/20 hover:bg-red-500/5 flex items-center gap-1">
+                  <XCircle className="w-3.5 h-3.5 shrink-0" />
+                  <span className="hidden sm:inline">All Absent</span>
                 </button>
               </div>
             </div>

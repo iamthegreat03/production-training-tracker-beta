@@ -4,6 +4,19 @@ All notable changes to this project are documented here.
 
 ---
 
+## [v3.22] — 2026-05-18
+
+### Features
+- **Mobile nav "More" drawer** — bottom nav now shows 4 primary tabs + a "More" button. Tapping "More" slides up a full-tab grid sheet. Active tab always appears in the main bar (swaps into the 4th slot if it's in the overflow group).
+
+### Fixes
+- **Mobile header + bottom nav glassmorphism** — both bars now use the new `.mobile-bar` CSS class which applies `backdrop-filter: blur(var(--glass-blur-px))` in dark mode, making them respond to the Settings blur slider.
+- **Attendance card scroll area (mobile)** — reduced outer padding to `p-2`, all spacing to `space-y-2`, hidden page header on mobile, compressed session tiles to `h-10` and training chips to `h-8`. Substantially more cards now visible before scrolling.
+- **Attendance filter bar (mobile)** — "All Present" / "All Absent" buttons show icon-only on mobile so they never wrap to a second line.
+- **Page headings responsive** — `.page-title` is now `text-xl` on mobile / `text-2xl` on desktop; `.page-header` margin reduced on mobile. Applies globally to all pages.
+
+---
+
 ## [v3.21] — 2026-05-18
 
 ### Fixes

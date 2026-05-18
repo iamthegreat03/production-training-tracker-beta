@@ -123,6 +123,16 @@
     border-color: rgba(255, 255, 255, 0.05);
   }
 
+  /* Mobile top/bottom bars — solid in light, glass in dark, responds to settings */
+  .mobile-bar {
+    background: rgb(var(--surface));
+  }
+  .dark .mobile-bar {
+    background: rgba(20, 20, 20, 0.55);
+    backdrop-filter: blur(var(--glass-blur-px));
+    -webkit-backdrop-filter: blur(var(--glass-blur-px));
+  }
+
   /* Strong glass for modal panels */
   .modal-glass {
     background: rgba(250, 250, 250, 0.82);
@@ -381,10 +391,10 @@
 
   /* Page header */
   .page-header {
-    @apply mb-6;
+    @apply mb-2 md:mb-6;
   }
   .page-title {
-    @apply font-display font-bold text-2xl text-primary;
+    @apply font-display font-bold text-xl md:text-2xl text-primary;
   }
   .page-subtitle {
     @apply text-sm mt-0.5;
