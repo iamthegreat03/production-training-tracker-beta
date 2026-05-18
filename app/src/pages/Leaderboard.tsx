@@ -300,23 +300,16 @@ export default function Leaderboard() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 md:px-6 pb-6">
-        <div className="flex flex-col lg:flex-row gap-6 items-start">
+      <div className="flex-1 overflow-y-auto px-4 md:px-6 pb-6 space-y-6">
 
-          {/* Left: Podium */}
-          {top3.length > 0 && (
-            <div className="w-full lg:w-[420px] lg:shrink-0 lg:sticky lg:top-0">
-              {/* Podium layout: 2nd | 1st | 3rd */}
-              <div className="flex items-stretch gap-2">
-                {top3[1] && <PodiumCard entry={top3[1]} meta={RANK_META[1]} index={1} />}
-                {top3[0] && <PodiumCard entry={top3[0]} meta={RANK_META[0]} index={0} />}
-                {top3[2] && <PodiumCard entry={top3[2]} meta={RANK_META[2]} index={2} />}
-              </div>
-            </div>
-          )}
-
-          {/* Right: Rankings + Legend */}
-          <div className="flex-1 min-w-0 space-y-4">
+        {/* Podium */}
+        {top3.length > 0 && (
+          <div className="flex items-stretch gap-2">
+            {top3[1] && <PodiumCard entry={top3[1]} meta={RANK_META[1]} index={1} />}
+            {top3[0] && <PodiumCard entry={top3[0]} meta={RANK_META[0]} index={0} />}
+            {top3[2] && <PodiumCard entry={top3[2]} meta={RANK_META[2]} index={2} />}
+          </div>
+        )}
 
         {/* Search */}
         <div className="relative">
@@ -330,8 +323,8 @@ export default function Leaderboard() {
           <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-c z-10" />
         </div>
 
-        {/* Team Rankings */}
-        <div className="space-y-4">
+        {/* Team Rankings grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {teamGroups.map((team, teamIdx) => (
             <div key={team.name} className="card rounded-2xl overflow-hidden">
               {/* Team header */}
@@ -439,8 +432,6 @@ export default function Leaderboard() {
             ))}
           </div>
         </div>
-          </div>{/* end right column */}
-        </div>{/* end horizontal flex */}
       </div>
     </div>
   )
