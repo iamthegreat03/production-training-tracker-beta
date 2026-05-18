@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Shield, UserPlus, Key, Trash2, Pencil,
+  Shield, UserPlus, Trash2, Pencil,
   Search, ShieldCheck,
 } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
@@ -19,6 +19,13 @@ const ROLE_COLORS: Record<UserRole, string> = {
   trainer: 'badge-orange',
   staff: 'badge-blue',
   designer: 'badge-emerald',
+}
+
+const ROLE_AVATAR: Record<UserRole, string> = {
+  admin:    'bg-purple-500',
+  trainer:  'bg-orange-500',
+  staff:    'bg-blue-500',
+  designer: 'bg-emerald-500',
 }
 
 export default function UserManagement() {
@@ -48,21 +55,34 @@ export default function UserManagement() {
       const q = search.toLowerCase()
       list = list.filter(u =>
         u.displayName.toLowerCase().includes(q) ||
-        (u.displayEmail ?? '').toLowerCase().includes(q)
+        (u.displayEmail ?? '').toLowerCase().includes(q) ||
+        u.role.toLowerCase().includes(q)
       )
     }
     return list
   }, [enriched, search, roleFilter])
 
+  const roleCounts = useMemo(() => {
+    const counts: Record<string, number> = { ALL: enriched.length }
+    for (const u of enriched) counts[u.role] = (counts[u.role] ?? 0) + 1
+    return counts
+  }, [enriched])
+
   async function handleDelete() {
     if (!deleteTarget) return
     setSaving(true)
-    const { error } = await supabase.from('user_roles').delete().eq('id', deleteTarget.id)
-    if (error) toast.error(error.message)
-    else toast.success('User access removed')
-    setDeleteTarget(null)
-    await loadAll()
-    setSaving(false)
+    try {
+      const { error } = await supabase.from('user_roles').delete().eq('id', deleteTarget.id)
+      if (error) {
+        toast.error(error.message)
+      } else {
+        toast.success('User access removed')
+        setDeleteTarget(null)
+        await loadAll()
+      }
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -87,13 +107,16 @@ export default function UserManagement() {
             key={r}
             onClick={() => setRoleFilter(r)}
             className={cn(
-              'px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all',
+              'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all',
               roleFilter === r
                 ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20'
                 : 'bg-surface-2 text-muted-c hover:text-primary border border-border'
             )}
           >
             {r}
+            <span className={cn('font-black', roleFilter === r ? 'opacity-70' : 'opacity-40')}>
+              {roleCounts[r] ?? 0}
+            </span>
           </button>
         ))}
       </div>
@@ -111,7 +134,9 @@ export default function UserManagement() {
             />
           </div>
           <div className="text-[10px] font-bold text-muted-c uppercase tracking-widest hidden sm:block whitespace-nowrap">
-            {users.length} Active Accounts
+            {filtered.length === users.length
+              ? `${users.length} Users`
+              : `${filtered.length} of ${users.length} Users`}
           </div>
         </div>
 
@@ -129,8 +154,14 @@ export default function UserManagement() {
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-12 text-muted-c italic text-sm">
-                    No users found.
+                  <td colSpan={5}>
+                    <div className="flex flex-col items-center gap-2 py-12">
+                      <Shield className="w-8 h-8 text-muted-c opacity-30" />
+                      <p className="text-sm font-medium text-muted-c">No users found</p>
+                      {(search || roleFilter !== 'ALL') && (
+                        <p className="text-xs text-muted-c">Try clearing the search or filter</p>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ) : (
@@ -149,7 +180,7 @@ export default function UserManagement() {
                     >
                       <td>
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-surface-2 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">
+                          <div className={cn('w-9 h-9 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0', ROLE_AVATAR[u.role as UserRole] ?? 'bg-surface-2')}>
                             {initials(u.displayName)}
                           </div>
                           <div className="font-medium text-primary">{u.displayName}</div>
@@ -163,14 +194,14 @@ export default function UserManagement() {
                       </td>
                       <td className="hidden lg:table-cell">
                         <div className="flex items-center gap-1.5">
-                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                          <ShieldCheck className={cn('w-3.5 h-3.5', u.role === 'admin' ? 'text-purple-400' : 'text-emerald-400')} />
                           <span className="text-[10px] font-bold text-muted-c uppercase tracking-widest">
-                            {permCount} Capabilities
+                            {u.role === 'admin' ? 'Full Access' : `${permCount} Capabilities`}
                           </span>
                         </div>
                       </td>
                       <td>
-                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center justify-end gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                           {can('canManageUsers') && (
                             <>
                               <button
@@ -196,20 +227,6 @@ export default function UserManagement() {
               )}
             </tbody>
           </table>
-        </div>
-      </div>
-
-      {/* Info */}
-      <div className="p-4 rounded-2xl bg-surface-2 border border-border flex items-start gap-4 max-w-2xl">
-        <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center shrink-0">
-          <Key className="w-5 h-5 text-orange-500" />
-        </div>
-        <div className="space-y-1">
-          <h4 className="text-sm font-bold text-primary">Granular Access Control</h4>
-          <p className="text-xs text-muted-c leading-relaxed">
-            Permissions are managed per role. Admins have full access, Trainers manage sessions and skill sets,
-            Staff manage designers and track attendance. Users must first register via Supabase Auth.
-          </p>
         </div>
       </div>
 
