@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import {
-  Zap, Calendar, Star, Trophy, Clock,
+  Zap, Calendar, Trophy, Clock,
   ArrowRight, Flame, Target, MessageSquare
 } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
@@ -170,20 +170,29 @@ export default function DesignerHome() {
                   <p className="text-sm text-muted-c">Complete trainings to earn badges.</p>
                 </div>
               ) : (
-                mySkills.slice(0, 6).map(s => (
-                  <div key={s.id} className="card p-3 flex flex-col items-center gap-2 w-24 text-center">
-                    <div className={cn(
-                      'w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg',
-                      s.level === 'Expert' ? 'bg-orange-gradient' : s.level === 'Advanced' ? 'bg-blue-600' : 'bg-slate-600'
-                    )}>
-                      <Star className={cn('w-6 h-6', s.level === 'Expert' ? 'fill-white' : '')} />
+                mySkills.slice(0, 6).map(s => {
+                  const badgeSrc = s.level === 'Expert' || s.level === 'Completed'
+                    ? '/expert_badge.png'
+                    : s.level === 'Advanced'
+                    ? '/advance_badge.png'
+                    : '/intermidiate_badge.png'
+                  const glow = s.level === 'Expert' || s.level === 'Completed'
+                    ? 'rgba(220,60,30,0.55)'
+                    : s.level === 'Advanced'
+                    ? 'rgba(200,133,74,0.5)'
+                    : 'rgba(100,180,80,0.5)'
+                  return (
+                    <div key={s.id} className="flex flex-col items-center gap-1.5 text-center" style={{ width: 96 }}>
+                      <div style={{ filter: `drop-shadow(0 4px 14px ${glow})` }}>
+                        <img src={badgeSrc} alt={s.level} className="w-20 h-20 object-contain" />
+                      </div>
+                      <div className="space-y-0.5">
+                        <div className="text-[10px] font-bold text-primary truncate w-full">{s.platform}</div>
+                        <div className="text-[8px] font-bold text-muted-c uppercase tracking-tighter">{s.level}</div>
+                      </div>
                     </div>
-                    <div className="space-y-0.5">
-                      <div className="text-[10px] font-bold text-primary truncate w-full">{s.platform}</div>
-                      <div className="text-[8px] font-bold text-muted-c uppercase tracking-tighter">{s.level}</div>
-                    </div>
-                  </div>
-                ))
+                  )
+                })
               )}
             </div>
           </div>
