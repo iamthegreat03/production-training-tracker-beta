@@ -14,7 +14,7 @@ const DEFAULT_PERMS: Record<string, boolean> = {
   canAddDesigners: false, canDeleteDesigners: false,
   canAddEditTrainings: false, canDeleteTrainings: false,
   canMarkAttendance: false, canAddSessions: false,
-  canManageUsers: false,
+  canEditSkills: false, canManageUsers: false,
   hideDesigners: false, hideTrainings: false,
   hideAttendance: false, hideTeams: false,
   hideSkillSet: false, hideLeaderboard: false,

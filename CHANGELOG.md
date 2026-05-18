@@ -4,6 +4,13 @@ All notable changes to this project are documented here.
 
 ---
 
+## [v3.27] — 2026-05-18
+
+### Features
+- **User permissions — Edit Skills capability** — added dedicated `canEditSkills` toggle. Controls ability to update skill levels in the Skill Set matrix, independent of `canAddEditTrainings`.
+
+---
+
 ## [v3.26] — 2026-05-18
 
 ### Features

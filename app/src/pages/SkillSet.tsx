@@ -534,7 +534,7 @@ export default function SkillSet() {
                     <th key={p} className="p-4 border-b border-border min-w-[120px]">
                       <div className="text-[10px] font-bold text-muted-c uppercase tracking-widest flex items-center justify-between group">
                         {p}
-                        {!BASE_PLATFORMS.includes(p) && can('canAddEditTrainings') && (
+                        {!BASE_PLATFORMS.includes(p) && can('canEditSkills') || can('canAddEditTrainings') && (
                           <button
                             onClick={() => setPlatformToDelete(p)}
                             disabled={saving}
@@ -569,7 +569,7 @@ export default function SkillSet() {
                         <td key={p} className="p-2 border-b border-border-subtle">
                           <button
                             onClick={() => setEditTarget({ designer: d, platform: p })}
-                            disabled={!can('canAddEditTrainings')}
+                            disabled={!can('canEditSkills') || can('canAddEditTrainings')}
                             className={cn(
                               'w-full py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all',
                               level === 'Expert'       ? 'bg-orange-gradient text-white shadow-orange-sm' :

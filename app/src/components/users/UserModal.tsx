@@ -31,6 +31,7 @@ const PERM_META: PermMeta[] = [
   { key: 'canDeleteTrainings', label: 'Delete Trainings',      desc: 'Permanently remove training records',          group: 'capabilities' },
   { key: 'canMarkAttendance',  label: 'Mark Attendance',       desc: 'Record attendance for training sessions',       group: 'capabilities' },
   { key: 'canAddSessions',     label: 'Add Sessions',          desc: 'Create new sessions within a training',        group: 'capabilities' },
+  { key: 'canEditSkills',      label: 'Edit Skills',           desc: 'Update skill levels in the Skill Set matrix',  group: 'capabilities' },
   { key: 'canManageUsers',     label: 'Manage Users',          desc: 'Add, edit, and remove user accounts',          group: 'capabilities' },
   { key: 'hideDesigners',   label: 'Hide Designers Tab',   desc: 'Remove Designers from navigation',    group: 'visibility' },
   { key: 'hideTrainings',   label: 'Hide Trainings Tab',   desc: 'Remove Trainings from navigation',    group: 'visibility' },
