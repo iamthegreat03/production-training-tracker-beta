@@ -226,6 +226,21 @@ export default function Leaderboard() {
 
   const top3 = sorted.slice(0, 3)
 
+  const scoreKey: keyof DesignerScore = filter === 'overall' ? 'overall'
+    : filter === 'attendance' ? 'attendance'
+    : filter === 'skills' ? 'skills'
+    : 'trainings'
+
+  const scoreColor = filter === 'attendance' ? 'text-emerald-400'
+    : filter === 'skills' ? 'text-blue-400'
+    : filter === 'trainings' ? 'text-purple-400'
+    : 'text-orange-400'
+
+  const barColor = filter === 'attendance' ? 'bg-emerald-500'
+    : filter === 'skills' ? 'bg-blue-500'
+    : filter === 'trainings' ? 'bg-purple-500'
+    : 'bg-orange-500'
+
   const teamGroups = useMemo(() => {
     const grouped = new Map<string, DesignerScore[]>()
     for (const s of sorted) {
@@ -241,21 +256,6 @@ export default function Leaderboard() {
       }))
       .sort((a, b) => b.avg - a.avg)
   }, [sorted, scoreKey])
-
-  const scoreKey: keyof DesignerScore = filter === 'overall' ? 'overall'
-    : filter === 'attendance' ? 'attendance'
-    : filter === 'skills' ? 'skills'
-    : 'trainings'
-
-  const scoreColor = filter === 'attendance' ? 'text-emerald-400'
-    : filter === 'skills' ? 'text-blue-400'
-    : filter === 'trainings' ? 'text-purple-400'
-    : 'text-orange-400'
-
-  const barColor = filter === 'attendance' ? 'bg-emerald-500'
-    : filter === 'skills' ? 'bg-blue-500'
-    : filter === 'trainings' ? 'bg-purple-500'
-    : 'bg-orange-500'
 
   return (
     <div className="flex flex-col h-full">
