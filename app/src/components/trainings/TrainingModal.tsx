@@ -376,11 +376,11 @@ export default function TrainingModal({ training, onClose, onSaved }: Props) {
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   <div className="space-y-1.5 min-w-0">
                     <label className="text-xs font-semibold uppercase tracking-wider text-muted-c">Start Date</label>
-                    <input type="date" className="input w-full max-w-full min-w-0" value={startDate} onChange={e => setStartDate(e.target.value)} />
+                    <input type="date" className="input w-full max-w-full min-w-0 appearance-none" value={startDate} onChange={e => setStartDate(e.target.value)} />
                   </div>
                   <div className="space-y-1.5 min-w-0">
                     <label className="text-xs font-semibold uppercase tracking-wider text-muted-c">Target Date</label>
-                    <input type="date" className="input w-full max-w-full min-w-0" value={targetDate} onChange={e => setTargetDate(e.target.value)} />
+                    <input type="date" className="input w-full max-w-full min-w-0 appearance-none" value={targetDate} onChange={e => setTargetDate(e.target.value)} />
                   </div>
                   <div className="space-y-1.5 min-w-0 col-span-2 sm:col-span-1">
                     <label className="text-xs font-semibold uppercase tracking-wider text-muted-c">Status</label>
@@ -411,7 +411,7 @@ export default function TrainingModal({ training, onClose, onSaved }: Props) {
                   ) : (
                     <div className="space-y-3">
                       <div className="flex gap-2">
-                        <input type="date" className="input h-9" value={newDiscDate} onChange={e => setNewDiscDate(e.target.value)} />
+                        <input type="date" className="input h-9 min-w-0 appearance-none" value={newDiscDate} onChange={e => setNewDiscDate(e.target.value)} />
                         <button onClick={addDiscDate} className="btn-outline h-9 px-4 shrink-0"><Plus className="w-4 h-4" /></button>
                       </div>
                       <div className="flex flex-wrap gap-2">
