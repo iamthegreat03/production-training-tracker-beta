@@ -4,6 +4,13 @@ All notable changes to this project are documented here.
 
 ---
 
+## [v3.25] — 2026-05-18
+
+### Changes
+- **PWA homescreen icon** — replaced solid orange icon with dark background + RS logo centered. Generates `pwa-192x192.png`, `pwa-512x512.png`, and `apple-touch-icon.png` via `scripts/gen-icons.mjs`. Split manifest `purpose` into separate `any` and `maskable` entries.
+
+---
+
 ## [v3.24] — 2026-05-18
 
 ### Changes
