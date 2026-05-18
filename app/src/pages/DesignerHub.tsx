@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  BookOpen, Layers, Sparkles, Code2, Settings2, X, Plus, Library,
+  BookOpen, Layers, Sparkles, Code2, Settings2, X, Plus, Library, Search,
 } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
 import { supabase } from '@/lib/supabase'
@@ -33,6 +33,7 @@ export default function DesignerHub() {
   const { hubResources } = state
 
   const [activeFilter, setActiveFilter] = useState<CategoryFilter>('all')
+  const [search, setSearch] = useState('')
   const [editMode, setEditMode] = useState(false)
   const [modal, setModal] = useState<ModalState>({ open: false })
   const [deleteTarget, setDeleteTarget] = useState<HubResource | null>(null)
@@ -40,15 +41,25 @@ export default function DesignerHub() {
 
   const canManage = can('canAddEditTrainings')
 
+  const filteredResources = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    if (!q) return hubResources
+    return hubResources.filter(r =>
+      r.title.toLowerCase().includes(q) ||
+      r.description?.toLowerCase().includes(q) ||
+      r.tags?.some(t => t.toLowerCase().includes(q))
+    )
+  }, [hubResources, search])
+
   const sections = useMemo(() => {
     const cats: HubCategory[] = ['learn', 'assets', 'inspiration', 'code']
     if (activeFilter !== 'all') {
-      return [{ id: activeFilter as HubCategory, resources: hubResources.filter(r => r.category === activeFilter) }]
+      return [{ id: activeFilter as HubCategory, resources: filteredResources.filter(r => r.category === activeFilter) }]
     }
     return cats
-      .map(cat => ({ id: cat, resources: hubResources.filter(r => r.category === cat) }))
+      .map(cat => ({ id: cat, resources: filteredResources.filter(r => r.category === cat) }))
       .filter(s => s.resources.length > 0 || editMode)
-  }, [hubResources, activeFilter, editMode])
+  }, [filteredResources, activeFilter, editMode])
 
   function openCreate(category: HubCategory) {
     setModal({ open: true, mode: 'create', category })
@@ -108,7 +119,7 @@ export default function DesignerHub() {
         {FILTER_TABS.map(tab => {
           const Icon = tab.icon
           const active = activeFilter === tab.id
-          const count = tab.id === 'all' ? hubResources.length : hubResources.filter(r => r.category === tab.id).length
+          const count = tab.id === 'all' ? filteredResources.length : filteredResources.filter(r => r.category === tab.id).length
           const catMeta = tab.id !== 'all' ? CATEGORY_META[tab.id] : null
           return (
             <button
@@ -140,6 +151,26 @@ export default function DesignerHub() {
         )}
       </div>
 
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-c z-10" />
+        <input
+          type="text"
+          placeholder="Search by title, description, or tag…"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="input w-full pl-9 pr-9 text-sm"
+        />
+        {search && (
+          <button
+            onClick={() => setSearch('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded text-muted-c hover:text-primary transition-colors"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+
       {/* Empty state */}
       {isEmpty && !editMode ? (
         <div className="flex flex-col items-center justify-center py-24 text-center card border-dashed rounded-2xl">
@@ -158,6 +189,12 @@ export default function DesignerHub() {
             </button>
           )}
         </div>
+      ) : sections.length === 0 && search ? (
+        <div className="card rounded-2xl py-14 text-center border-dashed">
+          <Search className="w-8 h-8 mx-auto mb-3 text-muted-c opacity-40" />
+          <p className="text-sm font-bold text-primary">No results for "{search}"</p>
+          <p className="text-xs text-muted-c mt-1">Try a different keyword or clear the search.</p>
+        </div>
       ) : (
         <div className="space-y-10">
           {sections.map(section => {
@@ -168,13 +205,19 @@ export default function DesignerHub() {
             return (
               <div key={section.id} className="space-y-4">
                 {showSectionHeader && (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className={cn('w-7 h-7 rounded-lg flex items-center justify-center', catMeta.bg)}>
-                        <CatIcon className={cn('w-3.5 h-3.5', catMeta.color)} />
-                      </div>
-                      <h2 className="text-sm font-bold text-primary uppercase tracking-widest">{catMeta.label}</h2>
-                      <span className="text-[10px] font-bold text-muted-c">{section.resources.length}</span>
+                  <div
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl"
+                    style={{
+                      background: `linear-gradient(to right, rgba(${catMeta.glowRgb},0.12) 0%, transparent 65%)`,
+                      borderLeft: `3px solid rgba(${catMeta.glowRgb},0.7)`,
+                    }}
+                  >
+                    <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0', catMeta.bg)}>
+                      <CatIcon className={cn('w-4 h-4', catMeta.color)} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h2 className={cn('text-sm font-black uppercase tracking-widest', catMeta.color)}>{catMeta.label}</h2>
+                      <p className="text-[10px] text-muted-c">{section.resources.length} resource{section.resources.length !== 1 ? 's' : ''}</p>
                     </div>
                     {editMode && canManage && (
                       <button

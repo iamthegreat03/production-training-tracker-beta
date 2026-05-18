@@ -21,10 +21,23 @@ export function getResourceIcon(name: string | null): LucideIcon {
 export const ICON_OPTIONS = Object.keys(ICON_MAP)
 
 export const CATEGORY_META = {
-  learn:       { label: 'Learn',       color: 'text-blue-400',    bg: 'bg-blue-500/10',    border: 'border-blue-500/20'    },
-  assets:      { label: 'Assets',      color: 'text-purple-400',  bg: 'bg-purple-500/10',  border: 'border-purple-500/20'  },
-  inspiration: { label: 'Inspiration', color: 'text-orange-400',  bg: 'bg-orange-500/10',  border: 'border-orange-500/20'  },
-  code:        { label: 'Code',        color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
+  learn:       { label: 'Learn',       color: 'text-blue-400',    bg: 'bg-blue-500/10',    border: 'border-blue-500/20',    glowRgb: '59,130,246'  },
+  assets:      { label: 'Assets',      color: 'text-purple-400',  bg: 'bg-purple-500/10',  border: 'border-purple-500/20',  glowRgb: '168,85,247'  },
+  inspiration: { label: 'Inspiration', color: 'text-orange-400',  bg: 'bg-orange-500/10',  border: 'border-orange-500/20',  glowRgb: '249,115,22'  },
+  code:        { label: 'Code',        color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', glowRgb: '16,185,129'  },
+}
+
+function isNewResource(createdAt: string | null): boolean {
+  if (!createdAt) return false
+  return Date.now() - new Date(createdAt).getTime() < 7 * 24 * 60 * 60 * 1000
+}
+
+function NewBadge() {
+  return (
+    <span className="px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest bg-orange-500 text-white leading-none">
+      New
+    </span>
+  )
 }
 
 function safeHostname(url: string): string {
@@ -43,6 +56,7 @@ interface ResourceCardProps {
 export default function ResourceCard({ resource, editMode, onClick, onEdit, onDelete }: ResourceCardProps) {
   const [copied, setCopied] = useState(false)
   const meta = CATEGORY_META[resource.category]
+  const isNew = isNewResource(resource.created_at)
 
   function handleCopy(e: React.MouseEvent) {
     e.stopPropagation()
@@ -82,6 +96,7 @@ export default function ResourceCard({ resource, editMode, onClick, onEdit, onDe
             <span className={cn('px-2 py-0.5 rounded-lg text-[9px] font-bold uppercase tracking-widest', meta.bg, meta.color)}>
               {resource.language ?? 'CODE'}
             </span>
+            {isNew && <NewBadge />}
           </div>
           {editMode && <EditControls />}
         </div>
@@ -125,12 +140,13 @@ export default function ResourceCard({ resource, editMode, onClick, onEdit, onDe
         onClick={onClick}
         className="card rounded-2xl overflow-hidden group cursor-pointer hover:border-orange-500/30 hover:shadow-lg transition-all"
       >
-        <div className="aspect-video bg-surface-2 overflow-hidden">
+        <div className="aspect-video bg-surface-2 overflow-hidden relative">
           <img
             src={resource.thumbnail_url}
             alt={resource.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
+          {isNew && <div className="absolute top-2 left-2"><NewBadge /></div>}
         </div>
         <div className="p-3 space-y-1.5">
           <div className="flex items-start justify-between gap-2">
@@ -161,12 +177,13 @@ export default function ResourceCard({ resource, editMode, onClick, onEdit, onDe
         onClick={onClick}
         className="card rounded-2xl overflow-hidden group cursor-pointer hover:border-purple-500/30 hover:shadow-lg transition-all"
       >
-        <div className="h-28 bg-surface-2 overflow-hidden">
+        <div className="h-28 bg-surface-2 overflow-hidden relative">
           <img
             src={resource.thumbnail_url}
             alt={resource.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
+          {isNew && <div className="absolute top-2 left-2"><NewBadge /></div>}
         </div>
         <div className="p-3 space-y-2">
           <div className="flex items-start justify-between gap-2">
@@ -200,8 +217,11 @@ export default function ResourceCard({ resource, editMode, onClick, onEdit, onDe
       )}
     >
       <div className="flex items-start justify-between">
-        <div className={cn('w-9 h-9 rounded-xl flex items-center justify-center shrink-0', meta.bg)}>
-          <Icon className={cn('w-4 h-4', meta.color)} />
+        <div className="flex items-center gap-2">
+          <div className={cn('w-9 h-9 rounded-xl flex items-center justify-center shrink-0', meta.bg)}>
+            <Icon className={cn('w-4 h-4', meta.color)} />
+          </div>
+          {isNew && <NewBadge />}
         </div>
         {editMode && <EditControls />}
       </div>
