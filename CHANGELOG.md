@@ -11,7 +11,9 @@ All notable changes to this project are documented here.
   - **Login page** — "Request Access" link opens an inline form: full name, email, role preference (designer/staff/trainer), optional message. On submit shows a confirmation screen.
   - **User Management — Requests section** — collapsible banner at the top shows all pending requests with name, email, requested role, message, and date. Orange "Review" button per request.
   - **Review modal** — admin confirms the role (pre-filled from request), optionally links to a designer profile, then clicks "Approve & Send Email" or "Reject".
-  - **Edge Function (`approve-access`)** — server-side Deno function: verifies caller is admin/trainer, creates the Supabase auth account, generates a random 12-char password, sends a styled HTML welcome email via Gmail SMTP with login credentials, creates the `user_roles` record, and marks the request as approved.
+  - **Edge Function (`approve-access`)** — server-side Deno function: verifies caller is admin/trainer, creates the Supabase auth account, generates a random 12-char password, sends a styled HTML welcome email via Gmail SMTP with login credentials, creates the `user_roles` record, and marks the request as approved. Always returns HTTP 200 with errors in the JSON body to prevent the Supabase JS client from masking the actual error.
+  - **Auto-create designer profile** — approving a designer request without linking an existing profile automatically creates a new `designers` record (name + email, Tier 3) and links it.
+- **Duplicate request prevention** — partial unique index on `access_requests (lower(email)) WHERE status = 'pending'` prevents the same email from submitting multiple pending requests. Frontend shows a friendly message on duplicate.
 - **DB migration** — `access_requests` table with public INSERT (for unauthenticated requesters) and authenticated SELECT/UPDATE (see `access_request_migration.sql`).
 
 ---
