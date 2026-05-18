@@ -52,10 +52,10 @@ function BadgeCard({ skill, cfg, index }: { skill: DesignerSkill; cfg: LevelCfg;
         <img
           src={cfg.image}
           alt={cfg.label}
-          className="w-24 h-24 object-contain"
+          className="w-36 h-36 object-contain"
         />
       </div>
-      <div className="text-center" style={{ maxWidth: 96 }}>
+      <div className="text-center" style={{ maxWidth: 144 }}>
         <p className="text-xs font-bold text-primary leading-tight truncate">{skill.platform}</p>
         {skill.source && (
           <p className="text-[9px] text-muted-c mt-0.5 uppercase tracking-wider truncate">{skill.source}</p>
