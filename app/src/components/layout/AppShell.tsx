@@ -7,7 +7,7 @@ import {
 } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
 import { cn, initials } from '@/lib/utils'
-import SettingsPanel, { useGlassBlur, applyStoredGlassBlur } from './SettingsPanel'
+import SettingsPanel, { useGlassBlur, applyStoredGlassBlur, useBgOpacity, applyStoredBgOpacity } from './SettingsPanel'
 
 const STAFF_TABS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -51,9 +51,10 @@ export default function AppShell({ children }: AppShellProps) {
   const { state, dispatch, signOut, tabHidden } = useApp()
   const [dark, toggleDark] = useDarkMode()
   const [blur, setBlur] = useGlassBlur()
+  const [bgOpacity, setBgOpacity] = useBgOpacity()
   const [settingsOpen, setSettingsOpen] = useState(false)
 
-  useEffect(() => { applyStoredGlassBlur() }, [])
+  useEffect(() => { applyStoredGlassBlur(); applyStoredBgOpacity() }, [])
 
   const tabs = state.role === 'designer' ? DESIGNER_TABS : STAFF_TABS
   const visibleTabs = tabs.filter(t => !tabHidden(t.id))
@@ -72,15 +73,17 @@ export default function AppShell({ children }: AppShellProps) {
   return (
     <div className="flex h-dvh bg-app relative overflow-hidden">
       {/* ── Global background ── */}
-      <div className="absolute inset-0 dark:bg-grid-dark bg-grid-light pointer-events-none" />
-      <div
-        className="absolute -top-10 -left-10 w-[600px] h-[500px] pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse at 10% 10%, rgba(249,115,22,0.28) 0%, rgba(249,115,22,0.08) 45%, transparent 70%)' }}
-      />
-      <div
-        className="absolute bottom-0 right-0 w-[400px] h-[400px] pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse at 100% 100%, rgba(249,115,22,0.15) 0%, transparent 60%)' }}
-      />
+      <div className="absolute inset-0 pointer-events-none" style={{ opacity: 'var(--bg-opacity, 1)' }}>
+        <div className="absolute inset-0 dark:bg-grid-dark bg-grid-light" />
+        <div
+          className="absolute -top-10 -left-10 w-[600px] h-[500px]"
+          style={{ background: 'radial-gradient(ellipse at 10% 10%, rgba(249,115,22,0.28) 0%, rgba(249,115,22,0.08) 45%, transparent 70%)' }}
+        />
+        <div
+          className="absolute bottom-0 right-0 w-[400px] h-[400px]"
+          style={{ background: 'radial-gradient(ellipse at 100% 100%, rgba(249,115,22,0.15) 0%, transparent 60%)' }}
+        />
+      </div>
 
       {/* ── Sidebar (desktop) ── */}
       <aside className="hidden md:flex flex-col w-60 border-r shrink-0 relative z-10 glass"
@@ -166,6 +169,8 @@ export default function AppShell({ children }: AppShellProps) {
         onClose={() => setSettingsOpen(false)}
         blur={blur}
         setBlur={setBlur}
+        bgOpacity={bgOpacity}
+        setBgOpacity={setBgOpacity}
       />
     </div>
   )

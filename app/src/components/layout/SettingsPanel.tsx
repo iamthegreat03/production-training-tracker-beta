@@ -34,14 +34,46 @@ export function applyStoredGlassBlur() {
   document.documentElement.style.setProperty('--glass-blur', String(v))
 }
 
+const BG_OPACITY_KEY = 'pt-bg-opacity'
+const DEFAULT_BG_OPACITY = 1
+
+const BG_PRESETS = [
+  { label: 'None',    value: 0 },
+  { label: 'Low',     value: 0.3 },
+  { label: 'Mid',     value: 0.6 },
+  { label: 'Full',    value: 1 },
+]
+
+export function useBgOpacity() {
+  const [opacity, setOpacityState] = useState<number>(() => {
+    const s = localStorage.getItem(BG_OPACITY_KEY)
+    return s !== null ? parseFloat(s) : DEFAULT_BG_OPACITY
+  })
+
+  useEffect(() => {
+    document.documentElement.style.setProperty('--bg-opacity', String(opacity))
+    localStorage.setItem(BG_OPACITY_KEY, String(opacity))
+  }, [opacity])
+
+  return [opacity, setOpacityState] as const
+}
+
+export function applyStoredBgOpacity() {
+  const s = localStorage.getItem(BG_OPACITY_KEY)
+  const v = s !== null ? parseFloat(s) : DEFAULT_BG_OPACITY
+  document.documentElement.style.setProperty('--bg-opacity', String(v))
+}
+
 interface Props {
   open: boolean
   onClose: () => void
   blur: number
   setBlur: (v: number) => void
+  bgOpacity: number
+  setBgOpacity: (v: number) => void
 }
 
-export default function SettingsPanel({ open, onClose, blur, setBlur }: Props) {
+export default function SettingsPanel({ open, onClose, blur, setBlur, bgOpacity, setBgOpacity }: Props) {
   return (
     <AnimatePresence>
       {open && (
@@ -109,6 +141,44 @@ export default function SettingsPanel({ open, onClose, blur, setBlur }: Props) {
                     {p.label}
                   </button>
                 ))}
+              </div>
+
+              {/* Divider */}
+              <div className="border-t pt-3 mt-1" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-semibold text-primary">Background Opacity</span>
+                  <span className="text-[10px] font-bold text-orange-400 uppercase tracking-widest">
+                    {Math.round(bgOpacity * 100)}%
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min={0} max={1} step={0.05}
+                  value={bgOpacity}
+                  onChange={e => setBgOpacity(parseFloat(e.target.value))}
+                  className="w-full accent-orange-500 cursor-pointer"
+                  style={{ height: '4px' }}
+                />
+                <div className="flex items-center justify-between text-[9px] text-muted-c font-medium mt-1">
+                  <span>None</span>
+                  <span>Full</span>
+                </div>
+                <div className="flex gap-1.5 pt-2">
+                  {BG_PRESETS.map(p => (
+                    <button
+                      key={p.label}
+                      onClick={() => setBgOpacity(p.value)}
+                      className={cn(
+                        'flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all',
+                        bgOpacity === p.value
+                          ? 'bg-orange-500 text-white shadow-sm shadow-orange-500/30'
+                          : 'bg-surface-2 text-muted-c hover:text-primary border border-border'
+                      )}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </motion.div>
