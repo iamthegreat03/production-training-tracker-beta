@@ -4,6 +4,13 @@ All notable changes to this project are documented here.
 
 ---
 
+## [v3.24] — 2026-05-18
+
+### Changes
+- **Leaderboard** — removed search bar.
+
+---
+
 ## [v3.23] — 2026-05-18
 
 ### Features

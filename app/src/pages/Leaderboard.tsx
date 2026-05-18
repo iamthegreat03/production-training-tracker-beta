@@ -169,7 +169,6 @@ export default function Leaderboard() {
   const { state } = useApp()
   const { designers, sessions, attendance, designerSkills, enrollments, trainings } = state
   const [filter, setFilter] = useState<FilterTab>('overall')
-  const [search, setSearch] = useState('')
 
   const scores = useMemo<DesignerScore[]>(() => {
     return designers.map(d => {
@@ -222,11 +221,7 @@ export default function Leaderboard() {
       .map((s, i) => ({ ...s, rank: i + 1 }))
   }, [scores, filter])
 
-  const sorted = useMemo(() =>
-    sortedAll.filter(s => s.designer.name.toLowerCase().includes(search.toLowerCase())),
-  [sortedAll, search])
-
-  const top3 = sorted.slice(0, 3)
+  const top3 = sortedAll.slice(0, 3)
 
   const scoreKey: keyof DesignerScore = filter === 'overall' ? 'overall'
     : filter === 'attendance' ? 'attendance'
@@ -312,18 +307,6 @@ export default function Leaderboard() {
             {top3[2] && <PodiumCard entry={top3[2]} meta={RANK_META[2]} index={2} />}
           </div>
         )}
-
-        {/* Search */}
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Search designers..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="input w-full pl-9 text-sm"
-          />
-          <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-c z-10" />
-        </div>
 
         {/* Team Rankings grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
