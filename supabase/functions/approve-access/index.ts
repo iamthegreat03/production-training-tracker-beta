@@ -83,11 +83,24 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: authError.message }), { status: 400, headers: { ...CORS, 'Content-Type': 'application/json' } })
   }
 
+  // For designer role with no existing profile selected, auto-create one
+  const assignedRole = role ?? request.requested_role
+  let resolvedDesignerId = designerId ?? null
+
+  if (assignedRole === 'designer' && !resolvedDesignerId) {
+    const { data: newDesigner } = await admin
+      .from('designers')
+      .insert({ name: request.name, email: request.email, rank: 'Tier 3' })
+      .select()
+      .single()
+    if (newDesigner) resolvedDesignerId = newDesigner.id
+  }
+
   // Create user_roles record
   await admin.from('user_roles').insert({
     auth_user_id: authData.user.id,
-    role: role ?? request.requested_role,
-    designer_id: designerId ?? null,
+    role: assignedRole,
+    designer_id: resolvedDesignerId,
     permissions: null,
   })
 
