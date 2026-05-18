@@ -80,7 +80,15 @@ serve(async (req) => {
     email_confirm: true,
   })
   if (authError) {
-    return new Response(JSON.stringify({ error: authError.message }), { status: 400, headers: { ...CORS, 'Content-Type': 'application/json' } })
+    const alreadyExists = authError.message.toLowerCase().includes('already registered')
+      || authError.message.toLowerCase().includes('already exists')
+    return new Response(
+      JSON.stringify({ error: alreadyExists
+        ? `An account for ${request.email} already exists. Use the existing account or delete it in Supabase Auth first.`
+        : authError.message
+      }),
+      { status: 400, headers: { ...CORS, 'Content-Type': 'application/json' } }
+    )
   }
 
   // For designer role with no existing profile selected, auto-create one

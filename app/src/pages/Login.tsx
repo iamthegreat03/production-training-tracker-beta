@@ -51,7 +51,12 @@ export default function Login() {
       message: reqMessage.trim() || null,
     })
     if (err) {
-      setReqError(err.message)
+      // Unique constraint violation = duplicate pending request
+      const isDuplicate = err.code === '23505' || err.message.includes('unique_pending_email')
+      setReqError(isDuplicate
+        ? 'A request for this email is already pending. Please wait for admin approval.'
+        : err.message
+      )
       setReqLoading(false)
     } else {
       setView('sent')
