@@ -50,8 +50,8 @@ export default function UserManagement() {
     const d = u.designer_id ? designers.find(d => d.id === u.designer_id) : null
     return {
       ...u,
-      displayName: d?.name ?? `User ${u.auth_user_id.slice(0, 8)}`,
-      displayEmail: d?.email ?? null,
+      displayName: d?.name ?? u.name ?? `User ${u.auth_user_id.slice(0, 8)}`,
+      displayEmail: d?.email ?? u.email ?? null,
     }
   }), [users, designers])
 

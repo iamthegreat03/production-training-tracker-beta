@@ -116,6 +116,8 @@ export interface UserRoleRecord {
   auth_user_id: string
   role: UserRole
   designer_id: string | null
+  name: string | null
+  email: string | null
   created_at: string | null
   permissions: Record<string, boolean> | null
 }

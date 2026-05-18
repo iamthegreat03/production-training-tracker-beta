@@ -143,6 +143,8 @@ serve(async (req) => {
       auth_user_id: authData.user.id,
       role: assignedRole,
       designer_id: resolvedDesignerId,
+      name: request.name,
+      email: request.email,
       permissions: null,
     })
     if (roleInsertErr) return json({ error: 'Failed to assign role: ' + roleInsertErr.message })

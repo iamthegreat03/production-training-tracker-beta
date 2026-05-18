@@ -4,6 +4,15 @@ All notable changes to this project are documented here.
 
 ---
 
+## [v3.28] — 2026-05-18
+
+### Fixes
+- **User Management names/emails** — approved users now show their real name and email instead of a truncated UUID and "—". Added `name` and `email` columns to `user_roles` (requires SQL migration), Edge Function now writes them on approval, display logic falls back gracefully for legacy records.
+
+> **Migration required:** `ALTER TABLE user_roles ADD COLUMN name text; ALTER TABLE user_roles ADD COLUMN email text;`
+
+---
+
 ## [v3.27] — 2026-05-18
 
 ### Features
