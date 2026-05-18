@@ -1,7 +1,7 @@
 # Database Schema — Production Training Tracker
 
 **Database:** Supabase (PostgreSQL)
-**Last Updated:** May 2026
+**Last Updated:** May 2026 (v3.18)
 
 ---
 
@@ -216,6 +216,74 @@ Maps Supabase Auth users to app roles and permissions.
 
 ---
 
+---
+
+## Table `ext_trainings`
+
+Cross-department training programs — product knowledge sessions delivered to other departments (Sales, Marketing, Compliance, etc.).
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| `id` | `uuid` | Primary Key | Auto-generated |
+| `title` | `text` | NOT NULL | Program/topic title |
+| `department` | `text` | NOT NULL | Department receiving the training (e.g. `'Sales'`, `'Marketing'`) |
+| `topic` | `text` | Nullable | Specific subject matter |
+| `requested_by` | `text` | Nullable | Name of the person who requested the training |
+| `facilitator` | `text` | Nullable | RWDS member facilitating the session |
+| `status` | `text` | NOT NULL, CHECK | `'requested'` / `'scheduled'` / `'completed'` / `'cancelled'`. Default `'requested'` |
+| `notes` | `text` | Nullable | General notes |
+| `created_at` | `timestamptz` | Nullable | Auto |
+
+**RLS:** `auth_all_ext_trainings` — authenticated users have full read/write access.
+
+---
+
+## Table `ext_sessions`
+
+Individual session logs within a cross-department training program.
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| `id` | `uuid` | Primary Key | Auto-generated |
+| `training_id` | `uuid` | NOT NULL, FK → `ext_trainings.id` ON DELETE CASCADE | Parent program |
+| `session_date` | `date` | NOT NULL | Date the session was held |
+| `attendee_count` | `int` | NOT NULL, Default `0` | Number of department staff who attended |
+| `notes` | `text` | Nullable | What was discussed / session topic |
+| `proof_url` | `text` | Nullable | Link to recording or proof |
+| `created_at` | `timestamptz` | Nullable | Auto |
+
+> Deleting a program (`ext_trainings`) cascades and removes all its sessions automatically.
+
+**RLS:** `auth_all_ext_sessions` — authenticated users have full read/write access.
+
+---
+
+## Table `access_requests`
+
+Pending account requests submitted from the login page by new users.
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| `id` | `uuid` | Primary Key | Auto-generated |
+| `name` | `text` | NOT NULL | Requester's full name |
+| `email` | `text` | NOT NULL | Requester's email |
+| `requested_role` | `text` | NOT NULL, Default `'designer'` | Requested role: `'designer'` / `'staff'` / `'trainer'` |
+| `message` | `text` | Nullable | Optional note to admin |
+| `status` | `text` | NOT NULL, CHECK | `'pending'` / `'approved'` / `'rejected'`. Default `'pending'` |
+| `reviewed_at` | `timestamptz` | Nullable | When admin approved/rejected |
+| `created_at` | `timestamptz` | Nullable | Auto |
+
+**Unique constraint:** `UNIQUE INDEX ON access_requests (lower(email)) WHERE status = 'pending'` — prevents duplicate pending requests for the same email.
+
+**RLS:**
+- `public_insert_access_requests` — anonymous users can INSERT (so non-logged-in requesters can submit).
+- `auth_read_access_requests` — authenticated users can SELECT all requests.
+- `auth_update_access_requests` — authenticated users can UPDATE (for approve/reject).
+
+> Approved requests trigger the `approve-access` Edge Function which creates the Supabase Auth account, inserts into `user_roles`, and emails credentials via Gmail SMTP.
+
+---
+
 ## Key Relationships
 
 ```
@@ -234,4 +302,10 @@ trainings
 training_sessions
   ├── attendance (session_id)
   └── makeup_sessions (original_session_id)
+
+ext_trainings
+  └── ext_sessions (training_id) [CASCADE DELETE]
+
+access_requests
+  └── (standalone — no FK; linked to user_roles/designers indirectly via Edge Function on approval)
 ```
