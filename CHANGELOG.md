@@ -4,6 +4,18 @@ All notable changes to this project are documented here.
 
 ---
 
+## [v3.16] — 2026-05-18
+
+### Features
+- **User Management — permissions editor** — UserModal now includes a full inline permissions editor. Pill toggle switches for all 11 permission keys, split into Capabilities (7) and Tab Visibility (4) groups. Admin role bypasses toggles and shows a "Full Access" notice. Modal header shows count of enabled capabilities. `permissions: null` stored for admins, object for all other roles.
+- **User Management — UX overhaul** — role-colored avatar initials, per-role count chips on filter bar, combined "X of Y Users" header counter, search includes role field, empty-state with icon and hint, mobile-always-visible action buttons, permissions column shows "Full Access" (purple) vs "N Capabilities" (emerald).
+- **Designer Badges page** — esports-style PNG badge display using `intermidiate_badge.png`, `advance_badge.png`, and `expert_badge.png`. Drop-shadow glows per level (green/amber/red). Grouped by skill level with section headers. Badges also applied to Recent Achievements on DesignerHome.
+- **Hub tab** — search bar (title/description/tags), "New" orange pill badge on resources created within the last 7 days, category section glow bands with color-coded left border and gradient fill.
+- **Leaderboard** — team-grouped cards sorted by avg score (top 3 members highlighted), replacing the flat full-rankings list. Cards arranged in a horizontal grid (`md:grid-cols-2 xl:grid-cols-3`). Podium blur toned down to `glass-blur-px`.
+- **Settings Panel** — background opacity slider (0–100%) with None/Low/Mid/Full presets, persisted to `localStorage` under `pt-bg-opacity`. All background layers in AppShell wrapped in an opacity-controlled div.
+
+---
+
 ## [v3.15] — 2026-05-16
 
 ### Features
