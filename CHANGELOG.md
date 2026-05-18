@@ -4,6 +4,13 @@ All notable changes to this project are documented here.
 
 ---
 
+## [v3.21] — 2026-05-18
+
+### Fixes
+- **TrainingModal date inputs (iOS PWA)** — Start/Target date fields no longer overflow or collapse on iOS Safari. `appearance-none` strips WebKit's native date chrome (which sets an unoverridable min-width); `h-10` pins the height so the empty input doesn't collapse; `min-w-0 max-w-full` constrains both columns; `overflow-x-hidden` on the modal body prevents any bleed. Native date picker wheel still fires on tap.
+
+---
+
 ## [v3.20] — 2026-05-18
 
 ### Fixes
