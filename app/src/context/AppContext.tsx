@@ -14,9 +14,11 @@ const DEFAULT_PERMS: Record<string, boolean> = {
   canAddDesigners: false, canDeleteDesigners: false,
   canAddEditTrainings: false, canDeleteTrainings: false,
   canMarkAttendance: false, canAddSessions: false,
-  canManageUsers: false, hideTeams: false,
-  hideSkillSet: false, hideAttendance: false,
-  hideDesigners: false,
+  canManageUsers: false,
+  hideDesigners: false, hideTrainings: false,
+  hideAttendance: false, hideTeams: false,
+  hideSkillSet: false, hideLeaderboard: false,
+  hideHub: false, hideCrossDept: false,
 }
 
 const initial: AppState = {
@@ -140,8 +142,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   function tabHidden(id: string): boolean {
     if (state.role === 'admin' || state.role === 'trainer') return false
     const map: Record<string, string> = {
-      teams: 'hideTeams', skillset: 'hideSkillSet',
-      attendance: 'hideAttendance', designers: 'hideDesigners',
+      designers:  'hideDesigners',
+      trainings:  'hideTrainings',
+      attendance: 'hideAttendance',
+      teams:      'hideTeams',
+      skillset:   'hideSkillSet',
+      leaderboard:'hideLeaderboard',
+      hub:        'hideHub',
+      crossdept:  'hideCrossDept',
     }
     const key = map[id]
     return key ? (state.perms[key] ?? false) : false

@@ -4,6 +4,13 @@ All notable changes to this project are documented here.
 
 ---
 
+## [v3.26] — 2026-05-18
+
+### Features
+- **User permissions — full tab visibility controls** — added hide toggles for Trainings, Leaderboard, Hub, and Cross-Dept tabs in the User edit modal. All 8 staff tabs (except Dashboard and User Mgmt) are now individually hideable per user. `tabHidden()` and `DEFAULT_PERMS` updated to match.
+
+---
+
 ## [v3.25] — 2026-05-18
 
 ### Changes

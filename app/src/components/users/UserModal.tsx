@@ -32,10 +32,14 @@ const PERM_META: PermMeta[] = [
   { key: 'canMarkAttendance',  label: 'Mark Attendance',       desc: 'Record attendance for training sessions',       group: 'capabilities' },
   { key: 'canAddSessions',     label: 'Add Sessions',          desc: 'Create new sessions within a training',        group: 'capabilities' },
   { key: 'canManageUsers',     label: 'Manage Users',          desc: 'Add, edit, and remove user accounts',          group: 'capabilities' },
-  { key: 'hideTeams',          label: 'Hide Teams Tab',        desc: 'Remove Teams from this user\'s navigation',    group: 'visibility'   },
-  { key: 'hideSkillSet',       label: 'Hide Skill Set Tab',    desc: 'Remove Skill Set from this user\'s navigation',group: 'visibility'   },
-  { key: 'hideAttendance',     label: 'Hide Attendance Tab',   desc: 'Remove Attendance from navigation',            group: 'visibility'   },
-  { key: 'hideDesigners',      label: 'Hide Designers Tab',    desc: 'Remove Designers from navigation',             group: 'visibility'   },
+  { key: 'hideDesigners',   label: 'Hide Designers Tab',   desc: 'Remove Designers from navigation',    group: 'visibility' },
+  { key: 'hideTrainings',   label: 'Hide Trainings Tab',   desc: 'Remove Trainings from navigation',    group: 'visibility' },
+  { key: 'hideAttendance',  label: 'Hide Attendance Tab',  desc: 'Remove Attendance from navigation',   group: 'visibility' },
+  { key: 'hideTeams',       label: 'Hide Teams Tab',       desc: 'Remove Teams from navigation',        group: 'visibility' },
+  { key: 'hideSkillSet',    label: 'Hide Skill Set Tab',   desc: 'Remove Skill Set from navigation',    group: 'visibility' },
+  { key: 'hideLeaderboard', label: 'Hide Leaderboard Tab', desc: 'Remove Leaderboard from navigation',  group: 'visibility' },
+  { key: 'hideHub',         label: 'Hide Hub Tab',         desc: 'Remove Hub from navigation',          group: 'visibility' },
+  { key: 'hideCrossDept',   label: 'Hide Cross-Dept Tab',  desc: 'Remove Cross-Dept from navigation',   group: 'visibility' },
 ]
 
 function PermToggle({ meta, enabled, onToggle }: { meta: PermMeta; enabled: boolean; onToggle: () => void }) {
