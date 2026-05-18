@@ -289,7 +289,7 @@ export default function TrainingModal({ training, onClose, onSaved }: Props) {
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto p-5">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-5">
           <AnimatePresence mode="wait">
             {step === 1 ? (
               <motion.div key="step1" initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 12 }} transition={{ duration: 0.2, ease: [0.16,1,0.3,1] }} className="space-y-5">
@@ -373,14 +373,14 @@ export default function TrainingModal({ training, onClose, onSaved }: Props) {
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   <div className="space-y-1.5 min-w-0">
                     <label className="text-xs font-semibold uppercase tracking-wider text-muted-c">Start Date</label>
-                    <input type="date" className="input w-full" value={startDate} onChange={e => setStartDate(e.target.value)} />
+                    <input type="date" className="input w-full max-w-full min-w-0" value={startDate} onChange={e => setStartDate(e.target.value)} />
                   </div>
                   <div className="space-y-1.5 min-w-0">
                     <label className="text-xs font-semibold uppercase tracking-wider text-muted-c">Target Date</label>
-                    <input type="date" className="input w-full" value={targetDate} onChange={e => setTargetDate(e.target.value)} />
+                    <input type="date" className="input w-full max-w-full min-w-0" value={targetDate} onChange={e => setTargetDate(e.target.value)} />
                   </div>
                   <div className="space-y-1.5 min-w-0 col-span-2 sm:col-span-1">
                     <label className="text-xs font-semibold uppercase tracking-wider text-muted-c">Status</label>
