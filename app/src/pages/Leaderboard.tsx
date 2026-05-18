@@ -438,6 +438,7 @@ export default function Leaderboard() {
               </div>
             ))}
           </div>
+        </div>
           </div>{/* end right column */}
         </div>{/* end horizontal flex */}
       </div>
