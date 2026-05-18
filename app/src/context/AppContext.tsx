@@ -187,8 +187,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     // Listen only for explicit sign-in / sign-out after initial load.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN') {
-        applySession(session!)
+      if (event === 'SIGNED_IN' && session) {
+        // Skip if this is the same user already active — Supabase fires SIGNED_IN
+        // on tab-focus token refreshes, which would trigger a full loadAll() and
+        // flash the loading screen mid-task. Only act on genuine new logins.
+        if (authedUserIdRef.current === session.user.id) return
+        applySession(session)
       } else if (event === 'SIGNED_OUT') {
         authedUserIdRef.current = null
         dispatch({ type: 'SIGN_OUT' })

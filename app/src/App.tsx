@@ -50,7 +50,9 @@ function PageRouter() {
 export default function App() {
   const { state } = useApp()
 
-  if (state.loading) {
+  // Only block the UI during the initial auth check — once a user is known,
+  // loadAll() refreshes silently in the background so open forms aren't lost.
+  if (state.loading && !state.user) {
     return (
       <div className="min-h-dvh flex items-center justify-center bg-app">
         <div className="flex flex-col items-center gap-4">
